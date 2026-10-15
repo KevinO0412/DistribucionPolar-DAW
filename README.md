@@ -32,6 +32,7 @@ cp .env.example .env                  # y cambiar JWT_KEY: openssl rand -base64 
 docker compose up --build -d
 docker ps                             # db, api y spa en estado (healthy)
 scripts/demo-operacion.sh             # opcional: carga camiones y factura a través de la API para poblar el dashboard
+scripts/demo-fechas.sh                # opcional: reparte esas facturas en los últimos 14 días (solo Development)
 ```
 
 | Servicio | URL |
@@ -201,7 +202,7 @@ aplica en Development.
   - mínimo = 5 cajas y máximo = 40 cajas;
   - stock entre 0 y 44 cajas.
 
-  Los empleados, camiones y clientes iniciales también son ficticios. Las ventas del dashboard salen de `scripts/demo-operacion.sh`, que opera a través de la API.
+  Los empleados, camiones y clientes iniciales también son ficticios. Las ventas del dashboard salen de `scripts/demo-operacion.sh`, que opera a través de la API. Como la API emite cada factura con la fecha del momento, `scripts/demo-fechas.sh` las reparte después en los últimos días; solo cambia fechas en la base de Development y no inserta datos.
 
 ## Commits
 
