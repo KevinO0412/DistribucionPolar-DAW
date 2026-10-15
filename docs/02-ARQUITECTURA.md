@@ -390,6 +390,6 @@ Ningún Singleton depende de un servicio Scoped, así que no hay dependencias ca
 | Integración | `tests/IntegrationTests` | 16 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
 | API de punta a punta | Colección de Postman | 50 peticiones, 97 aserciones | Fases 1–3 y la operación completa del negocio |
 
-| Frontend | Vitest + Testing Library | 27 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807 y validaciones del formulario |
+| Frontend | Vitest + Testing Library | 31 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807 y validaciones del formulario |
 
 Las pruebas de integración requieren Docker. La cobertura de las unitarias se genera con `scripts/cobertura.sh` (coverlet + ReportGenerator).

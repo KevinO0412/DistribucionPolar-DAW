@@ -4,7 +4,7 @@
 | --- | --- | ---: | --- |
 | `UnitTests/` | Unitarias del núcleo con xUnit + Moq | 168 | Solo el SDK de .NET 10 |
 | `IntegrationTests/` | API real (`WebApplicationFactory`) contra PostgreSQL 15 desechable (Testcontainers) | 16 | Docker |
-| `../src/frontend` | SPA con Vitest + Testing Library | 25 | Node.js 20 |
+| `../src/frontend` | SPA con Vitest + Testing Library | 31 | Node.js 20 |
 
 ```bash
 dotnet test tests/UnitTests                      # unitarias, sin base de datos
