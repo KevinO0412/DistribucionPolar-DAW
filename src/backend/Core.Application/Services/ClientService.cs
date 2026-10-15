@@ -17,7 +17,8 @@ public sealed class ClientService(
     IValidator<UpdateClientRequest> updateValidator,
     IValidator<ClientPaymentRequest> paymentValidator,
     IValidator<ClientEmptiesReturnRequest> emptiesValidator,
-    IValidator<ClientBalanceAdjustmentRequest> adjustmentValidator) : IClientService
+    IValidator<ClientBalanceAdjustmentRequest> adjustmentValidator,
+    IValidator<SetCreditLimitRequest> creditLimitValidator) : IClientService
 {
     public async Task<IReadOnlyList<ClientResponse>> SearchAsync(string? search, CancellationToken cancellationToken = default)
     {
@@ -175,6 +176,22 @@ public sealed class ClientService(
     }
 
     /// <summary>Ajuste manual (solo Admin): fija saldos absolutos con signo; motivo obligatorio.</summary>
+    /// <summary>Límite de crédito (solo Admin): null = sin límite; 0 = solo de contado.</summary>
+    public async Task<ClientResponse> SetCreditLimitAsync(Guid id, SetCreditLimitRequest request, CancellationToken cancellationToken = default)
+    {
+        await creditLimitValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var client = await clients.GetForUpdateAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"No existe el cliente {id}.");
+        decimal? before = client.CreditLimit;
+        client.SetCreditLimit(request.CreditLimit);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await audit.AuditAsync("client_credit_limit", "clients", $"Límite de crédito de {client.Name}: {(request.CreditLimit is null ? "sin límite" : BusinessMappings.Money(request.CreditLimit.Value))}",
+            nameof(Client), id.ToString(), request.CreditLimit, new { CreditLimit = before }, new { client.CreditLimit },
+            cancellationToken: cancellationToken);
+        return await GetByIdAsync(id, cancellationToken);
+    }
+
     public async Task<ClientResponse> AdjustBalancesAsync(Guid id, ClientBalanceAdjustmentRequest request, CancellationToken cancellationToken = default)
     {
         await adjustmentValidator.ValidateAndThrowAsync(request, cancellationToken);

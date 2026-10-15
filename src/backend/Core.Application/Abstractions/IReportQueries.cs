@@ -39,8 +39,12 @@ public sealed record DashboardCollections(decimal Collected, decimal Credit);
 /// <summary>Camión con su capacidad y su carga en cajas equivalentes.</summary>
 public sealed record DashboardTruckRow(Guid Id, string Name, string Plate, int CapacityBoxes, decimal LoadedBoxes, int StockUnits, decimal InventoryValue);
 
+/// <summary>Cliente que debe, con las ventas que aún tienen saldo pendiente (para la antigüedad de la deuda).</summary>
+public sealed record DebtorRow(Guid Id, int Code, string Name, decimal Debt, decimal? CreditLimit, IReadOnlyList<Core.Domain.Services.PendingSale> Sales);
+
 public sealed record DashboardData(
     IReadOnlyList<DashboardProductRow> Products,
     IReadOnlyList<DashboardSaleLine> SaleLines,
     DashboardCollections Collections,
-    IReadOnlyList<DashboardTruckRow> Trucks);
+    IReadOnlyList<DashboardTruckRow> Trucks,
+    IReadOnlyList<DebtorRow> Debtors);

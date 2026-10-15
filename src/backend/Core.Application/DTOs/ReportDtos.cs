@@ -45,6 +45,7 @@ public sealed record BalanceResponse(
 /// <param name="SalesByCategory">Ventas y unidades por categoría.</param>
 /// <param name="TopProducts">Productos con más unidades vendidas y su índice de rotación (máximo 10).</param>
 /// <param name="Fleet">Ocupación y ventas por camión.</param>
+/// <param name="DebtAging">Antigüedad de la deuda de los clientes a la fecha (no depende del filtro).</param>
 public sealed record DashboardResponse(
     DateOnly From,
     DateOnly To,
@@ -56,7 +57,8 @@ public sealed record DashboardResponse(
     IReadOnlyList<SalesPoint> SalesByDay,
     IReadOnlyList<CategorySales> SalesByCategory,
     IReadOnlyList<ProductRotation> TopProducts,
-    DashboardFleetKpi Fleet);
+    DashboardFleetKpi Fleet,
+    DebtAgingResponse DebtAging);
 
 /// <summary>Valorización del inventario (galpón + camiones).</summary>
 /// <param name="ActiveProducts">Productos activos considerados.</param>
@@ -112,3 +114,21 @@ public sealed record DashboardFleetKpi(int CapacityBoxes, decimal LoadedBoxes, d
 public sealed record TruckOccupancy(
     Guid TruckId, string Name, string Plate, int CapacityBoxes, decimal LoadedBoxes, decimal OccupancyPercent,
     int StockUnits, decimal InventoryValue, decimal SalesTotal, int Invoices);
+
+/// <summary>Antigüedad de la deuda (los abonos saldan primero lo más antiguo).</summary>
+/// <param name="TotalDebt">Dinero en la calle.</param>
+/// <param name="Debtors">Clientes que deben.</param>
+/// <param name="MaxOverdueDays">Días a partir de los cuales la deuda bloquea el crédito.</param>
+/// <param name="OverdueDebt">Deuda con más de <paramref name="MaxOverdueDays"/> días.</param>
+/// <param name="Buckets">Deuda por tramo de antigüedad.</param>
+/// <param name="TopDebtors">Clientes con más deuda vencida (máximo 10).</param>
+public sealed record DebtAgingResponse(
+    decimal TotalDebt, int Debtors, int MaxOverdueDays, decimal OverdueDebt,
+    IReadOnlyList<DebtAgingBucket> Buckets, IReadOnlyList<ClientDebtAging> TopDebtors);
+
+/// <summary>Tramo de antigüedad: "0–7 días", "8–15 días", "16–30 días" o "Más de 30 días".</summary>
+public sealed record DebtAgingBucket(string Label, int FromDays, int? ToDays, decimal Amount, int Clients);
+
+/// <summary>Deuda de un cliente por antigüedad.</summary>
+public sealed record ClientDebtAging(
+    Guid ClientId, string Code, string Name, decimal Debt, decimal OverdueDebt, int OldestDays, decimal? CreditLimit);

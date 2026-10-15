@@ -22,6 +22,7 @@ public sealed class InvoiceService(
     ICurrentUser currentUser,
     IClock clock,
     IDocumentPdfGenerator pdf,
+    CreditPolicy creditPolicy,
     IValidator<CreateSaleRequest> saleValidator,
     IValidator<CreateGiftRequest> giftValidator,
     IValidator<CancelInvoiceRequest> cancelValidator) : IInvoiceService
@@ -40,9 +41,45 @@ public sealed class InvoiceService(
     /// Factura de venta en una sola transacción: valida stock de TODAS las líneas, descuenta inventario del
     /// origen, numera, carga el pendiente al cliente, registra abono y vacíos. Si algo falla, no cambia nada.
     /// </summary>
-    public async Task<InvoiceResponse> CreateSaleAsync(CreateSaleRequest request, CancellationToken cancellationToken = default)
+    public async Task<InvoiceResponse> CreateSaleAsync(CreateSaleRequest request, CancellationToken cancellationToken = default) =>
+        (await CreateSaleAsync(request, null, cancellationToken)).Invoice;
+
+    public async Task<(InvoiceResponse Invoice, bool Created)> CreateSaleAsync(
+        CreateSaleRequest request, Guid? idempotencyKey, CancellationToken cancellationToken = default)
     {
         await saleValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        if (idempotencyKey is { } key && await invoices.GetByIdempotencyKeyAsync(key, cancellationToken) is { } existing)
+        {
+            return (existing.ToResponse(), false);
+        }
+
+        Invoice invoice;
+        try
+        {
+            invoice = await CreateSaleCoreAsync(request, idempotencyKey, cancellationToken);
+        }
+        catch (Exception) when (idempotencyKey is not null)
+        {
+            // Dos envíos simultáneos con la misma clave: el índice único deja pasar uno; el otro devuelve esa factura.
+            var raced = await invoices.GetByIdempotencyKeyAsync(idempotencyKey.Value, cancellationToken);
+            if (raced is null)
+            {
+                throw;
+            }
+
+            return (raced.ToResponse(), false);
+        }
+
+        await audit.AuditAsync("invoice_created", "invoices", $"{invoice.Number} a {invoice.ClientName}",
+            nameof(Invoice), invoice.Id.ToString(), invoice.Total,
+            metadata: new { invoice.Payment, invoice.Pending, invoice.DispatchOrigin, invoice.TruckName, Items = invoice.Items.Count, IdempotencyKey = idempotencyKey },
+            cancellationToken: cancellationToken);
+        return (invoice.ToResponse(), true);
+    }
+
+    private async Task<Invoice> CreateSaleCoreAsync(CreateSaleRequest request, Guid? idempotencyKey, CancellationToken cancellationToken)
+    {
         var (employeeId, attendant) = await ResolveAttendantAsync(request.EmployeeId, cancellationToken);
 
         var invoice = await unitOfWork.ExecuteInTransactionAsync(async ct =>
@@ -53,6 +90,7 @@ public sealed class InvoiceService(
             var lines = await StockOperations.LoadLinesAsync(products, request.Items, ct);
 
             StockOperations.EnsureAvailable(request.DispatchOrigin, truck, lines);
+            await EnsureCreditAsync(client, lines.Sum(l => l.Subtotal) - request.Payment, ct);
             foreach (var line in lines)
             {
                 StockOperations.Remove(request.DispatchOrigin, truck, line.Product, line.Quantity);
@@ -65,6 +103,10 @@ public sealed class InvoiceService(
             var created = Invoice.CreateSale(
                 await NextNumberAsync(InvoiceType.Sale, ct), client, request.DispatchOrigin, truck, employeeId, attendant,
                 lines, request.Payment, request.PaymentObservation, returned, clock.UtcNow);
+            if (idempotencyKey is { } key)
+            {
+                created.AssignIdempotencyKey(key);
+            }
 
             invoices.Add(created);
             ApplyAccountEffects(client, created, request.PaymentObservation);
@@ -72,11 +114,22 @@ public sealed class InvoiceService(
             return created;
         }, cancellationToken);
 
-        await audit.AuditAsync("invoice_created", "invoices", $"{invoice.Number} a {invoice.ClientName}",
-            nameof(Invoice), invoice.Id.ToString(), invoice.Total,
-            metadata: new { invoice.Payment, invoice.Pending, invoice.DispatchOrigin, invoice.TruckName, Items = invoice.Items.Count },
-            cancellationToken: cancellationToken);
-        return invoice.ToResponse();
+        return invoice;
+    }
+
+    /// <summary>Control de crédito (observación del docente): deuda vencida o límite superado bloquean la venta a crédito.</summary>
+    private async Task EnsureCreditAsync(Client client, decimal newPending, CancellationToken cancellationToken)
+    {
+        if (newPending <= 0)
+        {
+            return;
+        }
+
+        decimal overdue = client.Debt > 0
+            ? Core.Domain.Services.DebtAging.Overdue(
+                client.Debt, await invoices.GetPendingSalesAsync(client.Id, cancellationToken), clock.UtcNow, creditPolicy.MaxOverdueDays)
+            : 0m;
+        client.EnsureCreditAvailable(newPending, overdue, creditPolicy.MaxOverdueDays);
     }
 
     /// <summary>

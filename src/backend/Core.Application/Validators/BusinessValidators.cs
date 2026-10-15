@@ -343,3 +343,27 @@ public sealed class ChangePasswordRequestValidator : AbstractValidator<ChangePas
             .NotEqual(x => x.CurrentPassword).WithMessage("La nueva clave debe ser distinta de la actual.");
     }
 }
+
+public sealed class SettleRouteRequestValidator : AbstractValidator<SettleRouteRequest>
+{
+    public SettleRouteRequestValidator()
+    {
+        RuleFor(x => x.CountedCash).GreaterThanOrEqualTo(0).PrecisionScale(18, 2, true);
+        RuleFor(x => x.Returned).NotNull();
+        RuleForEach(x => x.Returned).ChildRules(line =>
+        {
+            line.RuleFor(l => l.ProductId).NotEmpty();
+            line.RuleFor(l => l.Boxes).GreaterThanOrEqualTo(0);
+            line.RuleFor(l => l.LooseUnits).GreaterThanOrEqualTo(0);
+        });
+        RuleFor(x => x.Observation).MaximumLength(RouteSettlement.ObservationMaxLength);
+    }
+}
+
+public sealed class SetCreditLimitRequestValidator : AbstractValidator<SetCreditLimitRequest>
+{
+    public SetCreditLimitRequestValidator()
+    {
+        RuleFor(x => x.CreditLimit).GreaterThanOrEqualTo(0).PrecisionScale(18, 2, true).When(x => x.CreditLimit is not null);
+    }
+}

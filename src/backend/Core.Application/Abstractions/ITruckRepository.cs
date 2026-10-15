@@ -19,6 +19,11 @@ public interface ITruckRepository
 
     void AddLoad(TruckLoad load);
 
+    void AddSettlement(RouteSettlement settlement);
+
+    /// <summary>Liquidaciones con sus líneas, de la más reciente a la más antigua (AsNoTracking).</summary>
+    Task<IReadOnlyList<RouteSettlement>> GetSettlementsAsync(Guid? truckId, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default);
+
     /// <summary>Historial de cargas, de la más reciente a la más antigua (AsNoTracking).</summary>
     Task<IReadOnlyList<TruckLoad>> GetLoadsAsync(Guid? truckId, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default);
 }

@@ -7,6 +7,7 @@ namespace Core.Application.Services;
 
 public sealed class ReportService(
     IReportQueries reports,
+    CreditPolicy creditPolicy,
     IConsignmentService consignments,
     IAuditLogRepository auditLogs,
     IClock clock) : IReportService
@@ -68,7 +69,41 @@ public sealed class ReportService(
                 .OrderByDescending(c => c.Total)
                 .ToList(),
             BuildTopProducts(data),
-            BuildFleet(data));
+            BuildFleet(data),
+            BuildDebtAging(data.Debtors));
+    }
+
+    private static readonly (string Label, int From, int? To)[] AgingBuckets =
+        [("0–7 días", 0, 7), ("8–15 días", 8, 15), ("16–30 días", 16, 30), ("Más de 30 días", 31, null)];
+
+    /// <summary>Antigüedad de la deuda a la fecha, con la misma imputación FIFO del control de crédito.</summary>
+    private DebtAgingResponse BuildDebtAging(IReadOnlyList<DebtorRow> debtors)
+    {
+        var now = clock.UtcNow;
+        var aged = debtors.Select(d => (Debtor: d, Parts: DebtAging.Allocate(d.Debt, d.Sales, now))).ToList();
+
+        var buckets = AgingBuckets
+            .Select(b =>
+            {
+                bool InBucket(AgedAmount a) => a.AgeDays >= b.From && (b.To is null || a.AgeDays <= b.To);
+                return new DebtAgingBucket(
+                    b.Label, b.From, b.To,
+                    aged.Sum(x => x.Parts.Where(InBucket).Sum(a => a.Amount)),
+                    aged.Count(x => x.Parts.Any(InBucket)));
+            })
+            .ToList();
+
+        var perClient = aged
+            .Select(x => new ClientDebtAging(
+                x.Debtor.Id, x.Debtor.Code.ToString("D3"), x.Debtor.Name, x.Debtor.Debt,
+                x.Parts.Where(a => a.AgeDays > creditPolicy.MaxOverdueDays).Sum(a => a.Amount),
+                x.Parts.Count == 0 ? 0 : x.Parts.Max(a => a.AgeDays == DebtAging.UnexplainedAge ? 999 : a.AgeDays),
+                x.Debtor.CreditLimit))
+            .ToList();
+
+        return new DebtAgingResponse(
+            debtors.Sum(d => d.Debt), debtors.Count, creditPolicy.MaxOverdueDays, perClient.Sum(c => c.OverdueDebt), buckets,
+            perClient.Where(c => c.OverdueDebt > 0).OrderByDescending(c => c.OverdueDebt).ThenByDescending(c => c.Debt).Take(10).ToList());
     }
 
     private static DashboardInventoryKpi BuildInventory(IReadOnlyList<DashboardProductRow> products)

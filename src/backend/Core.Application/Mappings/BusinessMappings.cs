@@ -52,7 +52,7 @@ internal static class BusinessMappings
 
         return new TruckResponse(
             truck.Id, truck.Name, truck.Plate, truck.Status, truck.TotalUnits, lines.Sum(l => l.Value), lines,
-            truck.CapacityBoxes, Math.Round(truck.LoadedBoxes, 1), truck.OccupancyPercent);
+            truck.CapacityBoxes, Math.Round(truck.LoadedBoxes, 1), truck.OccupancyPercent, truck.DispatchedAt);
     }
 
     public static TruckLoadResponse ToResponse(this TruckLoad load) => new(
@@ -79,7 +79,7 @@ internal static class BusinessMappings
             .ToList(),
         client.IsReceivable,
         lastPurchaseAt,
-        client.CreatedAt);
+        client.CreatedAt, client.CreditLimit);
 
     public static ClientMovementResponse ToResponse(this ClientMovement movement) => new(
         movement.Id, movement.Type, movement.Title, movement.Description, movement.Amount, movement.InvoiceId, movement.CreatedAt);
@@ -160,4 +160,18 @@ internal static class BusinessMappings
 
     public static UserResponse ToResponse(this User user) => new(
         user.Id, user.Username, user.Email, user.FullName, user.Role, user.IsActive, user.AttendantName, user.CanChangeAttendant, user.CreatedAt);
+
+    public static RouteSettlementResponse ToResponse(this RouteSettlement settlement) => new(
+        settlement.Id, settlement.TruckId, settlement.TruckName, settlement.TruckPlate, settlement.DispatchedAt, settlement.SettledAt,
+        settlement.SettledBy, settlement.InvoicesCount, settlement.SalesTotal, settlement.ExpectedCash, settlement.CountedCash,
+        settlement.CashDifference, settlement.MissingGoodsValue, settlement.IsBalanced, settlement.Observation,
+        settlement.Lines
+            .OrderBy(l => l.DifferenceUnits)
+            .ThenBy(l => l.ProductName)
+            .Select(l => new RouteSettlementLineResponse(
+                l.ProductId, l.ProductName, l.UnitsPerBox,
+                l.ExpectedUnits, BoxQuantity.FromUnits(l.ExpectedUnits, l.UnitsPerBox).ToString(),
+                l.CountedUnits, BoxQuantity.FromUnits(l.CountedUnits, l.UnitsPerBox).ToString(),
+                l.DifferenceUnits, l.DifferenceValue))
+            .ToList());
 }

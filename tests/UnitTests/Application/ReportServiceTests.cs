@@ -24,7 +24,7 @@ public sealed class ReportServiceTests
             (d.ToDateTime(new TimeOnly(4, 0), DateTimeKind.Utc), d.AddDays(1).ToDateTime(new TimeOnly(4, 0), DateTimeKind.Utc)));
         mockClock.Setup(c => c.ToLocal(It.IsAny<DateTime>())).Returns<DateTime>(utc => utc.AddHours(-4));
 
-        service = new ReportService(mockReports.Object, Mock.Of<IConsignmentService>(), Mock.Of<IAuditLogRepository>(), mockClock.Object);
+        service = new ReportService(mockReports.Object, new CreditPolicy(), Mock.Of<IConsignmentService>(), Mock.Of<IAuditLogRepository>(), mockClock.Object);
     }
 
     private static DashboardProductRow Harina(int warehouse, int truck = 0) =>
@@ -39,8 +39,8 @@ public sealed class ReportServiceTests
 
     private static DashboardData Data(
         IReadOnlyList<DashboardProductRow>? products = null, IReadOnlyList<DashboardSaleLine>? lines = null,
-        IReadOnlyList<DashboardTruckRow>? trucks = null) =>
-        new(products ?? [], lines ?? [], new DashboardCollections(30m, 18m), trucks ?? []);
+        IReadOnlyList<DashboardTruckRow>? trucks = null, IReadOnlyList<DebtorRow>? debtors = null) =>
+        new(products ?? [], lines ?? [], new DashboardCollections(30m, 18m), trucks ?? [], debtors ?? []);
 
     [Fact]
     public async Task GetDashboardAsync_WithoutDates_UsesTheLast30LocalDays()
@@ -146,6 +146,29 @@ public sealed class ReportServiceTests
         Assert.Equal(19.2m, fleet.OccupancyPercent);
         var fvr = fleet.Trucks.Single(t => t.Name == "FVR");
         Assert.Equal((25.0m, 18.50m, 1), (fvr.OccupancyPercent, fvr.SalesTotal, fvr.Invoices));
+    }
+
+    [Fact]
+    public async Task GetDashboardAsync_DebtAging_GroupsDebtByAgeAndFlagsOverdueClients()
+    {
+        // Arrange: hoy es el 15/10 a las 12:00.
+        var now = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
+        mockClock.Setup(c => c.UtcNow).Returns(now);
+        Returns(Data(debtors:
+        [
+            new DebtorRow(Guid.NewGuid(), 7, "Bodega La Esquina", 100m, 150m,
+                [new Core.Domain.Services.PendingSale(now.AddDays(-45), 70m), new Core.Domain.Services.PendingSale(now.AddDays(-3), 60m)]),
+            new DebtorRow(Guid.NewGuid(), 9, "Abasto Mary", 20m, null, [new Core.Domain.Services.PendingSale(now.AddDays(-10), 20m)]),
+        ]));
+
+        // Act
+        var aging = (await service.GetDashboardAsync(Today, Today, null)).DebtAging;
+
+        // Assert: 60 recientes + 40 viejos de La Esquina; 20 de Mary en 8–15 días.
+        Assert.Equal((120m, 2, 30, 40m), (aging.TotalDebt, aging.Debtors, aging.MaxOverdueDays, aging.OverdueDebt));
+        Assert.Equal([60m, 20m, 0m, 40m], aging.Buckets.Select(b => b.Amount));
+        var top = Assert.Single(aging.TopDebtors);
+        Assert.Equal(("007", 40m, 45, 150m), (top.Code, top.OverdueDebt, top.OldestDays, top.CreditLimit));
     }
 
     [Fact]

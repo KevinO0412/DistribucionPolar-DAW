@@ -9,7 +9,8 @@ public sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
 {
     public void Configure(EntityTypeBuilder<Client> builder)
     {
-        builder.ToTable("Clients");
+        builder.ToTable("Clients", table =>
+            table.HasCheckConstraint("CK_Clients_CreditLimit_NotNegative", "\"CreditLimit\" IS NULL OR \"CreditLimit\" >= 0"));
         builder.ConfigureBaseEntity();
         builder.UseOptimisticConcurrency();
         builder.Property(c => c.Code).IsRequired();
@@ -21,6 +22,8 @@ public sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(c => c.MoneyBalance).IsRequired().HasPrecision(18, 2).HasDefaultValue(0m);
         builder.Property(c => c.EmptyBoxesBalance).IsRequired().HasDefaultValue(0);
         builder.Property(c => c.EmptyUnitsBalance).IsRequired().HasDefaultValue(0);
+        builder.Property(c => c.CreditLimit).HasPrecision(18, 2);
+        builder.Ignore(c => c.Debt);
 
         builder.HasIndex(c => c.Code).IsUnique();
         builder.HasIndex(c => c.Rif).IsUnique().HasFilter("\"IsDeleted\" = false");

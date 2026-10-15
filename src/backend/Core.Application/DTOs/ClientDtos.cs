@@ -19,10 +19,11 @@ namespace Core.Application.DTOs;
 /// <param name="IsReceivable">Tiene alguna deuda (dinero o vacíos).</param>
 /// <param name="LastPurchaseAt">Fecha de la última factura de venta vigente.</param>
 /// <param name="CreatedAt">Fecha de alta (UTC).</param>
+/// <param name="CreditLimit">Límite de crédito en USD (null = sin límite, 0 = solo de contado).</param>
 public sealed record ClientResponse(
     Guid Id, string Code, string Rif, string Name, string Address, string? Nickname, string Type,
     decimal MoneyBalance, string MoneyStatus, int EmptyBoxesBalance, int EmptyUnitsBalance, string EmptiesStatus,
-    IReadOnlyList<EmptyGroupBalance> EmptyBalances, bool IsReceivable, DateTime? LastPurchaseAt, DateTime CreatedAt);
+    IReadOnlyList<EmptyGroupBalance> EmptyBalances, bool IsReceivable, DateTime? LastPurchaseAt, DateTime CreatedAt, decimal? CreditLimit);
 
 /// <summary>Alta de cliente. Se crea como "Ocasional" con saldos en 0.</summary>
 /// <param name="Rif" example="V-12345678">RIF o cédula, obligatorio y único.</param>
@@ -78,3 +79,7 @@ public sealed record ClientStatementResponse(
     IReadOnlyList<ClientMovementResponse> Payments,
     IReadOnlyList<ClientMovementResponse> Empties,
     IReadOnlyList<ClientMovementResponse> Adjustments);
+
+/// <summary>Límite de crédito del cliente (solo Admin).</summary>
+/// <param name="CreditLimit" example="500.00">Límite en USD; null = sin límite; 0 = solo de contado.</param>
+public sealed record SetCreditLimitRequest(decimal? CreditLimit);

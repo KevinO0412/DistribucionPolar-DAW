@@ -39,7 +39,7 @@ public sealed class InvoiceServiceTests
         service = new InvoiceService(
             mockInvoices.Object, mockClients.Object, mockProducts.Object, mockTrucks.Object, mockEmployees.Object, mockUsers.Object,
             mockNumbers.Object, mockUnitOfWork.Object, mockAudit.Object, mockCurrentUser.Object, mockClock.Object,
-            Mock.Of<IDocumentPdfGenerator>(), new CreateSaleRequestValidator(), new CreateGiftRequestValidator(), new CancelInvoiceRequestValidator());
+            Mock.Of<IDocumentPdfGenerator>(), new CreditPolicy(), new CreateSaleRequestValidator(), new CreateGiftRequestValidator(), new CancelInvoiceRequestValidator());
 
         mockCurrentUser.Setup(u => u.UserId).Returns(employee.Id);
         mockCurrentUser.Setup(u => u.Username).Returns("admin");
@@ -251,6 +251,84 @@ public sealed class InvoiceServiceTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.CancelAsync(sale.Id, new CancelInvoiceRequest("Error")));
         Assert.Equal(-100m, client.MoneyBalance);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_WithIdempotencyKey_StoresTheKey()
+    {
+        var beer = Beer(360);
+        var key = Guid.NewGuid();
+
+        var (invoice, created) = await service.CreateSaleAsync(Sale(beer.Id, 1, 0, 0m), key);
+
+        Assert.True(created);
+        Assert.Equal(key, CaptureLastInvoice().IdempotencyKey);
+        Assert.Equal(324, beer.StockUnits);
+        Assert.Equal("Factura Octubre 2026 #3", invoice.Number);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_RepeatedIdempotencyKey_ReturnsTheExistingInvoiceWithoutSellingAgain()
+    {
+        // Arrange: la preventa reintenta un pedido que ya llegó.
+        var beer = Beer(360);
+        var key = Guid.NewGuid();
+        await service.CreateSaleAsync(Sale(beer.Id, 1, 0, 0m), key);
+        var first = CaptureLastInvoice();
+        mockInvoices.Setup(r => r.GetByIdempotencyKeyAsync(key, It.IsAny<CancellationToken>())).ReturnsAsync(first);
+
+        // Act
+        var (again, created) = await service.CreateSaleAsync(Sale(beer.Id, 1, 0, 0m), key);
+
+        // Assert: misma factura, sin descontar stock ni cargar saldo dos veces.
+        Assert.False(created);
+        Assert.Equal(first.Id, again.Id);
+        Assert.Equal(324, beer.StockUnits);
+        Assert.Equal(-100m, client.MoneyBalance);
+        mockInvoices.Verify(r => r.Add(It.IsAny<Invoice>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_ClientWithDebtOlderThan30Days_IsBlockedOnCredit()
+    {
+        // Arrange: debe $50 de una factura de hace 45 días.
+        var beer = Beer(360);
+        client.AdjustBalances(-50m, 0, 0);
+        mockInvoices.Setup(r => r.GetPendingSalesAsync(client.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Core.Domain.Services.PendingSale(Now.AddDays(-45), 50m)]);
+
+        // Act
+        var error = await Assert.ThrowsAsync<DomainException>(() => service.CreateSaleAsync(Sale(beer.Id, 1, 0, 40m)));
+
+        // Assert: no se toca el inventario ni se numera.
+        Assert.StartsWith("Crédito bloqueado", error.Message);
+        Assert.Equal(360, beer.StockUnits);
+        mockNumbers.Verify(n => n.NextAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_ClientWithOverdueDebt_CanStillBuyCash()
+    {
+        var beer = Beer(360);
+        client.AdjustBalances(-50m, 0, 0);
+        mockInvoices.Setup(r => r.GetPendingSalesAsync(client.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Core.Domain.Services.PendingSale(Now.AddDays(-45), 50m)]);
+
+        var invoice = await service.CreateSaleAsync(Sale(beer.Id, 1, 0, 100m));
+
+        Assert.Equal(0m, invoice.Pending);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_OverTheCreditLimit_IsBlocked()
+    {
+        var beer = Beer(360);
+        client.SetCreditLimit(50m);
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => service.CreateSaleAsync(Sale(beer.Id, 1, 0, 40m)));
+
+        Assert.Contains("límite es $50.00", error.Message);
+        Assert.Equal(360, beer.StockUnits);
     }
 
     [Fact]

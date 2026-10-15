@@ -12,6 +12,7 @@ namespace Core.Application.Services;
 public sealed class TruckService(
     ITruckRepository trucks,
     IProductRepository products,
+    IInvoiceRepository invoices,
     IUnitOfWork unitOfWork,
     IAuditService audit,
     ICurrentUser currentUser,
@@ -19,7 +20,8 @@ public sealed class TruckService(
     IValidator<TruckRequest> truckValidator,
     IValidator<LoadTruckRequest> loadValidator,
     IValidator<TransferFromTruckRequest> transferValidator,
-    IValidator<AdjustStockRequest> adjustValidator) : ITruckService
+    IValidator<AdjustStockRequest> adjustValidator,
+    IValidator<SettleRouteRequest> settleValidator) : ITruckService
 {
     public async Task<IReadOnlyList<TruckResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -94,6 +96,7 @@ public sealed class TruckService(
 
             product.RemoveStock(BoxQuantity.FromUnits(toLoad, product.UnitsPerBox));
             truck.AddStock(product.Id, toLoad);
+            truck.MarkLoading();
 
             var record = new TruckLoad(truck, product, toLoad, before, truck.GetUnits(product.Id),
                 TruckLoadSource.Warehouse, null, request.Observation, currentUser.Username);
@@ -202,6 +205,81 @@ public sealed class TruckService(
             nameof(Truck), truckId.ToString(), metadata: unloaded.Select(l => new { l.ProductId, l.Units }),
             cancellationToken: cancellationToken);
         return await GetByIdAsync(truckId, cancellationToken);
+    }
+
+    /// <summary>Sale a ruta: el camión pasa a "En ruta" y empieza el período que se liquidará.</summary>
+    public async Task<TruckResponse> DispatchAsync(Guid truckId, CancellationToken cancellationToken = default)
+    {
+        var truck = await trucks.GetForUpdateAsync(truckId, cancellationToken)
+            ?? throw new KeyNotFoundException($"No existe el camión {truckId}.");
+        truck.Dispatch(clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await audit.AuditAsync("truck_dispatched", "trucks", $"Camión {truck.Name} sale a ruta con {truck.TotalUnits} und",
+            nameof(Truck), truckId.ToString(), cancellationToken: cancellationToken);
+        return await GetByIdAsync(truckId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Liquidación ciega: compara lo declarado con lo esperado (abonos de las facturas del camión desde su salida y la
+    /// mercancía que debía traer), reintegra al galpón lo contado y deja la planilla de cuadre. Todo en una transacción.
+    /// </summary>
+    public async Task<RouteSettlementResponse> SettleAsync(Guid truckId, SettleRouteRequest request, CancellationToken cancellationToken = default)
+    {
+        await settleValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var settlement = await unitOfWork.ExecuteInTransactionAsync(async ct =>
+        {
+            var truck = await trucks.GetForUpdateAsync(truckId, ct)
+                ?? throw new KeyNotFoundException($"No existe el camión {truckId}.");
+            if (!truck.IsOnRoute || truck.DispatchedAt is not { } dispatchedAt)
+            {
+                throw new DomainException($"Solo se liquida un camión en ruta; {truck.Name} está \"{truck.Status}\".");
+            }
+
+            var sales = await invoices.GetTruckRouteSalesAsync(truckId, dispatchedAt, ct);
+            var expected = truck.Settle();
+            var found = await products.GetManyForUpdateAsync(expected.Select(e => e.ProductId).Union(request.Returned.Select(r => r.ProductId)), ct);
+
+            var counted = new Dictionary<Guid, int>();
+            foreach (var line in request.Returned)
+            {
+                var product = found.GetValueOrDefault(line.ProductId)
+                    ?? throw new InvalidOperationException($"El producto {line.ProductId} no existe.");
+                counted[product.Id] = counted.GetValueOrDefault(product.Id) + new BoxQuantity(line.Boxes, line.LooseUnits).ToUnits(product.UnitsPerBox);
+            }
+
+            var created = RouteSettlement.Create(truck, dispatchedAt, found, expected, counted, request.CountedCash,
+                sales.Payments, sales.Total, sales.Count, clock.UtcNow, currentUser.Username, request.Observation);
+
+            // Lo contado físicamente vuelve al galpón; los faltantes quedan registrados en la planilla.
+            foreach (var (productId, units) in counted.Where(c => c.Value > 0))
+            {
+                var product = found[productId];
+                product.AddStock(BoxQuantity.FromUnits(units, product.UnitsPerBox));
+            }
+
+            trucks.AddSettlement(created);
+            await unitOfWork.SaveChangesAsync(ct);
+            return created;
+        }, cancellationToken);
+
+        await audit.AuditAsync("route_settled", "trucks",
+            $"Liquidación de {settlement.TruckName}: dinero {(settlement.CashDifference >= 0 ? "+" : "")}{settlement.CashDifference:0.00}, " +
+            $"faltante de mercancía {settlement.MissingGoodsValue:0.00}",
+            nameof(RouteSettlement), settlement.Id.ToString(), settlement.CountedCash,
+            metadata: new { settlement.ExpectedCash, settlement.CashDifference, settlement.MissingGoodsValue, settlement.IsBalanced },
+            cancellationToken: cancellationToken);
+        return settlement.ToResponse();
+    }
+
+    public async Task<IReadOnlyList<RouteSettlementResponse>> GetSettlementsAsync(
+        Guid? truckId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
+    {
+        DateTime? fromUtc = from is null ? null : clock.GetDayRangeUtc(from.Value).StartUtc;
+        DateTime? toUtc = to is null ? null : clock.GetDayRangeUtc(to.Value).EndUtc;
+        var list = await trucks.GetSettlementsAsync(truckId, fromUtc, toUtc, cancellationToken);
+        return list.Select(s => s.ToResponse()).ToList();
     }
 
     public async Task<IReadOnlyList<TruckLoadResponse>> GetLoadsAsync(

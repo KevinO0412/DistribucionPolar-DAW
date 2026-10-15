@@ -1,6 +1,7 @@
 using Core.Application.Abstractions;
 using Core.Application.DTOs;
 using Core.Domain.Entities;
+using Core.Domain.Services;
 using Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,37 @@ public sealed class InvoiceRepository(ApplicationDbContext context) : IInvoiceRe
     public void Add(Invoice invoice)
     {
         context.Invoices.Add(invoice);
+    }
+
+    public Task<Invoice?> GetByIdempotencyKeyAsync(Guid key, CancellationToken cancellationToken = default)
+    {
+        return context.Invoices
+            .AsNoTrackingWithIdentityResolution()
+            .Include(i => i.Items)
+            .Include(i => i.EmptyGroups)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(i => i.IdempotencyKey == key, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<PendingSale>> GetPendingSalesAsync(Guid clientId, CancellationToken cancellationToken = default)
+    {
+        return await context.Invoices
+            .AsNoTracking()
+            .Where(i => i.ClientId == clientId && !i.IsCancelled && i.Type == InvoiceType.Sale && i.Pending > 0)
+            .Select(i => new PendingSale(i.IssuedAt, i.Pending))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<(int Count, decimal Total, decimal Payments)> GetTruckRouteSalesAsync(
+        Guid truckId, DateTime sinceUtc, CancellationToken cancellationToken = default)
+    {
+        var totals = await context.Invoices
+            .AsNoTracking()
+            .Where(i => i.TruckId == truckId && !i.IsCancelled && i.Type == InvoiceType.Sale && i.IssuedAt >= sinceUtc)
+            .GroupBy(_ => 1)
+            .Select(g => new { Count = g.Count(), Total = g.Sum(i => i.Total), Payments = g.Sum(i => i.Payment) })
+            .FirstOrDefaultAsync(cancellationToken);
+        return totals is null ? (0, 0m, 0m) : (totals.Count, totals.Total, totals.Payments);
     }
 
     public Task<Invoice?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

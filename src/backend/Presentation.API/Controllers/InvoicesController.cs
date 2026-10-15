@@ -79,17 +79,24 @@ public sealed class InvoicesController(IInvoiceService invoices) : ControllerBas
     /// </remarks>
     /// <param name="request">Datos de la factura.</param>
     /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <param name="idempotencyKey">
+    /// Clave UUID opcional del pedido. Reenviar el mismo pedido con la misma clave devuelve la factura ya emitida (200)
+    /// en lugar de duplicarla; la usa la preventa sin conexión al sincronizar.
+    /// </param>
     /// <response code="201">Factura emitida.</response>
-    /// <response code="400">Datos inválidos, stock insuficiente o vendedor no permitido.</response>
+    /// <response code="200">Ya existía una factura con esa clave de idempotencia; no se creó otra.</response>
+    /// <response code="400">Datos inválidos, stock insuficiente, crédito bloqueado o vendedor no permitido.</response>
     /// <response code="409">Conflicto de concurrencia; reintentar.</response>
     [HttpPost("sales")]
     [ProducesResponseType<InvoiceResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<InvoiceResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
-    public async Task<ActionResult<InvoiceResponse>> CreateSale(CreateSaleRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<InvoiceResponse>> CreateSale(
+        CreateSaleRequest request, [FromHeader(Name = "Idempotency-Key")] Guid? idempotencyKey, CancellationToken cancellationToken)
     {
-        var invoice = await invoices.CreateSaleAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, invoice);
+        var (invoice, created) = await invoices.CreateSaleAsync(request, idempotencyKey, cancellationToken);
+        return created ? CreatedAtAction(nameof(GetById), new { id = invoice.Id }, invoice) : Ok(invoice);
     }
 
     /// <summary>Emite una regalía (solo productos autorizados; no cobra; sí genera vacíos).</summary>

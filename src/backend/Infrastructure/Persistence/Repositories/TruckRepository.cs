@@ -39,6 +39,25 @@ public sealed class TruckRepository(ApplicationDbContext context) : ITruckReposi
         context.TruckLoads.Add(load);
     }
 
+    public void AddSettlement(RouteSettlement settlement)
+    {
+        context.RouteSettlements.Add(settlement);
+    }
+
+    public async Task<IReadOnlyList<RouteSettlement>> GetSettlementsAsync(
+        Guid? truckId, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
+    {
+        return await context.RouteSettlements
+            .AsNoTracking()
+            .Include(s => s.Lines)
+            .Where(s => (truckId == null || s.TruckId == truckId)
+                && (fromUtc == null || s.SettledAt >= fromUtc)
+                && (toUtc == null || s.SettledAt < toUtc))
+            .OrderByDescending(s => s.SettledAt)
+            .Take(200)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<TruckLoad>> GetLoadsAsync(Guid? truckId, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
     {
         return await context.TruckLoads
