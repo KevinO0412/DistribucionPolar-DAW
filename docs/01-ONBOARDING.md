@@ -5,13 +5,13 @@ entender cómo está organizado y saber dónde va cada cambio.
 
 ## 1. Qué es el sistema
 
-**Distribución Polar** es la API REST de una distribuidora mayorista de alimentos, bebidas y productos de limpieza.
-Cubre la operación completa:
+**Distribución Polar** es el sistema de una distribuidora mayorista de alimentos, bebidas y productos de limpieza:
+una API REST (.NET 10) y una SPA (React) para el personal. Cubre la operación completa:
 - Catálogo e inventario (galpón y camiones de reparto).
 - Clientes con saldos y estado de cuenta.
 - Facturación y regalías con control de envases retornables.
 - Compras, averías, consumos internos y consignación.
-- Reportes, auditoría y usuarios con roles.
+- Reportes, dashboard de indicadores, auditoría y usuarios con roles.
 
 Conceptos del negocio que aparecen en todo el código (ver [Lógica de negocio](03-LOGICA-NEGOCIO.md)):
 
@@ -31,19 +31,22 @@ Conceptos del negocio que aparecen en todo el código (ver [Lógica de negocio](
 
 ## 2. Levantar el proyecto
 
-Requisitos: Docker con Docker Compose. Para programar y correr las pruebas también hace falta el SDK de .NET 10.
+Requisitos: Docker con Docker Compose. Para programar y correr las pruebas también hace falta el SDK de .NET 10 y Node.js 20.
 
 ```bash
-git clone https://github.com/Leynner2/DistribucionPolar.git
+git clone https://github.com/KevinO0412/DistribucionPolar-DAW.git
 cd DistribucionPolar
+cp .env.example .env              # cambiar JWT_KEY por una clave aleatoria: openssl rand -base64 48
 docker compose up -d --build
+scripts/demo-operacion.sh         # opcional: ventas y cargas de camión reales para el dashboard
 ```
 
 Con eso quedan en marcha:
 
 | Servicio | URL | Para qué |
 | --- | --- | --- |
-| API + Swagger | http://localhost:8080/swagger | Probar todos los endpoints |
+| SPA | http://localhost:8080 | Usar el sistema: dashboard, catálogo, camiones y facturas |
+| API + Swagger | http://localhost:5000/swagger | Probar todos los endpoints |
 | pgAdmin | http://localhost:5050 | Ver la base de datos (Servers → Distribución Polar) |
 | PostgreSQL 15 | `localhost:5432` | Base de datos (`polar` / `polar_dev_2026`) |
 
@@ -62,6 +65,7 @@ Para correr las pruebas automatizadas:
 
 ```bash
 dotnet test DistribucionPolar.slnx                                      # unitarias + integración (requiere Docker)
+(cd src/frontend && npm ci && npm test)                                 # pruebas de la SPA
 npx newman run postman/collections/DistribucionPolar.postman_collection.json   # pruebas de la API
 ```
 
@@ -71,27 +75,27 @@ La solución sigue la **Arquitectura Cebolla (Onion)**: el negocio está en el c
 La explicación completa está en [Arquitectura](02-ARQUITECTURA.md).
 
 ```text
-Core.Domain/              Centro. Reglas de negocio puras: entidades, value objects, evaluadores.
-Core.Application/         Casos de uso: servicios, DTOs, validadores y las interfaces que necesita.
-Infrastructure/           Implementa esas interfaces: EF Core + PostgreSQL, JWT, hash de claves.
-Presentation.API/         HTTP: controladores, middleware de errores, autenticación, Swagger.
-Core.Domain.Tests/        Pruebas del dominio.
-Core.Application.Tests/   Pruebas de validadores y servicios (sin base de datos).
-Integration.Tests/        API real contra PostgreSQL desechable (Testcontainers).
-docs/                     Esta documentación, script SQL y contrato OpenAPI.
-postman/                  Colección de pruebas de la API.
+src/backend/Core.Domain/        Centro. Reglas de negocio puras: entidades, value objects, evaluadores.
+src/backend/Core.Application/   Casos de uso: servicios, DTOs, validadores y las interfaces que necesita.
+src/backend/Infrastructure/     Implementa esas interfaces: EF Core + PostgreSQL, JWT, hash de claves.
+src/backend/Presentation.API/   HTTP: controladores, middleware de errores, autenticación, Swagger.
+src/frontend/                   SPA React: contextos de sesión y tema, dashboard, catálogo, camiones, facturas.
+tests/UnitTests/                Pruebas del dominio y de los servicios con Moq (sin base de datos).
+tests/IntegrationTests/         API real contra PostgreSQL desechable (Testcontainers).
+docs/                           Esta documentación, evidencias, script SQL y contrato OpenAPI.
+postman/                        Colección de pruebas de la API.
 ```
 
 Orden de lectura recomendado para entender el sistema:
 
-1. `Core.Domain/Entities/Product.cs`: la entidad central y sus reglas.
-2. `Core.Domain/ValueObjects/BoxQuantity.cs`: cajas ↔ unidades.
-3. `Core.Application/Services/ProductService.cs`: un caso de uso completo.
-4. `Infrastructure/Persistence/Configurations/ProductConfiguration.cs`: cómo se guarda en PostgreSQL.
-5. `Presentation.API/Controllers/ProductsController.cs`: cómo se expone por HTTP y quién puede usarlo.
-6. `Presentation.API/Middleware/ExceptionMiddleware.cs`: cómo se convierten los errores en respuestas.
-7. `Core.Domain/Entities/Invoice.cs` y `Core.Application/Services/InvoiceService.cs`: el proceso más completo (transacción, stock, numeración, saldos, vacíos y anulación).
-8. `Infrastructure/Persistence/ApplicationDbContext.cs`: `ExecuteInTransactionAsync`, la transacción de cada proceso.
+1. `src/backend/Core.Domain/Entities/Product.cs`: la entidad central y sus reglas.
+2. `src/backend/Core.Domain/ValueObjects/BoxQuantity.cs`: cajas ↔ unidades.
+3. `src/backend/Core.Application/Services/ProductService.cs`: un caso de uso completo.
+4. `src/backend/Infrastructure/Persistence/Configurations/ProductConfiguration.cs`: cómo se guarda en PostgreSQL.
+5. `src/backend/Presentation.API/Controllers/ProductsController.cs`: cómo se expone por HTTP y quién puede usarlo.
+6. `src/backend/Presentation.API/Middleware/ExceptionMiddleware.cs`: cómo se convierten los errores en respuestas.
+7. `src/backend/Core.Domain/Entities/Invoice.cs` y `src/backend/Core.Application/Services/InvoiceService.cs`: el proceso más completo (transacción, stock, numeración, saldos, vacíos y anulación).
+8. `src/backend/Infrastructure/Persistence/ApplicationDbContext.cs`: `ExecuteInTransactionAsync`, la transacción de cada proceso.
 
 ## 4. Qué ocurre en una petición
 
@@ -141,10 +145,11 @@ Ejemplo: agregar proveedores (`Supplier`). Se trabaja **de adentro hacia afuera*
 | 2 | Application | `ISupplierRepository`, DTOs (`SupplierResponse`, `CreateSupplierRequest`…), validadores, `ISupplierService` + `SupplierService` | `Abstractions/ICategoryRepository.cs`, `Validators/CategoryValidators.cs`, `Services/CategoryService.cs` |
 | 3 | Application | Registrar el servicio en `DependencyInjection.cs` (los validadores se registran solos) | — |
 | 4 | Infrastructure | `SupplierConfiguration` (Fluent API), `SupplierRepository`, `DbSet` en `ApplicationDbContext`, registro en `DependencyInjection.cs` | `Configurations/CategoryConfiguration.cs` |
-| 5 | Infrastructure | Migración: `dotnet ef migrations add AddSuppliers --project Infrastructure --startup-project Presentation.API --output-dir Persistence/Migrations` | — |
+| 5 | Infrastructure | Migración: `dotnet ef migrations add AddSuppliers --project src/backend/Infrastructure --startup-project src/backend/Presentation.API --output-dir Persistence/Migrations` | — |
 | 6 | Presentation | Controlador con `[Authorize(Roles = ...)]` y comentarios XML para Swagger | `Controllers/CategoriesController.cs` |
-| 7 | Tests | Pruebas del dominio; del servicio con repositorios falsos; y de integración si hay transacciones o concurrencia | `Core.Application.Tests/Fakes.cs`, `Integration.Tests/BusinessScenarioTests.cs` |
-| 8 | Postman | Peticiones con sus pruebas en la colección | `postman/collections/` |
+| 7 | Tests | Pruebas del dominio; del servicio con repositorios simulados con Moq; y de integración si hay transacciones o concurrencia | `tests/UnitTests/Application/CategoryServiceTests.cs`, `tests/IntegrationTests/BusinessScenarioTests.cs` |
+| 8 | Frontend | Tipos y funciones en `src/api`, página en `src/pages` y entrada en el menú (`navigation.ts`, con el rol si aplica) | `src/frontend/src/pages/CategoriesPage.tsx` |
+| 9 | Postman | Peticiones con sus pruebas en la colección | `postman/collections/` |
 
 Reglas que no se rompen:
 
@@ -163,7 +168,7 @@ Reglas que no se rompen:
 - **Idioma:** código en inglés; mensajes al usuario, comentarios y documentación en español.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/), por ejemplo `feat(domain): agregar entidad Supplier`.
 - **Errores:** siempre `application/problem+json` (RFC 7807).
-- **Secretos:** nunca en el repositorio. Solo se versionan los `.env.*.example`.
+- **Secretos:** nunca en el repositorio, ni siquiera en `appsettings.Development.json`. Solo se versionan los `.env*.example`; la clave JWT local va en user-secrets o en `.env`.
 - **Calidad:** la solución debe compilar con 0 advertencias y todas las pruebas deben pasar.
 
 ## 7. Dónde seguir
@@ -177,3 +182,4 @@ Reglas que no se rompen:
 | Ver qué requisito de cada fase cubre qué parte del código | [05-REQUISITOS-POR-FASE.md](05-REQUISITOS-POR-FASE.md) |
 | Levantar Staging o Production | [README](../README.md#entornos) |
 | Consultar el contrato de la API | `docs/openapi/openapi.yaml` o Swagger |
+| Ver las tablas, columnas e índices | [07-MODELO-DATOS.md](07-MODELO-DATOS.md) |

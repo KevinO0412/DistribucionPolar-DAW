@@ -49,6 +49,10 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 | [42](#42-capacidad-del-camión-en-cajas) | Capacidad del camión en cajas | Dominio |
 | [43](#43-spa-con-context-api-jwt-en-localstorage-y-mismo-origen) | SPA con Context API, JWT en localStorage y mismo origen | Frontend |
 | [44](#44-tailwind-css-3-con-tokens-semánticos) | Tailwind CSS 3 con tokens semánticos | Frontend |
+| [45](#45-imagen-de-la-api-self-contained-y-recortada-sobre-alpine) | Imagen de la API self-contained y recortada sobre Alpine | Despliegue |
+| [46](#46-nginx-como-servidor-de-la-spa-y-proxy-de-la-api) | Nginx como servidor de la SPA y proxy de la API | Despliegue |
+| [47](#47-secretos-solo-por-variables-de-entorno) | Secretos solo por variables de entorno | Seguridad |
+| [48](#48-ci-con-jobs-separados-y-artefactos-condicionados-a-las-pruebas) | CI con jobs separados y artefactos condicionados a las pruebas | Calidad |
 
 ---
 
@@ -59,7 +63,7 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 - **Dónde:** los `.csproj` y `DistribucionPolar.slnx`.
 
 ### 02. Interfaces de repositorio en Core.Application
-- **Decisión:** `IProductRepository`, `ICategoryRepository`, `IUserRepository` e `IUnitOfWork` se declaran en `Core.Application/Abstractions`.
+- **Decisión:** `IProductRepository`, `ICategoryRepository`, `IUserRepository` e `IUnitOfWork` se declaran en `src/backend/Core.Application/Abstractions`.
 - **Por qué:** son *puertos* que necesitan los casos de uso. Hablan de consultas concretas (stock bajo, SKU existente) y de cancelación asíncrona, que no son reglas del negocio. Así el dominio queda formado solo por entidades y reglas, y la infraestructura sigue dependiendo de una abstracción (inversión de dependencias).
 - **Descartado:** ponerlas en `Core.Domain`, que también es válido en Onion. Se prefirió un dominio sin conceptos de acceso a datos.
 
@@ -67,13 +71,13 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 - **Decisión:** las entidades tienen setters privados, constructores que validan y métodos de negocio (`AddStock`, `RemoveStock`, `UpdateDetails`, `MarkAsDeleted`). Si se viola una regla, se lanza `DomainException`.
 - **Por qué:** una entidad nunca puede quedar en un estado inválido, venga la orden de la API, de una prueba o de un proceso futuro.
 - **Descartado:** entidades anémicas (solo propiedades) con reglas en los servicios. Las reglas terminan duplicadas o se olvidan.
-- **Dónde:** `Core.Domain/Entities`, `Core.Domain/Common/Guard.cs`.
+- **Dónde:** `src/backend/Core.Domain/Entities`, `src/backend/Core.Domain/Common/Guard.cs`.
 
 ### 04. Stock en unidades con el value object `BoxQuantity`
 - **Decisión:** `Product.StockUnits` guarda unidades. `BoxQuantity` (cajas + sueltas) solo convierte y da formato.
 - **Por qué:** con una sola unidad de medida se suma y resta sin ambigüedad, y el valor de la caja nunca queda desincronizado. El value object reúne toda la aritmética de cajas en un único lugar inmutable y probado.
 - **Descartado:** guardar cajas y unidades en dos columnas. Obliga a normalizar en cada operación (por ejemplo, 40 sueltas con cajas de 36).
-- **Dónde:** `Core.Domain/ValueObjects/BoxQuantity.cs`.
+- **Dónde:** `src/backend/Core.Domain/ValueObjects/BoxQuantity.cs`.
 
 ### 05. Precio por caja y precio por unidad independientes
 - **Decisión:** dos campos (`PriceBox`, `PriceUnit`) en lugar de un único `Price`.
@@ -98,7 +102,7 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 ### 09. Fluent API sin Data Annotations
 - **Decisión:** todo el mapeo relacional va en clases `IEntityTypeConfiguration<T>` dentro de Infrastructure, cargadas con `ApplyConfigurationsFromAssembly`.
 - **Por qué:** el dominio queda libre de atributos de EF, y el mapeo de cada entidad queda en un único archivo.
-- **Dónde:** `Infrastructure/Persistence/Configurations`.
+- **Dónde:** `src/backend/Infrastructure/Persistence/Configurations`.
 
 ### 10. Borrado lógico con filtro global
 - **Decisión:** `DELETE` marca `IsDeleted = true`. Un filtro global (`HasQueryFilter(e => !e.IsDeleted)`) oculta esos registros en todas las consultas.
@@ -125,12 +129,12 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
   - FluentValidation da una respuesta 400 con todos los errores por campo.
   - El dominio garantiza la consistencia aunque la orden no venga de la API.
   - La base protege ante accesos externos o errores de programación.
-- **Dónde:** `Core.Application/Validators`, `Core.Domain/Common/Guard.cs`, `ProductConfiguration`.
+- **Dónde:** `src/backend/Core.Application/Validators`, `src/backend/Core.Domain/Common/Guard.cs`, `ProductConfiguration`.
 
 ### 14. Errores centralizados en un middleware RFC 7807
 - **Decisión:** las capas lanzan excepciones estándar (`KeyNotFoundException`, `InvalidOperationException`, `DomainException`, `ValidationException`, `UnauthorizedAccessException`). Un único `ExceptionMiddleware` las traduce a Problem Details.
 - **Por qué:** formato de error uniforme y predecible para cualquier cliente, sin `try/catch` repetidos en los controladores, y sin exponer el stack trace (el detalle queda solo en el log).
-- **Dónde:** `Presentation.API/Middleware`.
+- **Dónde:** `src/backend/Presentation.API/Middleware`.
 
 ### 15. Controladores en lugar de Minimal APIs
 - **Decisión:** los endpoints de negocio son controladores `[ApiController]`.
@@ -143,7 +147,7 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
   - Se valida emisor, audiencia, firma, expiración y algoritmo (`HS256`).
   - La clave se configura por entorno y la aplicación no arranca si mide menos de 32 bytes.
 - **Por qué:** el servidor no guarda sesiones, lo que permite escalar horizontalmente. Fijar el algoritmo evita ataques de sustitución (`alg: none`).
-- **Dónde:** `Infrastructure/Security/JwtTokenService.cs`, `Presentation.API/Security/AuthenticationSetup.cs`.
+- **Dónde:** `src/backend/Infrastructure/Security/JwtTokenService.cs`, `src/backend/Presentation.API/Security/AuthenticationSetup.cs`.
 
 ### 17. Autenticación obligatoria por defecto
 - **Decisión:** la política de respaldo (`FallbackPolicy`) exige un usuario autenticado. Las rutas públicas se marcan con `[AllowAnonymous]`.
@@ -153,7 +157,7 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 ### 18. Claves con PBKDF2-HMAC-SHA256
 - **Decisión:** PBKDF2 con HMAC-SHA256, 100.000 iteraciones, sal aleatoria de 16 bytes y comparación en tiempo constante.
 - **Por qué:** un SHA-256 simple se calcula a miles de millones por segundo y, sin sal, cae con tablas precalculadas. PBKDF2 aplica SHA-256 de forma iterada y salada, así que cumple el requisito de "SHA-256 o superior" con resistencia real a la fuerza bruta. Es una primitiva incluida en .NET, sin dependencias externas.
-- **Dónde:** `Infrastructure/Security/Pbkdf2PasswordHasher.cs`.
+- **Dónde:** `src/backend/Infrastructure/Security/Pbkdf2PasswordHasher.cs`.
 
 ### 19. Matriz de permisos: Employee registra productos pero no los edita ni elimina
 - **Decisión:**
@@ -268,7 +272,7 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 - **Por qué:** genera PDF desde código C# tipado, sin navegadores ni plantillas HTML externas. La licencia Community cubre el uso académico.
 
 ### 39. Pruebas de integración con PostgreSQL real (Testcontainers)
-- **Decisión:** `Integration.Tests` levanta la API real con `WebApplicationFactory` y un PostgreSQL 15 desechable en Docker.
+- **Decisión:** `tests/IntegrationTests` levanta la API real con `WebApplicationFactory` y un PostgreSQL 15 desechable en Docker.
 - **Por qué:** las reglas más delicadas (transacciones, concurrencia, numeración atómica, check constraints, filtros de borrado lógico) dependen del motor real. Un proveedor en memoria no las reproduciría. Cada ejecución parte de una base limpia y no toca la de desarrollo.
 
 ### 40. Reportes como consultas de solo lectura proyectadas
@@ -293,4 +297,47 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 ### 44. Tailwind CSS 3 con tokens semánticos
 - **Decisión:** Tailwind 3.4 con `darkMode: 'class'` y el color `unet.blue #003366`, como en el material del curso. Los colores de la interfaz son variables CSS (`--brand`, `--surface`, `--status-*`) que cambian con la clase `dark`.
 - **Por qué:** los componentes no repiten pares `bg-x dark:bg-y`; un solo token cambia ambos temas. Tailwind 4 cambia la configuración (sin `tailwind.config.js`) y se aleja de la guía del curso.
+
+### 45. Imagen de la API self-contained y recortada sobre Alpine
+- **Decisión:** la etapa final usa `runtime-deps:10.0-alpine` (solo librerías nativas). La app se publica self-contained para `linux-musl-x64`:
+  - con recorte parcial (`TrimMode=partial`);
+  - en un archivo único comprimido;
+  - sin soporte de depurador ni EventSource.
+- **Por qué:** la imagen base `aspnet:10.0-alpine` ya ocupa unos 128 MB, así que el Dockerfile de la guía no baja de 120 MB. Con el recorte parcial, la imagen queda en unos 59 MB sin comprimir y 34 MB comprimida.
+- **Cómo se evita romper la reflexión:**
+  - `TrimMode=partial` solo recorta los ensamblados marcados como recortables.
+  - Los que usan reflexión se conservan enteros (`TrimmerRootAssembly`): MVC, EF Core, Npgsql, FluentValidation, QuestPDF, System.Text.Json y los cuatro proyectos.
+  - Se mantienen la serialización JSON por reflexión, los metadatos de ApiExplorer y el enlace de opciones por reflexión.
+  - Verificado con la colección de Postman completa (50 peticiones, 97 aserciones) contra la imagen, a través de Nginx.
+- **Consecuencias:**
+  - Sin ICU (`InvariantGlobalization`): los meses de la numeración están en español en el código.
+  - Npgsql desactiva el cifrado GSS (Kerberos no se usa).
+  - Al agregar una librería que use reflexión hay que conservarla como raíz o validarla con la colección.
+
+### 46. Nginx como servidor de la SPA y proxy de la API
+- **Decisión:** la imagen de la SPA es `nginx:alpine` con:
+  - fallback a `index.html` para las rutas del cliente;
+  - caché inmutable para `/assets/` (nombres con hash);
+  - `no-cache` para `index.html`;
+  - reenvío de `/api/` a `api:5000`.
+- **Por qué:**
+  - El navegador habla con un solo origen: no depende de CORS ni de una URL de la API compilada en el bundle.
+  - La misma imagen sirve en cualquier entorno.
+  - La API no necesita exponerse en producción.
+- **Consecuencia:** la API lee la IP real del cliente desde `X-Forwarded-For`, aceptado solo desde redes privadas (`ReverseProxy:Enabled`), para que el límite del login siga funcionando por cliente.
+
+### 47. Secretos solo por variables de entorno
+- **Decisión:**
+  - `JWT_KEY` y `POSTGRES_PASSWORD` llegan desde `.env`, `.env.staging` o `.env.production` (ignorados por Git) y Compose no arranca sin ellos.
+  - En desarrollo sin Docker, la clave JWT va en user-secrets.
+  - Las pruebas de integración generan una clave aleatoria en cada ejecución.
+- **Por qué:** la Fase 5 exige que la clave JWT no esté escrita en el código. Antes había una clave de desarrollo en `appsettings.Development.json`; esa clave queda en el historial de Git y no debe usarse en ningún despliegue.
+
+### 48. CI con jobs separados y artefactos condicionados a las pruebas
+- **Decisión:** `backend-ci` y `frontend-ci` corren en paralelo, y `publish-artifacts` y `docker-images` dependen de ambos (`needs`). Se dispara en `main` y `develop`.
+- **Por qué:**
+  - Un fallo se ve rápido y en su job.
+  - Nada se publica ni se empaqueta si alguna prueba falla.
+  - `develop` también se valida, porque es la rama de integración del equipo.
+- **Controles extra:** reporte de cobertura en el resumen del job, límite de 120 MB por imagen y prueba de humo con Compose (salud de la SPA y de la API, y fallback del SPA).
 

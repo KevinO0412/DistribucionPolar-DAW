@@ -1635,3 +1635,76 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    ALTER TABLE "Trucks" ADD "CapacityBoxes" integer NOT NULL DEFAULT 500;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    UPDATE "Trucks" SET "CapacityBoxes" = 600
+    WHERE "Id" = '00000200-0000-4000-8000-000000000001';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    UPDATE "Trucks" SET "CapacityBoxes" = 500
+    WHERE "Id" = '00000200-0000-4000-8000-000000000002';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    UPDATE "Trucks" SET "CapacityBoxes" = 900
+    WHERE "Id" = '00000200-0000-4000-8000-000000000003';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    UPDATE "Trucks" SET "CapacityBoxes" = 700
+    WHERE "Id" = '00000200-0000-4000-8000-000000000004';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    UPDATE "Trucks" SET "CapacityBoxes" = 150
+    WHERE "Id" = '00000200-0000-4000-8000-000000000005';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    UPDATE "Trucks" SET "CapacityBoxes" = 60
+    WHERE "Id" = '00000200-0000-4000-8000-000000000006';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    ALTER TABLE "Trucks" ADD CONSTRAINT "CK_Trucks_CapacityBoxes_Range" CHECK ("CapacityBoxes" BETWEEN 1 AND 5000);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015144424_TruckCapacity') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261015144424_TruckCapacity', '10.0.12');
+    END IF;
+END $EF$;
+COMMIT;
+

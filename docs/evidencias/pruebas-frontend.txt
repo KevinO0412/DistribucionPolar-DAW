@@ -1,0 +1,101 @@
+# npx vitest run --reporter=verbose --coverage
+
+ RUN  v2.1.8 /home/kevin-orduz/Desktop/projects/DistribucionPolar/src/frontend
+      Coverage enabled with v8
+
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > lee title y detail del Problem Details
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > expone los errores por campo de un 400 de validación
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > explica el 403 aunque la API no envíe cuerpo
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > distingue la falta de conexión
+ ✓ src/context/ThemeContext.test.tsx > ThemeProvider > alterna el modo oscuro con la clase "dark" en <html> y lo guarda en localStorage
+ ✓ src/context/ThemeContext.test.tsx > ThemeProvider > respeta el tema guardado al recargar
+ ✓ src/context/AuthContext.test.tsx > decodeSession > lee los claims del JWT emitido por la API
+ ✓ src/context/AuthContext.test.tsx > decodeSession > rechaza un token sin un rol conocido
+ ✓ src/context/AuthContext.test.tsx > AuthProvider > guarda el token en localStorage al iniciar sesión y lo limpia al cerrarla
+ ✓ src/context/AuthContext.test.tsx > AuthProvider > recupera la sesión guardada al recargar la página
+ ✓ src/context/AuthContext.test.tsx > AuthProvider > descarta un token vencido al recargar
+ ✓ src/context/AuthContext.test.tsx > AuthProvider > cierra la sesión sola cuando vence el token
+ ✓ src/pages/ProductForm.test.ts > validateProduct > acepta un producto válido (con coma decimal)
+ ✓ src/pages/ProductForm.test.ts > validateProduct > aplica las mismas reglas que FluentValidation
+ ✓ src/pages/ProductForm.test.ts > stockStatus > 0 und con mínimo 100 y máximo 800 → OutOfStock
+ ✓ src/pages/ProductForm.test.ts > stockStatus > 45 und con mínimo 100 y máximo 800 → CriticalRisk
+ ✓ src/pages/ProductForm.test.ts > stockStatus > 300 und con mínimo 100 y máximo 800 → Understocked
+ ✓ src/pages/ProductForm.test.ts > stockStatus > 600 und con mínimo 100 y máximo 800 → Optimal
+ ✓ src/pages/ProductForm.test.ts > stockStatus > 800 und con mínimo 100 y máximo 800 → Overstocked
+ ✓ src/pages/ProductForm.test.ts > stockStatus > 900 und con mínimo 100 y máximo 800 → Excessive
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > envía al login cuando no hay sesión
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja pasar al Admin al dashboard
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > bloquea el dashboard al Employee
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja al Employee consultar el catálogo
+ ✓ src/components/ProtectedRoute.test.tsx > menú por rol > oculta el dashboard al Employee y lo muestra al Admin
+
+ Test Files  5 passed (5)
+      Tests  25 passed (25)
+   Start at  09:47:04
+   Duration  1.94s (transform 224ms, setup 1.05s, collect 634ms, tests 174ms, environment 2.38s, prepare 630ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   21.52 |    71.93 |   33.33 |   21.52 |                   
+ src               |       0 |        0 |       0 |       0 |                   
+  App.tsx          |       0 |        0 |       0 |       0 | 1-54              
+ src/api           |   87.06 |    85.29 |   31.81 |   87.06 |                   
+  client.test.ts   |     100 |      100 |     100 |     100 |                   
+  client.ts        |   84.48 |       80 |   71.42 |   84.48 | 64-67,73-77       
+  endpoints.ts     |   81.25 |      100 |       0 |   81.25 | 18,30,38-40,49    
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ src/components    |     100 |      100 |     100 |     100 |                   
+  ...oute.test.tsx |     100 |      100 |     100 |     100 |                   
+  ...ctedRoute.tsx |     100 |      100 |     100 |     100 |                   
+ ...ents/dashboard |       0 |        0 |       0 |       0 |                   
+  ...alesChart.tsx |       0 |        0 |       0 |       0 | 1-44              
+  ...rdFilters.tsx |       0 |        0 |       0 |       0 | 1-110             
+  DataTable.tsx    |       0 |        0 |       0 |       0 | 1-45              
+  KpiTile.tsx      |       0 |        0 |       0 |       0 | 1-20              
+  ...Dashboard.tsx |       0 |        0 |       0 |       0 | 1-156             
+  ...rendChart.tsx |       0 |        0 |       0 |       0 | 1-37              
+  Section.tsx      |       0 |        0 |       0 |       0 | 1-23              
+  ...HealthBar.tsx |       0 |        0 |       0 |       0 | 1-36              
+  ValuationBar.tsx |       0 |        0 |       0 |       0 | 1-37              
+ ...ponents/layout |    5.78 |       60 |      25 |    5.78 |                   
+  AppLayout.tsx    |       0 |        0 |       0 |       0 | 1-189             
+  PageHeader.tsx   |       0 |        0 |       0 |       0 | 1-13              
+  navigation.ts    |     100 |      100 |      50 |     100 |                   
+ ...ponents/trucks |       0 |        0 |       0 |       0 |                   
+  Ticket.tsx       |       0 |        0 |       0 |       0 | 1-82              
+  TruckCard.tsx    |       0 |        0 |       0 |       0 | 1-76              
+ src/components/ui |   17.62 |    83.33 |      10 |   17.62 |                   
+  Button.tsx       |   36.36 |      100 |       0 |   36.36 | 27-49             
+  Field.tsx        |    12.5 |      100 |       0 |    12.5 | ...57,67-79,82-92 
+  Modal.tsx        |    4.34 |      100 |       0 |    4.34 | 17-66             
+  States.tsx       |       0 |        0 |       0 |       0 | 1-42              
+  StatusBadge.tsx  |   73.07 |      100 |      50 |   73.07 | 15-22             
+  Toast.tsx        |       0 |        0 |       0 |       0 | 1-55              
+ src/context       |   96.17 |    86.58 |   92.85 |   96.17 |                   
+  ...text.test.tsx |     100 |      100 |     100 |     100 |                   
+  AuthContext.tsx  |   93.67 |    86.04 |      75 |   93.67 | 71,85,98,120-121  
+  ...text.test.tsx |     100 |      100 |     100 |     100 |                   
+  ThemeContext.tsx |      92 |    58.33 |     100 |      92 | 22,39             
+ src/hooks         |   16.66 |    28.57 |      40 |   16.66 |                   
+  useApiQuery.ts   |       0 |        0 |       0 |       0 | 1-44              
+  useAuth.ts       |     100 |       50 |     100 |     100 | 6                 
+  ...hartColors.ts |       0 |        0 |       0 |       0 | 1-28              
+  useDebounced.ts  |       0 |        0 |       0 |       0 | 1-10              
+  useTheme.ts      |     100 |       50 |     100 |     100 | 6                 
+ src/lib           |     7.4 |        0 |       0 |     7.4 |                   
+  cn.ts            |      50 |      100 |       0 |      50 | 6-7               
+  format.ts        |       0 |        0 |       0 |       0 | 1-31              
+ src/pages         |    7.66 |    37.03 |   15.38 |    7.66 |                   
+  ...oriesPage.tsx |       0 |        0 |       0 |       0 | 1-151             
+  ...irmDialog.tsx |       0 |        0 |       0 |       0 | 1-56              
+  ...boardPage.tsx |       0 |        0 |       0 |       0 | 1-51              
+  InvoicesPage.tsx |       0 |        0 |       0 |       0 | 1-127             
+  LoginPage.tsx    |       0 |        0 |       0 |       0 | 1-103             
+  ...tForm.test.ts |     100 |      100 |     100 |     100 |                   
+  ProductForm.tsx  |   19.28 |    35.71 |      40 |   19.28 | ...9,63-66,77-178 
+  ProductsPage.tsx |       0 |        0 |       0 |       0 | 1-168             
+  StatusPages.tsx  |       0 |        0 |       0 |       0 | 1-22              
+  TrucksPage.tsx   |       0 |        0 |       0 |       0 | 1-49              
+-------------------|---------|----------|---------|---------|-------------------

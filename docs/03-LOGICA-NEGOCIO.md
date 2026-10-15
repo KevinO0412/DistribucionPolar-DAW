@@ -2,7 +2,7 @@
 
 Cada regla que implementa el sistema, por qué existe y en qué archivo vive.
 Las rutas son relativas a la raíz del repositorio. Las cifras de los ejemplos están verificadas por pruebas
-automatizadas (`Core.Domain.Tests`, `Integration.Tests`) y por la colección de Postman.
+automatizadas (`tests/UnitTests/Domain`, `tests/IntegrationTests`) y por la colección de Postman.
 
 ## 1. Contexto
 
@@ -260,7 +260,7 @@ Dónde: `ExchangeRateProvider`.
 | Productos | 275 del catálogo de referencia (143 Alimentos, 49 Bebidas, 83 Jabones/P&G): 9 con grupo de vacíos y 6 autorizados para regalía |
 | Valores de demostración | El catálogo no trae costo ni niveles de stock. Valores ficticios: costo = 80% del precio por caja; mínimo = 5 cajas; máximo = 40 cajas; stock entre 0 y 44 cajas |
 | Empleados, camiones, clientes | 7 empleados, 6 camiones y 5 clientes, todos **ficticios** |
-| Usuarios | Según el entorno (ver [Arquitectura §9](02-ARQUITECTURA.md#9-entornos-y-despliegue)) |
+| Usuarios | Según el entorno (ver [Arquitectura §9](02-ARQUITECTURA.md#9-entornos-contenedores-y-ci)) |
 
 Las unidades por caja se calcularon como `precioCaja ÷ precioUnidad` redondeado y se verificaron contra el nombre
 del producto. Los precios por unidad con más de dos decimales se redondearon a 2.

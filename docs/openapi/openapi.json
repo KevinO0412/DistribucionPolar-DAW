@@ -2,12 +2,12 @@
     "openapi": "3.1.1",
     "info": {
         "title": "Distribución Polar API",
-        "description": "Fases 1, 2 y 3 (DAW-0423807T). Inicie sesión en POST /api/auth/login y pegue el token en Authorize.",
+        "description": "Proyecto integrador DAW-0423807T, fases 1 a 5. Inicie sesión en POST /api/auth/login y pegue el token en Authorize.",
         "version": "1.0.0"
     },
     "servers": [
         {
-            "url": "http://localhost:8080/"
+            "url": "http://localhost:5000/"
         }
     ],
     "paths": {
@@ -122,6 +122,88 @@
                                     "$ref": "#/components/schemas/BalanceResponse"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/dashboard": {
+            "get": {
+                "tags": [
+                    "Reportes y auditoría"
+                ],
+                "summary": "Dashboard KPI: valorización costo/venta, alertas MinStock/MaxStock, ventas por día y categoría,\nrotación por producto y ocupación de la flota.",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Desde (fecha local, inclusive). Por defecto, 29 días antes de to.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Hasta (fecha local, inclusive). Por defecto, hoy.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
+                        "in": "query",
+                        "description": "Filtra productos y ventas por categoría.",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "200": {
+                        "description": "Indicadores del rango.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DashboardResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Rango de fechas inválido (inicio posterior al fin o más de 366 días).",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
                         }
                     }
                 }
@@ -5377,6 +5459,41 @@
                 },
                 "description": "Categoría del catálogo con el depósito del galpón donde se almacena."
             },
+            "CategorySales": {
+                "required": [
+                    "categoryId",
+                    "categoryName",
+                    "total",
+                    "units"
+                ],
+                "type": "object",
+                "properties": {
+                    "categoryId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "categoryName": {
+                        "type": "string"
+                    },
+                    "total": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    },
+                    "units": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    }
+                },
+                "description": "Ventas de una categoría en el rango."
+            },
             "ChangePasswordRequest": {
                 "required": [
                     "currentPassword",
@@ -6549,6 +6666,78 @@
                 },
                 "description": "Alta de usuario (solo Admin)."
             },
+            "CriticalProductResponse": {
+                "required": [
+                    "id",
+                    "sku",
+                    "name",
+                    "categoryName",
+                    "stockUnits",
+                    "stockDisplay",
+                    "minStock",
+                    "maxStock",
+                    "status",
+                    "recommendedPurchaseUnits"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "categoryName": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "stockUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "stockDisplay": {
+                        "type": "string"
+                    },
+                    "minStock": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "maxStock": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "recommendedPurchaseUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    }
+                },
+                "description": "Producto que requiere atención por su nivel de stock en galpón."
+            },
             "CurrentUserResponse": {
                 "required": [
                     "id",
@@ -6849,6 +7038,292 @@
             "DamageType": {
                 "type": "integer",
                 "description": "Clasificación de una avería."
+            },
+            "DashboardFleetKpi": {
+                "required": [
+                    "capacityBoxes",
+                    "loadedBoxes",
+                    "occupancyPercent",
+                    "trucks"
+                ],
+                "type": "object",
+                "properties": {
+                    "capacityBoxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Capacidad total de los camiones, en cajas.",
+                        "format": "int32"
+                    },
+                    "loadedBoxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Carga total en cajas equivalentes.",
+                        "format": "double"
+                    },
+                    "occupancyPercent": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Ocupación de la flota en %.",
+                        "format": "double"
+                    },
+                    "trucks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TruckOccupancy"
+                        },
+                        "description": "Detalle por camión."
+                    }
+                },
+                "description": "Ocupación de la flota."
+            },
+            "DashboardInventoryKpi": {
+                "required": [
+                    "activeProducts",
+                    "stockUnits",
+                    "costValue",
+                    "saleValue",
+                    "grossMargin",
+                    "grossMarginPercent"
+                ],
+                "type": "object",
+                "properties": {
+                    "activeProducts": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Productos activos considerados.",
+                        "format": "int32"
+                    },
+                    "stockUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Unidades en galpón y camiones.",
+                        "format": "int32"
+                    },
+                    "costValue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Valor al costo: unidades × (costo por caja / unidades por caja).",
+                        "format": "double"
+                    },
+                    "saleValue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Valor a precio de venta: unidades × precio por unidad.",
+                        "format": "double"
+                    },
+                    "grossMargin": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Margen bruto proyectado: venta − costo.",
+                        "format": "double"
+                    },
+                    "grossMarginPercent": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Margen bruto sobre el valor de venta, en %.",
+                        "format": "double"
+                    }
+                },
+                "description": "Valorización del inventario (galpón + camiones)."
+            },
+            "DashboardResponse": {
+                "required": [
+                    "from",
+                    "to",
+                    "categoryId",
+                    "inventory",
+                    "sales",
+                    "stockAlerts",
+                    "criticalProducts",
+                    "salesByDay",
+                    "salesByCategory",
+                    "topProducts",
+                    "fleet"
+                ],
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": "string",
+                        "description": "Desde (día local, inclusive).",
+                        "format": "date"
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": "Hasta (día local, inclusive).",
+                        "format": "date"
+                    },
+                    "categoryId": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Categoría filtrada, o null para todas.",
+                        "format": "uuid"
+                    },
+                    "inventory": {
+                        "description": "Valorización del inventario: costo frente a precio de venta.",
+                        "$ref": "#/components/schemas/DashboardInventoryKpi"
+                    },
+                    "sales": {
+                        "description": "Totales de ventas del rango.",
+                        "$ref": "#/components/schemas/DashboardSalesKpi"
+                    },
+                    "stockAlerts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StockAlertCount"
+                        },
+                        "description": "Conteo de productos por estado de salud del stock."
+                    },
+                    "criticalProducts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CriticalProductResponse"
+                        },
+                        "description": "Productos agotados, en riesgo crítico o en exceso (máximo 25, los más urgentes primero)."
+                    },
+                    "salesByDay": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SalesPoint"
+                        },
+                        "description": "Serie diaria de ventas, un punto por día del rango."
+                    },
+                    "salesByCategory": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CategorySales"
+                        },
+                        "description": "Ventas y unidades por categoría."
+                    },
+                    "topProducts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductRotation"
+                        },
+                        "description": "Productos con más unidades vendidas y su índice de rotación (máximo 10)."
+                    },
+                    "fleet": {
+                        "description": "Ocupación y ventas por camión.",
+                        "$ref": "#/components/schemas/DashboardFleetKpi"
+                    }
+                },
+                "description": "Dashboard KPI del rango indicado. Las ventas excluyen documentos anulados; con categoría,\nlas ventas son la suma de los renglones de esa categoría."
+            },
+            "DashboardSalesKpi": {
+                "required": [
+                    "salesTotal",
+                    "invoicesCount",
+                    "giftsCount",
+                    "averageTicket",
+                    "unitsSold",
+                    "collectedOnInvoices",
+                    "creditGenerated",
+                    "rotationIndex"
+                ],
+                "type": "object",
+                "properties": {
+                    "salesTotal": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Ventas en USD.",
+                        "format": "double"
+                    },
+                    "invoicesCount": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Facturas de venta.",
+                        "format": "int32"
+                    },
+                    "giftsCount": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Regalías.",
+                        "format": "int32"
+                    },
+                    "averageTicket": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Ticket promedio: ventas / facturas.",
+                        "format": "double"
+                    },
+                    "unitsSold": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Unidades vendidas (facturas y regalías).",
+                        "format": "int32"
+                    },
+                    "collectedOnInvoices": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Cobrado al facturar (sin filtro de categoría).",
+                        "format": "double"
+                    },
+                    "creditGenerated": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Fiado generado (sin filtro de categoría).",
+                        "format": "double"
+                    },
+                    "rotationIndex": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Rotación del período: unidades vendidas / unidades en existencia.",
+                        "format": "double"
+                    }
+                },
+                "description": "Ventas del rango."
             },
             "EmployeeResponse": {
                 "required": [
@@ -8228,6 +8703,70 @@
                 },
                 "description": "Producto del catálogo. El stock se expresa en unidades y también en cajas + unidades sueltas."
             },
+            "ProductRotation": {
+                "required": [
+                    "productId",
+                    "sku",
+                    "name",
+                    "categoryName",
+                    "unitsSold",
+                    "revenue",
+                    "stockUnits",
+                    "rotationIndex"
+                ],
+                "type": "object",
+                "properties": {
+                    "productId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "categoryName": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    },
+                    "unitsSold": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "revenue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    },
+                    "stockUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "rotationIndex": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    }
+                },
+                "description": "Rotación de un producto: unidades vendidas en el rango frente a la existencia actual."
+            },
             "PurchaseDocumentType": {
                 "type": "integer",
                 "description": "Documento que respalda una entrada de mercancía."
@@ -8375,6 +8914,46 @@
                 },
                 "description": "Restablecimiento de clave (solo Admin)."
             },
+            "SalesPoint": {
+                "required": [
+                    "date",
+                    "total",
+                    "invoices",
+                    "units"
+                ],
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "total": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    },
+                    "invoices": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "units": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    }
+                },
+                "description": "Ventas de un día local."
+            },
             "SkuGenerationResult": {
                 "required": [
                     "rawInput",
@@ -8440,6 +9019,29 @@
                     }
                 },
                 "description": "Entrada del generador de SKU corporativo (reto 2 de la Fase 1)."
+            },
+            "StockAlertCount": {
+                "required": [
+                    "status",
+                    "count"
+                ],
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "OutOfStock, CriticalRisk, Understocked, Optimal, Overstocked o Excessive."
+                    },
+                    "count": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Productos en ese estado.",
+                        "format": "int32"
+                    }
+                },
+                "description": "Cantidad de productos en un estado de salud del stock."
             },
             "StockHealthReport": {
                 "required": [
@@ -8744,6 +9346,90 @@
                 "type": "integer",
                 "description": "Origen de una entrada de mercancía a un camión (historial de cargas)."
             },
+            "TruckOccupancy": {
+                "required": [
+                    "truckId",
+                    "name",
+                    "plate",
+                    "capacityBoxes",
+                    "loadedBoxes",
+                    "occupancyPercent",
+                    "stockUnits",
+                    "inventoryValue",
+                    "salesTotal",
+                    "invoices"
+                ],
+                "type": "object",
+                "properties": {
+                    "truckId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "plate": {
+                        "type": "string"
+                    },
+                    "capacityBoxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "loadedBoxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    },
+                    "occupancyPercent": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    },
+                    "stockUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    },
+                    "inventoryValue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    },
+                    "salesTotal": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "format": "double"
+                    },
+                    "invoices": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "format": "int32"
+                    }
+                },
+                "description": "Ocupación y ventas despachadas desde un camión en el rango."
+            },
             "TruckRequest": {
                 "required": [
                     "name",
@@ -8758,6 +9444,16 @@
                     "plate": {
                         "type": "string",
                         "description": "Placa única."
+                    },
+                    "capacityBoxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Capacidad de carga en cajas (1–5000, por defecto 500).",
+                        "format": "int32",
+                        "default": 500
                     }
                 },
                 "description": "Alta o edición de camión (solo Admin)."
@@ -8770,7 +9466,10 @@
                     "status",
                     "totalUnits",
                     "inventoryValue",
-                    "stock"
+                    "stock",
+                    "capacityBoxes",
+                    "loadedBoxes",
+                    "occupancyPercent"
                 ],
                 "type": "object",
                 "properties": {
@@ -8815,6 +9514,33 @@
                             "$ref": "#/components/schemas/TruckStockLineResponse"
                         },
                         "description": "Líneas de inventario."
+                    },
+                    "capacityBoxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Capacidad de carga en cajas.",
+                        "format": "int32"
+                    },
+                    "loadedBoxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Carga actual en cajas equivalentes (unidades / unidades por caja).",
+                        "format": "double"
+                    },
+                    "occupancyPercent": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Ocupación: carga / capacidad × 100.",
+                        "format": "double"
                     }
                 },
                 "description": "Camión de reparto con su inventario."
