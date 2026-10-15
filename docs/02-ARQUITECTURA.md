@@ -298,8 +298,8 @@ erDiagram
 
 | Imagen | Etapa de compilación | Etapa final | Tamaño |
 | --- | --- | --- | --- |
-| API (`src/backend/Presentation.API/Dockerfile`) | `dotnet/sdk:10.0-alpine`: restore por `.csproj` (caché de capas) y publish | `dotnet/runtime-deps:10.0-alpine` con la app self-contained, recorte parcial y archivo único comprimido. Usuario sin privilegios, healthcheck `/health` | ~59 MB sin comprimir ([ADR 45](04-DECISIONES.md#45-imagen-de-la-api-self-contained-y-recortada-sobre-alpine)) |
-| SPA (`src/frontend/Dockerfile`) | `node:20-alpine`: `npm ci` y `npm run build` | `nginx:alpine` con `dist/` y `nginx.conf` (fallback a `index.html`, caché de assets, proxy de `/api`) | ~50 MB sin comprimir |
+| API (`src/backend/Presentation.API/Dockerfile`) | `dotnet/sdk:10.0-alpine`: restore por `.csproj` (caché de capas) y publish | `dotnet/runtime-deps:10.0-alpine` con la app self-contained, recorte parcial y archivo único comprimido. Usuario sin privilegios, healthcheck `/health` | ~60 MB sin comprimir ([ADR 45](04-DECISIONES.md#45-imagen-de-la-api-self-contained-y-recortada-sobre-alpine)) |
+| SPA (`src/frontend/Dockerfile`) | `node:20-alpine`: `npm ci` y `npm run build` | `nginx:alpine` con `dist/` y `nginx.conf` (fallback a `index.html`, caché de assets, proxy de `/api`) | ~54 MB sin comprimir |
 
 Las cifras exactas y cómo medirlas están en [evidencias](evidencias/README.md#imágenes-docker).
 
@@ -390,6 +390,6 @@ Ningún Singleton depende de un servicio Scoped, así que no hay dependencias ca
 | Integración | `tests/IntegrationTests` | 16 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
 | API de punta a punta | Colección de Postman | 50 peticiones, 97 aserciones | Fases 1–3 y la operación completa del negocio |
 
-| Frontend | Vitest + Testing Library | 25 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807 y validaciones del formulario |
+| Frontend | Vitest + Testing Library | 27 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807 y validaciones del formulario |
 
 Las pruebas de integración requieren Docker. La cobertura de las unitarias se genera con `scripts/cobertura.sh` (coverlet + ReportGenerator).

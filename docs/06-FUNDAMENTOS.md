@@ -18,7 +18,7 @@ Cuando un concepto todavía no aplica, se explica por qué.
 
 | Concepto | Aplicación |
 | --- | --- |
-| **Problema del monolito acoplado**: la lógica mezclada con la base de datos y la interfaz dificulta mantener y probar | La lógica está aislada en `Core.Domain`. Las 75 pruebas de dominio corren sin base de datos ni servidor |
+| **Problema del monolito acoplado**: la lógica mezclada con la base de datos y la interfaz dificulta mantener y probar | La lógica está aislada en `Core.Domain`. Las 80 pruebas de dominio corren sin base de datos ni servidor |
 | **Origen de Onion**: DDD (Evans, 2003) → Arquitectura Hexagonal / *Ports and Adapters* (Cockburn, 2005) → Onion (Palermo, 2008) → Clean Architecture (Martin) | Puertos = interfaces en `src/backend/Core.Application/Abstractions`; adaptadores = implementaciones en `Infrastructure` (EF Core, HttpClient, QuestPDF) y en `Presentation.API` (HTTP) |
 | **Regla de dependencia**: las capas externas dependen de las internas, nunca al revés | La impone el compilador: `Core.Domain` no tiene referencias ([Arquitectura §1](02-ARQUITECTURA.md#1-visión-general)) |
 | **DDD**: entidades con identidad y comportamiento, value objects, agregados, invariantes | Entidades ricas (`Product`, `Client`, `Invoice`), value objects (`BoxQuantity`, `ProductLine`) y agregados que controlan sus colecciones (`Invoice` → líneas y vacíos; `Truck` → inventario; `ConsignmentEvent` → productos) |
@@ -115,7 +115,7 @@ Cuando un concepto todavía no aplica, se explica por qué.
 | Concepto | Aplicación |
 | --- | --- |
 | **Multi-stage build**: herramientas de compilación separadas de la imagen final | SDK de .NET y Node.js solo en la primera etapa; la final lleva `runtime-deps` Alpine o Nginx Alpine |
-| **Imagen mínima** | API self-contained con recorte parcial y archivo único comprimido (~59 MB); menos paquetes significa menos superficie de ataque |
+| **Imagen mínima** | API self-contained con recorte parcial y archivo único comprimido (~60 MB); menos paquetes significa menos superficie de ataque |
 | **Healthchecks y orden de arranque** | `pg_isready`, `/health` (consulta PostgreSQL) y `/healthz`; `depends_on: condition: service_healthy` |
 | **Persistencia en volúmenes** | `postgres-data` sobrevive a `docker compose down`; `down -v` lo borra para una demostración limpia |
 | **Redes aisladas** | `backend` y `frontend`: la SPA solo alcanza a la API |

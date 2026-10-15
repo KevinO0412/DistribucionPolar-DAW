@@ -303,7 +303,7 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
   - con recorte parcial (`TrimMode=partial`);
   - en un archivo único comprimido;
   - sin soporte de depurador ni EventSource.
-- **Por qué:** la imagen base `aspnet:10.0-alpine` ya ocupa unos 128 MB, así que el Dockerfile de la guía no baja de 120 MB. Con el recorte parcial, la imagen queda en unos 59 MB sin comprimir y 34 MB comprimida.
+- **Por qué:** la imagen base `aspnet:10.0-alpine` ya ocupa unos 128 MB, así que el Dockerfile de la guía no baja de 120 MB. Con el recorte parcial, la imagen queda en unos 60 MB sin comprimir y 34 MB comprimida.
 - **Cómo se evita romper la reflexión:**
   - `TrimMode=partial` solo recorta los ensamblados marcados como recortables.
   - Los que usan reflexión se conservan enteros (`TrimmerRootAssembly`): MVC, EF Core, Npgsql, FluentValidation, QuestPDF, System.Text.Json y los cuatro proyectos.
