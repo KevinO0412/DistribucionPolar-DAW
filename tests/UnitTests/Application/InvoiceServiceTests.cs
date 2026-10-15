@@ -6,7 +6,7 @@ using Core.Domain.Entities;
 using Core.Domain.Enums;
 using Core.Domain.Exceptions;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 /// <summary>
 /// Facturación (lógica de negocio §6.1–6.4) con todos los repositorios simulados: saldos con signo,

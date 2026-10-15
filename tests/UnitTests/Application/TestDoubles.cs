@@ -1,7 +1,7 @@
 using Core.Application.Abstractions;
 using Core.Domain.Entities;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 /// <summary>Mocks y datos de prueba compartidos por las pruebas de servicios.</summary>
 internal static class TestDoubles

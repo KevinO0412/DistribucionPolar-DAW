@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Testcontainers.PostgreSql;
 
-namespace Integration.Tests;
+namespace IntegrationTests;
 
 /// <summary>
 /// Levanta PostgreSQL 15 en un contenedor desechable y la API real en memoria (entorno Development:

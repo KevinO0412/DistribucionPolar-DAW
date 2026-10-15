@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Core.Application.DTOs;
 
-namespace Integration.Tests;
+namespace IntegrationTests;
 
 /// <summary>CORS y rate limiting.</summary>
 [Collection(ApiCollection.Name)]

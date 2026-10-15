@@ -1,7 +1,7 @@
 using Core.Application.DTOs;
 using Core.Application.Validators;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 public sealed class ValidatorTests
 {

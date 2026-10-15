@@ -1,6 +1,6 @@
 using Core.Domain.Services;
 
-namespace Core.Domain.Tests;
+namespace UnitTests.Domain;
 
 public sealed class ProductHealthEvaluatorTests
 {

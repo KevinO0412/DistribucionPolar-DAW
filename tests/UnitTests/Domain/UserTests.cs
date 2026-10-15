@@ -2,7 +2,7 @@ using Core.Domain.Entities;
 using Core.Domain.Enums;
 using Core.Domain.Exceptions;
 
-namespace Core.Domain.Tests;
+namespace UnitTests.Domain;
 
 public sealed class UserTests
 {

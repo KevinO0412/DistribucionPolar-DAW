@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 
 RESULTS=TestResults/coverage
 OUTPUT=docs/evidencias/cobertura
-UNIT_TESTS=(Core.Domain.Tests Core.Application.Tests)
+UNIT_TESTS=(tests/UnitTests)
 
 rm -rf "$RESULTS" "$OUTPUT"
 dotnet tool restore >/dev/null

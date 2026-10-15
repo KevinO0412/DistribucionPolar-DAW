@@ -2,7 +2,7 @@ using Core.Application.Abstractions;
 using Core.Application.DTOs;
 using Core.Application.Services;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 /// <summary>KPI del dashboard calculados sobre datos simulados de IReportQueries (sin base de datos).</summary>
 public sealed class ReportServiceTests

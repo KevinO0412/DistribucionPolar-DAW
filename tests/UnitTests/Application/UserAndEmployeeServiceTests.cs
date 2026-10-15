@@ -5,7 +5,7 @@ using Core.Application.Validators;
 using Core.Domain.Entities;
 using Core.Domain.Enums;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 public sealed class UserAndEmployeeServiceTests
 {

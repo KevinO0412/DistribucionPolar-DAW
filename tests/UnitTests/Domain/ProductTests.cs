@@ -4,7 +4,7 @@ using Core.Domain.Exceptions;
 using Core.Domain.Services;
 using Core.Domain.ValueObjects;
 
-namespace Core.Domain.Tests;
+namespace UnitTests.Domain;
 
 public sealed class ProductTests
 {

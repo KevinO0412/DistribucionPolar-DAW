@@ -1,7 +1,7 @@
 using Core.Domain.Common;
 using Core.Domain.Entities;
 
-namespace Core.Domain.Tests;
+namespace UnitTests.Domain;
 
 internal static class TestData
 {

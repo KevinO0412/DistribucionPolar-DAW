@@ -6,7 +6,7 @@ using Core.Domain.Entities;
 using Core.Domain.Enums;
 using Core.Domain.Exceptions;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 /// <summary>Consignación, averías, consumos internos, compras y ajuste de galpón con repositorios simulados.</summary>
 public sealed class OperationServicesTests

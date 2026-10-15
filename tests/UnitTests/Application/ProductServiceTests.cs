@@ -6,7 +6,7 @@ using Core.Domain.Entities;
 using Core.Domain.Services;
 using FluentValidation;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 /// <summary>
 /// ProductService en aislamiento total: IProductRepository e ICategoryRepository se simulan con Moq,

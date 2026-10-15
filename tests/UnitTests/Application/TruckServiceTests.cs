@@ -5,7 +5,7 @@ using Core.Application.Validators;
 using Core.Domain.Entities;
 using Core.Domain.Exceptions;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 /// <summary>Carga de camiones desde el galpón (modos Agregar y Meta), con repositorios simulados.</summary>
 public sealed class TruckServiceTests

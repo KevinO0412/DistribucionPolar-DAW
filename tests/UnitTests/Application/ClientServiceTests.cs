@@ -6,7 +6,7 @@ using Core.Domain.Entities;
 using Core.Domain.Enums;
 using FluentValidation;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 /// <summary>Abonos de dinero: saldo con signo (negativo = el cliente debe).</summary>
 public sealed class ClientServiceTests

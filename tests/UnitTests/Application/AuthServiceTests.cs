@@ -6,7 +6,7 @@ using Core.Domain.Entities;
 using Core.Domain.Enums;
 using FluentValidation;
 
-namespace Core.Application.Tests;
+namespace UnitTests.Application;
 
 public sealed class AuthServiceTests
 {

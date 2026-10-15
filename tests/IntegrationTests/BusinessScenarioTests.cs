@@ -3,7 +3,7 @@ using System.Net;
 using Core.Application.DTOs;
 using Core.Domain.Enums;
 
-namespace Integration.Tests;
+namespace IntegrationTests;
 
 /// <summary>Casos de referencia de la lógica de negocio, ejecutados de punta a punta contra PostgreSQL real.</summary>
 [Collection(ApiCollection.Name)]
