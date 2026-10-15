@@ -28,7 +28,7 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 | [21](#21-comportamiento-por-entorno-mediante-configuración) | Comportamiento por entorno mediante configuración | Operación |
 | [22](#22-docker-compose-con-un-archivo-base-y-uno-por-entorno) | Docker Compose: un archivo base y uno por entorno | Operación |
 | [23](#23-openapi-nativo-de-net-10-con-swagger-ui) | OpenAPI nativo de .NET 10 + Swagger UI | API |
-| [24](#24-pruebas-con-dobles-escritos-a-mano) | Pruebas con dobles escritos a mano | Calidad |
+| [24](#24-pruebas-unitarias-con-moq) | Pruebas unitarias con Moq | Calidad |
 | [25](#25-una-transacción-explícita-por-proceso-de-negocio) | Una transacción explícita por proceso de negocio | Persistencia |
 | [26](#26-concurrencia-optimista-con-xmin) | Concurrencia optimista con `xmin` | Persistencia |
 | [27](#27-numeración-atómica-en-la-base-de-datos-con-el-año-en-el-número) | Numeración atómica en la base, con el año en el número | Dominio |
@@ -45,6 +45,10 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 | [38](#38-pdf-con-questpdf) | PDF con QuestPDF | Infraestructura |
 | [39](#39-pruebas-de-integración-con-postgresql-real-testcontainers) | Pruebas de integración con PostgreSQL real (Testcontainers) | Calidad |
 | [40](#40-reportes-como-consultas-de-solo-lectura-proyectadas) | Reportes como consultas de solo lectura proyectadas | Persistencia |
+| [41](#41-dashboard-kpi-calculado-en-la-capa-de-aplicación) | Dashboard KPI calculado en la capa de aplicación | Aplicación |
+| [42](#42-capacidad-del-camión-en-cajas) | Capacidad del camión en cajas | Dominio |
+| [43](#43-spa-con-context-api-jwt-en-localstorage-y-mismo-origen) | SPA con Context API, JWT en localStorage y mismo origen | Frontend |
+| [44](#44-tailwind-css-3-con-tokens-semánticos) | Tailwind CSS 3 con tokens semánticos | Frontend |
 
 ---
 
@@ -183,9 +187,10 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 - **Decisión:** el documento se genera con `Microsoft.AspNetCore.OpenApi` (OpenAPI 3.1), se documenta con comentarios XML y se visualiza con Swagger UI. El esquema Bearer habilita el botón *Authorize*.
 - **Por qué:** es el generador oficial del framework, y los comentarios XML mantienen la documentación junto al código. El contrato se publica en JSON y YAML (`docs/openapi/`).
 
-### 24. Pruebas con dobles escritos a mano
-- **Decisión:** las pruebas de aplicación usan repositorios falsos en memoria (`Fakes.cs`), no una librería de mocks.
-- **Por qué:** el comportamiento de cada doble se lee de forma explícita, no hay dependencias adicionales, y las pruebas verifican resultados en lugar de llamadas internas.
+### 24. Pruebas unitarias con Moq
+- **Decisión:** las pruebas de `Core.Application` simulan los repositorios y servicios de infraestructura con Moq (`Setup` para el comportamiento y `Verify` para las interacciones). Reemplaza a los dobles escritos a mano (`Fakes.cs`) de las fases anteriores.
+- **Por qué:** la Fase 4 exige xUnit + Moq. Además, `Verify` comprueba lo que un doble en memoria no muestra: que un proceso rechazado no guarda (`SaveChangesAsync` nunca se llama), no consume número de factura ni registra auditoría.
+- **Criterio:** se verifica el estado del dominio (stock, saldos) y solo las interacciones que forman parte de la regla (guardar, numerar, auditar), no cada llamada interna.
 
 ### 25. Una transacción explícita por proceso de negocio
 - **Decisión:** cada proceso que toca varias tablas (facturar, anular, cargar camión, compra, avería, consignación…) se ejecuta con `IUnitOfWork.ExecuteInTransactionAsync`. Ese método abre `BEGIN … COMMIT` dentro de la estrategia de reintentos de Npgsql.
@@ -269,4 +274,23 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 ### 40. Reportes como consultas de solo lectura proyectadas
 - **Decisión:** los reportes (`IReportQueries`) calculan sumas y conteos en PostgreSQL y proyectan directamente a DTO con `Select`, sin materializar entidades.
 - **Por qué:** es más rápido y usa menos memoria que cargar miles de facturas para sumarlas en C#. Además, los reportes son de solo lectura y no necesitan el comportamiento de las entidades (separación de lecturas y escrituras, al estilo CQRS ligero).
+
+### 41. Dashboard KPI calculado en la capa de aplicación
+- **Decisión:** `GET /api/reports/dashboard` (solo Admin) recibe rango de fechas y categoría. `IReportQueries.GetDashboardDataAsync` trae de PostgreSQL filas ya proyectadas (productos activos con su stock en camiones, renglones vendidos y camiones con su carga) y `ReportService` calcula los KPI.
+- **Por qué:** la serie diaria agrupa por **día local** (`IClock`), y el estado de cada producto usa el `ProductHealthEvaluator` del dominio: así el dashboard aplica las mismas reglas MinStock/MaxStock que `GET /api/products/{id}/health`. Calcularlo en C# deja la lógica probada con Moq, sin base de datos (`ReportServiceTests`).
+- **Definiciones:** valor al costo = unidades × (costo por caja / unidades por caja); valor de venta = unidades × precio por unidad; rotación = unidades vendidas en el rango / existencia actual (galpón + camiones). Las facturas anuladas no cuentan.
+
+### 42. Capacidad del camión en cajas
+- **Decisión:** `Truck.CapacityBoxes` (1–5000, 500 por defecto) y la ocupación = cajas equivalentes cargadas (unidades / unidades por caja) / capacidad. Migración `TruckCapacity`.
+- **Por qué:** el KPI de ocupación de flota que sugirió el profesor necesita una capacidad. Se mide en cajas porque es la unidad de carga del negocio; el peso o el volumen no existen en el catálogo.
+- **Consecuencia:** la ocupación puede pasar de 100 % y se muestra como "Sobrecargado"; no se bloquea la carga porque el negocio no definió esa regla.
+
+### 43. SPA con Context API, JWT en localStorage y mismo origen
+- **Decisión:** `AuthContext` guarda el JWT en `localStorage`, lo decodifica con `jwt-decode` y cierra la sesión al vencer o ante un 401. `ThemeContext` guarda el tema. La SPA siempre llama a `/api` relativo: Vite (desarrollo) y Nginx (Docker) reenvían a la API.
+- **Por qué:** el curso pide Context API y persistencia en `localStorage`. El mismo origen evita depender de CORS y de URLs de la API compiladas en el bundle.
+- **Riesgo aceptado:** un token en `localStorage` es legible por un script inyectado (XSS). Se mitiga con React (escapa el contenido), sin HTML sin sanitizar y con tokens de vida corta; una cookie `HttpOnly` requeriría protección CSRF y cambiar la API.
+
+### 44. Tailwind CSS 3 con tokens semánticos
+- **Decisión:** Tailwind 3.4 con `darkMode: 'class'` y el color `unet.blue #003366`, como en el material del curso. Los colores de la interfaz son variables CSS (`--brand`, `--surface`, `--status-*`) que cambian con la clase `dark`.
+- **Por qué:** los componentes no repiten pares `bg-x dark:bg-y`; un solo token cambia ambos temas. Tailwind 4 cambia la configuración (sin `tailwind.config.js`) y se aleja de la guía del curso.
 

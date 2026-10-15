@@ -336,9 +336,11 @@ Ningún Singleton depende de un servicio Scoped, así que no hay dependencias ca
 
 | Tipo | Proyecto o herramienta | Cantidad | Qué cubre |
 | --- | --- | ---: | --- |
-| Unitarias de dominio | `Core.Domain.Tests` | 75 | Cajas y unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones, facturas, regalías, anulación, consignación, compras y averías |
-| Unitarias de aplicación | `Core.Application.Tests` | 18 | Validadores y servicios con repositorios falsos |
-| Integración | `Integration.Tests` | 15 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
+| Unitarias de dominio | `Core.Domain.Tests` | 80 | Cajas y unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones, facturas, regalías, anulación, consignación, compras y averías |
+| Unitarias de aplicación | `Core.Application.Tests` | 88 | Validadores y servicios con repositorios simulados con Moq (`Setup`/`Verify`) |
+| Integración | `Integration.Tests` | 16 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
 | API de punta a punta | Colección de Postman | 50 peticiones, 97 aserciones | Fases 1–3 y la operación completa del negocio |
 
-Las pruebas de integración requieren Docker.
+| Frontend | Vitest + Testing Library | 25 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807 y validaciones del formulario |
+
+Las pruebas de integración requieren Docker. La cobertura de las unitarias se genera con `scripts/cobertura.sh` (coverlet + ReportGenerator).

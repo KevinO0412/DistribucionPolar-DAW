@@ -126,15 +126,18 @@ Todos los errores responden `application/problem+json` (RFC 7807) con los códig
 ## Pruebas
 
 ```bash
-dotnet test DistribucionPolar.slnx                                         # 108 pruebas (las de integración requieren Docker)
+dotnet test DistribucionPolar.slnx                                         # 184 pruebas (las de integración requieren Docker)
+scripts/cobertura.sh                                                       # reporte HTML de cobertura en docs/evidencias/cobertura
+(cd src/frontend && npm test)                                              # 25 pruebas del frontend
 npx newman run postman/collections/DistribucionPolar.postman_collection.json  # 50 peticiones, 97 aserciones
 ```
 
 | Suite | Pruebas | Qué cubre |
 | --- | ---: | --- |
-| `Core.Domain.Tests` | 75 | Reglas del dominio |
-| `Core.Application.Tests` | 18 | Validadores y servicios |
-| `Integration.Tests` | 15 | Procesos completos contra PostgreSQL real: casos de referencia, concurrencia, permisos, auditoría, CORS y rate limiting |
+| `Core.Domain.Tests` | 80 | Reglas del dominio |
+| `Core.Application.Tests` | 88 | Validadores y servicios, con Moq |
+| `Integration.Tests` | 16 | Procesos completos contra PostgreSQL real: casos de referencia, concurrencia, permisos, auditoría, CORS y rate limiting |
+| `src/frontend` (Vitest) | 25 | Sesión, rutas por rol, tema y errores de la API |
 | Postman | 50 / 97 | Escenarios obligatorios de la Fase 3 y operación completa |
 
 Para Staging, la colección acepta `--env-var baseUrl=http://localhost:8081` y las credenciales de `.env.staging`

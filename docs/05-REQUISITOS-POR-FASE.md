@@ -62,6 +62,31 @@ Complementos de la teoría de la fase también aplicados:
 | 400 con el detalle de cada error | `ExceptionMiddleware` → `ValidationProblemDetails` | Respuesta con el objeto `errors` por campo |
 | Colección de Postman con los 4 escenarios | `postman/collections/DistribucionPolar.postman_collection.json` (carpetas 1 y 2; la carpeta 5 cubre la operación completa) | `npx newman run …` → 50 peticiones, 97 aserciones |
 
+## Fase 4: Frontend SPA, dashboard KPI y pruebas unitarias
+
+| Requisito | Implementación | Verificación |
+| --- | --- | --- |
+| SPA desacoplada con React 18+, Vite y Tailwind CSS | `src/frontend` (React 18.3, Vite 6, TypeScript, Tailwind 3.4 con `unet.blue #003366` y `darkMode: 'class'`) | `npm run build`; navegación sin recargas con React Router |
+| Componentes modulares y diseño adaptable | Átomos en `components/ui`, layout con menú colapsable y menú lateral en móvil, tablas con `overflow-x-auto` | Sin desplazamiento horizontal de la página a 375 px |
+| `AuthContext`: sesión, JWT decodificado y persistido | `src/context/AuthContext.tsx` (`jwt-decode`, `localStorage`, cierre al vencer o ante un 401) | `AuthContext.test.tsx`: guarda, recupera al recargar, descarta vencido, cierra sola |
+| `ThemeContext`: Azul UNET y modo oscuro persistido | `src/context/ThemeContext.tsx` | `ThemeContext.test.tsx` |
+| Consumo de la API con Bearer y manejo de errores | `src/api/client.ts`: interceptor `Authorization: Bearer`, normaliza RFC 7807 (`title`, `detail`, `errors` por campo) | `client.test.ts`; los errores 400 se muestran junto a cada campo del formulario |
+| Dashboard KPI (`PowerBIDashboard`) con datos reales | `components/dashboard/PowerBIDashboard.tsx` sobre `GET /api/reports/dashboard` ([ADR 41](04-DECISIONES.md#41-dashboard-kpi-calculado-en-la-capa-de-aplicación)) | `ReportServiceTests`; `Dashboard_ReflectsTruckSaleOccupancyAndRotation_AndIsAdminOnly` |
+| Valorización costo frente a precio de venta | Tarjeta de margen y barra "Valorización del inventario" | KPI `inventory.costValue` / `saleValue` |
+| Rotación de stock | KPI de rotación y tabla "Rotación por producto" (unidades vendidas / existencia) | KPI `sales.rotationIndex` y `topProducts` |
+| Alertas MinStock / MaxStock | Distribución por estado y tabla "Stock crítico" con unidades a reponer | `ProductHealthEvaluator` del dominio |
+| Gráficos interactivos y filtros por fecha y categoría | Recharts: ventas por día y por categoría; al pulsar una barra se filtra todo el dashboard. Filtros en la URL | Postman / navegador: `?from=&to=&categoryId=` |
+| Al menos tres tarjetas KPI | Ventas del período, rotación, margen bruto, productos bajo el mínimo | Pantalla del dashboard |
+| Contención contra desbordamiento | `ResponsiveContainer` y `DataTable` con `overflow-x-auto` | Vista a 375 px |
+| CRUD de productos y categorías según el rol | `ProductsPage`, `CategoriesPage` | Employee no ve los botones de editar ni eliminar |
+| Dashboard solo para Admin | Oculto del menú para Employee (`navigation.ts`) y protegido con `ProtectedRoute role="Admin"`; la API responde 403 | `ProtectedRoute.test.tsx`; prueba de integración del dashboard |
+| Pruebas xUnit + Moq de `ProductService` con mock de `IProductRepository` | `Core.Application.Tests/ProductServiceTests.cs`: `GetByIdAsync_ExistingId_ReturnsProductDto`, `GetProductByIdAsync_WhenNotFound_ThrowsKeyNotFoundException` y 13 casos más | `dotnet test` |
+| Casos exitosos y de excepción, aislados de la base de datos | 88 pruebas de aplicación con Moq (`Setup`/`Verify`) en todos los servicios | Reporte de cobertura (coverlet + ReportGenerator): 85,8 % de líneas del núcleo |
+
+**Ideas del profesor incorporadas:** tarjetas por camión con ocupación ([ADR 42](04-DECISIONES.md#42-capacidad-del-camión-en-cajas)), KPI de ocupación de flota y ventas por camión, ticket de 80 mm imprimible desde el navegador (`Ticket.tsx`, `@media print`) y menú lateral colapsable.
+
+**Datos de la demostración:** `scripts/demo-operacion.sh` carga camiones y emite facturas a través de la API; no inserta datos en la base directamente.
+
 ## Teoría de las fases implementada
 
 Conceptos del material de lectura que no estaban en las tareas evaluadas y también están implementados.
