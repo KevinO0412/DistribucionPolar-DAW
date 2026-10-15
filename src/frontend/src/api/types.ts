@@ -256,3 +256,38 @@ export interface ProblemDetails {
   instance?: string;
   errors?: Record<string, string[]>;
 }
+
+export interface Client {
+  id: string;
+  code: string;
+  rif: string;
+  name: string;
+  address: string;
+  nickname: string | null;
+  type: string;
+  moneyBalance: number;
+  moneyStatus: string;
+  emptyBoxesBalance: number;
+  emptyUnitsBalance: number;
+  emptiesStatus: string;
+  isReceivable: boolean;
+  lastPurchaseAt: string | null;
+  createdAt: string;
+}
+
+export interface SaleLineRequest {
+  productId: string;
+  boxes: number;
+  looseUnits: number;
+}
+
+export interface CreateSaleRequest {
+  clientId: string;
+  dispatchOrigin: 'Truck' | 'Warehouse';
+  truckId: string | null;
+  employeeId: string | null;
+  items: SaleLineRequest[];
+  payment: number;
+  paymentObservation: string | null;
+  returnedEmpties: null;
+}

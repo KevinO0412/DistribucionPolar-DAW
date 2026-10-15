@@ -4,9 +4,18 @@ using Core.Domain.Enums;
 
 namespace Core.Application.Abstractions;
 
+/// <summary>Venta ya emitida con una clave Idempotency-Key: hash del cuerpo y factura resultante.</summary>
+public sealed record IdempotentSale(string RequestHash, Guid InvoiceId);
+
 public interface IInvoiceRepository
 {
     void Add(Invoice invoice);
+
+    /// <summary>Venta registrada con la clave de idempotencia indicada, si existe.</summary>
+    Task<IdempotentSale?> FindIdempotentSaleAsync(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>Registra la clave junto con la factura; se guarda en la misma transacción que la venta.</summary>
+    void AddIdempotentSale(string key, string requestHash, Guid invoiceId, string? username, DateTime createdAtUtc);
 
     /// <summary>Factura completa con líneas y vacíos (AsNoTrackingWithIdentityResolution).</summary>
     Task<Invoice?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

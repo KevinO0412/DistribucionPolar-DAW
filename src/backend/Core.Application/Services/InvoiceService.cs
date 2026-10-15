@@ -37,10 +37,54 @@ public sealed class InvoiceService(
     }
 
     /// <summary>
+    /// Factura de venta sin clave de idempotencia (ver <see cref="CreateSaleCoreAsync"/>).
+    /// </summary>
+    public async Task<InvoiceResponse> CreateSaleAsync(CreateSaleRequest request, CancellationToken cancellationToken = default)
+    {
+        var invoice = await CreateSaleCoreAsync(request, onCreated: null, cancellationToken);
+        return invoice.ToResponse();
+    }
+
+    /// <summary>
+    /// Venta con encabezado Idempotency-Key (preventa sin conexión que se reenvía al reconectar).
+    /// La clave se guarda en la misma transacción que la factura: o quedan las dos o ninguna.
+    /// </summary>
+    public async Task<SaleResult> CreateSaleAsync(CreateSaleRequest request, string idempotencyKey, CancellationToken cancellationToken = default)
+    {
+        string key = (idempotencyKey ?? string.Empty).Trim();
+        if (key.Length is < 8 or > 100)
+        {
+            throw new ValidationException([new FluentValidation.Results.ValidationFailure(
+                "Idempotency-Key", "El encabezado Idempotency-Key debe tener entre 8 y 100 caracteres.")]);
+        }
+
+        string hash = RequestHash(request);
+        var previous = await invoices.FindIdempotentSaleAsync(key, cancellationToken);
+        if (previous is not null)
+        {
+            if (previous.RequestHash != hash)
+            {
+                throw new Exceptions.IdempotencyKeyReusedException(
+                    "La clave Idempotency-Key ya se usó con otra venta. Genere una clave nueva para cada pedido.");
+            }
+
+            var existing = await invoices.GetByIdAsync(previous.InvoiceId, cancellationToken)
+                ?? throw new KeyNotFoundException($"No existe la factura {previous.InvoiceId}.");
+            return new SaleResult(existing.ToResponse(), Replayed: true);
+        }
+
+        var invoice = await CreateSaleCoreAsync(
+            request,
+            created => invoices.AddIdempotentSale(key, hash, created.Id, currentUser.Username, clock.UtcNow),
+            cancellationToken);
+        return new SaleResult(invoice.ToResponse(), Replayed: false);
+    }
+
+    /// <summary>
     /// Factura de venta en una sola transacción: valida stock de TODAS las líneas, descuenta inventario del
     /// origen, numera, carga el pendiente al cliente, registra abono y vacíos. Si algo falla, no cambia nada.
     /// </summary>
-    public async Task<InvoiceResponse> CreateSaleAsync(CreateSaleRequest request, CancellationToken cancellationToken = default)
+    private async Task<Invoice> CreateSaleCoreAsync(CreateSaleRequest request, Action<Invoice>? onCreated, CancellationToken cancellationToken)
     {
         await saleValidator.ValidateAndThrowAsync(request, cancellationToken);
         var (employeeId, attendant) = await ResolveAttendantAsync(request.EmployeeId, cancellationToken);
@@ -67,6 +111,7 @@ public sealed class InvoiceService(
                 lines, request.Payment, request.PaymentObservation, returned, clock.UtcNow);
 
             invoices.Add(created);
+            onCreated?.Invoke(created);
             ApplyAccountEffects(client, created, request.PaymentObservation);
             await unitOfWork.SaveChangesAsync(ct);
             return created;
@@ -76,7 +121,14 @@ public sealed class InvoiceService(
             nameof(Invoice), invoice.Id.ToString(), invoice.Total,
             metadata: new { invoice.Payment, invoice.Pending, invoice.DispatchOrigin, invoice.TruckName, Items = invoice.Items.Count },
             cancellationToken: cancellationToken);
-        return invoice.ToResponse();
+        return invoice;
+    }
+
+    /// <summary>Huella SHA-256 del cuerpo de la venta: el mismo pedido reenviado produce el mismo hash.</summary>
+    private static string RequestHash(CreateSaleRequest request)
+    {
+        byte[] json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(request);
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(json)).ToLowerInvariant();
     }
 
     /// <summary>

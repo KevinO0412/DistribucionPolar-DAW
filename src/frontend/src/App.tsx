@@ -6,6 +6,7 @@ import { homeFor } from './components/layout/navigation';
 import { useAuth } from './hooks/useAuth';
 import { CategoriesPage } from './pages/CategoriesPage';
 import { InvoicesPage } from './pages/InvoicesPage';
+import { PresalePage } from './pages/PresalePage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ForbiddenPage, NotFoundPage } from './pages/StatusPages';
@@ -46,6 +47,7 @@ export function App() {
         <Route path="categorias" element={<CategoriesPage />} />
         <Route path="camiones" element={<TrucksPage />} />
         <Route path="facturas" element={<InvoicesPage />} />
+        <Route path="preventa" element={<PresalePage />} />
         <Route path="sin-permiso" element={<ForbiddenPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

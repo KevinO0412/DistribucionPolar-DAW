@@ -1,0 +1,12 @@
+{
+  "name": "Distribución Polar",
+  "short_name": "Polar",
+  "description": "Preventa, inventario de camiones y facturación de Distribución Polar.",
+  "lang": "es",
+  "start_url": "/preventa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#003366",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

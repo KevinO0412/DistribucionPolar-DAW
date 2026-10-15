@@ -261,6 +261,72 @@ public sealed class InvoiceServiceTests
         await Assert.ThrowsAsync<KeyNotFoundException>(() => service.GetByIdAsync(Guid.NewGuid()));
     }
 
+    [Fact]
+    public async Task CreateSaleAsync_WithNewIdempotencyKey_SavesTheKeyWithTheInvoice()
+    {
+        var beer = Beer(360);
+
+        var result = await service.CreateSaleAsync(Sale(beer.Id, 1, 0, 40m), "pedido-offline-0001");
+
+        Assert.False(result.Replayed);
+        Assert.Equal(324, beer.StockUnits);
+        mockInvoices.Verify(r => r.AddIdempotentSale("pedido-offline-0001", It.Is<string>(h => h.Length == 64),
+            result.Invoice.Id, "admin", Now), Times.Once);
+        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_RetryWithSameKeyAndBody_ReturnsTheSameInvoiceWithoutTouchingStock()
+    {
+        // Arrange: primer envío; la clave queda guardada con el hash del pedido.
+        var beer = Beer(360);
+        var request = Sale(beer.Id, 1, 0, 40m);
+        string? savedHash = null;
+        mockInvoices.Setup(r => r.AddIdempotentSale("pedido-offline-0002", It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<DateTime>()))
+            .Callback((string _, string hash, Guid _, string? _, DateTime _) => savedHash = hash);
+        var first = await service.CreateSaleAsync(request, "pedido-offline-0002");
+        var emitted = CaptureLastInvoice();
+        mockInvoices.Setup(r => r.FindIdempotentSaleAsync("pedido-offline-0002", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new IdempotentSale(savedHash!, emitted.Id));
+        mockInvoices.Setup(r => r.GetByIdAsync(emitted.Id, It.IsAny<CancellationToken>())).ReturnsAsync(emitted);
+
+        // Act: el teléfono reenvía el mismo pedido al reconectarse.
+        var retry = await service.CreateSaleAsync(request, "pedido-offline-0002");
+
+        // Assert: misma factura, sin otra venta ni otro descuento de stock.
+        Assert.True(retry.Replayed);
+        Assert.Equal(first.Invoice.Id, retry.Invoice.Id);
+        Assert.Equal(324, beer.StockUnits);
+        Assert.Equal(-60m, client.MoneyBalance);
+        mockInvoices.Verify(r => r.Add(It.IsAny<Invoice>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_SameKeyWithAnotherBody_IsRejected()
+    {
+        var beer = Beer(360);
+        mockInvoices.Setup(r => r.FindIdempotentSaleAsync("pedido-offline-0003", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new IdempotentSale(new string('a', 64), Guid.NewGuid()));
+
+        await Assert.ThrowsAsync<Core.Application.Exceptions.IdempotencyKeyReusedException>(
+            () => service.CreateSaleAsync(Sale(beer.Id, 2, 0, 0m), "pedido-offline-0003"));
+
+        Assert.Equal(360, beer.StockUnits);
+        mockInvoices.Verify(r => r.Add(It.IsAny<Invoice>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("corta")]
+    [InlineData("   ")]
+    public async Task CreateSaleAsync_WithInvalidIdempotencyKey_FailsValidation(string key)
+    {
+        var beer = Beer(360);
+
+        await Assert.ThrowsAsync<FluentValidation.ValidationException>(() => service.CreateSaleAsync(Sale(beer.Id, 1, 0, 0m), key));
+
+        mockInvoices.Verify(r => r.FindIdempotentSaleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private Invoice CaptureLastInvoice() =>
         (Invoice)mockInvoices.Invocations.Last(i => i.Method.Name == nameof(IInvoiceRepository.Add)).Arguments[0];
 }

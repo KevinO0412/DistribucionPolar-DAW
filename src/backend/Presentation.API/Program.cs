@@ -23,8 +23,8 @@ string[] allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins"
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy => policy
     .WithOrigins(allowedOrigins)
     .WithMethods("GET", "POST", "PUT", "DELETE")
-    .WithHeaders("Authorization", "Content-Type")
-    .WithExposedHeaders("Retry-After", "Content-Disposition")));
+    .WithHeaders("Authorization", "Content-Type", "Idempotency-Key")
+    .WithExposedHeaders("Retry-After", "Content-Disposition", "Idempotency-Replayed")));
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());

@@ -76,20 +76,43 @@ public sealed class InvoicesController(IInvoiceService invoices) : ControllerBas
     /// En una sola transacción: verifica el stock de todas las líneas en el origen, descuenta el inventario,
     /// asigna el número mensual ("Factura Octubre 2026 #3"), carga el pendiente (total − abono) al cliente
     /// —un abono mayor al total deja saldo a favor—, registra el abono y los vacíos generados y devueltos por grupo.
+    /// Con el encabezado <c>Idempotency-Key</c> (la preventa sin conexión lo envía con el id del pedido), un reintento
+    /// con la misma clave y el mismo cuerpo devuelve la factura ya emitida (200 y <c>Idempotency-Replayed: true</c>)
+    /// sin descontar stock otra vez.
     /// </remarks>
     /// <param name="request">Datos de la factura.</param>
+    /// <param name="idempotencyKey">Clave única del pedido (8 a 100 caracteres), opcional.</param>
     /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">La clave ya se había usado con este mismo pedido: se devuelve la factura emitida.</response>
     /// <response code="201">Factura emitida.</response>
-    /// <response code="400">Datos inválidos, stock insuficiente o vendedor no permitido.</response>
+    /// <response code="400">Datos inválidos, stock insuficiente, crédito bloqueado o vendedor no permitido.</response>
     /// <response code="409">Conflicto de concurrencia; reintentar.</response>
+    /// <response code="422">La clave Idempotency-Key ya se usó con otro pedido.</response>
     [HttpPost("sales")]
+    [ProducesResponseType<InvoiceResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<InvoiceResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
-    public async Task<ActionResult<InvoiceResponse>> CreateSale(CreateSaleRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity, "application/problem+json")]
+    public async Task<ActionResult<InvoiceResponse>> CreateSale(
+        CreateSaleRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken)
     {
-        var invoice = await invoices.CreateSaleAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, invoice);
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            var invoice = await invoices.CreateSaleAsync(request, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = invoice.Id }, invoice);
+        }
+
+        var result = await invoices.CreateSaleAsync(request, idempotencyKey, cancellationToken);
+        if (result.Replayed)
+        {
+            Response.Headers["Idempotency-Replayed"] = "true";
+            return Ok(result.Invoice);
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Invoice.Id }, result.Invoice);
     }
 
     /// <summary>Emite una regalía (solo productos autorizados; no cobra; sí genera vacíos).</summary>

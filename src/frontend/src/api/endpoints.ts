@@ -3,6 +3,8 @@ import type {
   AuthResponse,
   Category,
   CategoryRequest,
+  Client,
+  CreateSaleRequest,
   CreateProductRequest,
   DashboardResponse,
   Invoice,
@@ -48,4 +50,11 @@ export const invoicesApi = {
   list: (params: { from?: string; to?: string; type?: string; includeCancelled?: boolean; page?: number; pageSize?: number }) =>
     api.get<PagedResponse<InvoiceSummary>>('/invoices', { params }).then((r) => r.data),
   get: (id: string) => api.get<Invoice>(`/invoices/${id}`).then((r) => r.data),
+  /** Venta idempotente: la misma clave reenviada devuelve la factura ya emitida en lugar de crear otra. */
+  createSale: (body: CreateSaleRequest, idempotencyKey: string) =>
+    api.post<Invoice>('/invoices/sales', body, { headers: { 'Idempotency-Key': idempotencyKey } }).then((r) => r.data),
+};
+
+export const clientsApi = {
+  list: (search?: string) => api.get<Client[]>('/clients', { params: { search: search || undefined } }).then((r) => r.data),
 };

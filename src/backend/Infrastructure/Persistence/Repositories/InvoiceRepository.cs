@@ -2,6 +2,7 @@ using Core.Application.Abstractions;
 using Core.Application.DTOs;
 using Core.Domain.Entities;
 using Core.Domain.Enums;
+using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
@@ -11,6 +12,27 @@ public sealed class InvoiceRepository(ApplicationDbContext context) : IInvoiceRe
     public void Add(Invoice invoice)
     {
         context.Invoices.Add(invoice);
+    }
+
+    public Task<IdempotentSale?> FindIdempotentSaleAsync(string key, CancellationToken cancellationToken = default)
+    {
+        return context.IdempotencyKeys
+            .AsNoTracking()
+            .Where(k => k.Key == key)
+            .Select(k => new IdempotentSale(k.RequestHash, k.InvoiceId))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public void AddIdempotentSale(string key, string requestHash, Guid invoiceId, string? username, DateTime createdAtUtc)
+    {
+        context.IdempotencyKeys.Add(new IdempotencyKey
+        {
+            Key = key,
+            RequestHash = requestHash,
+            InvoiceId = invoiceId,
+            Username = username,
+            CreatedAt = createdAtUtc,
+        });
     }
 
     public Task<Invoice?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

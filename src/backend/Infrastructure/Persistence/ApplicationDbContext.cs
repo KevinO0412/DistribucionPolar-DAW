@@ -51,6 +51,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<DocumentCounter> DocumentCounters => Set<DocumentCounter>();
 
+    public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
+
     /// <summary>
     /// Ejecuta el proceso dentro de una transacción explícita (BEGIN … COMMIT). La estrategia de ejecución
     /// de Npgsql reintenta el bloque completo ante fallas transitorias de conexión; antes de cada intento

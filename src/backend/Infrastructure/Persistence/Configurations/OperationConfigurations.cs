@@ -146,6 +146,21 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
     }
 }
 
+public sealed class IdempotencyKeyConfiguration : IEntityTypeConfiguration<IdempotencyKey>
+{
+    public void Configure(EntityTypeBuilder<IdempotencyKey> builder)
+    {
+        builder.ToTable("IdempotencyKeys");
+        builder.HasKey(k => k.Key);
+        builder.Property(k => k.Key).HasMaxLength(IdempotencyKey.KeyMaxLength);
+        builder.Property(k => k.RequestHash).IsRequired().HasMaxLength(64).IsFixedLength();
+        builder.Property(k => k.Username).HasMaxLength(User.UsernameMaxLength);
+        builder.Property(k => k.CreatedAt).IsRequired().HasColumnType("timestamptz");
+        builder.HasOne<Invoice>().WithMany().HasForeignKey(k => k.InvoiceId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(k => k.InvoiceId);
+    }
+}
+
 public sealed class DocumentCounterConfiguration : IEntityTypeConfiguration<DocumentCounter>
 {
     public void Configure(EntityTypeBuilder<DocumentCounter> builder)

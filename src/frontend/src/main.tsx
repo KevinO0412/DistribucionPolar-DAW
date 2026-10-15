@@ -25,3 +25,12 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 );
+
+// PWA: el service worker guarda la aplicación para abrirla sin conexión (preventa). Solo en el build de producción.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Sin service worker la aplicación funciona igual, solo que no abre sin conexión.
+    });
+  });
+}

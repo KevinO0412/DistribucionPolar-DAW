@@ -7009,6 +7009,35 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("DocumentCounters", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.IdempotencyKey", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Username")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Key");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("IdempotencyKeys", (string)null);
+                });
+
             modelBuilder.Entity("Core.Domain.Entities.ClientEmptyBalance", b =>
                 {
                     b.HasOne("Core.Domain.Entities.Client", null)
@@ -7189,6 +7218,15 @@ namespace Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.IdempotencyKey", b =>
+                {
+                    b.HasOne("Core.Domain.Entities.Invoice", null)
+                        .WithMany()
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Core.Domain.Entities.Category", b =>

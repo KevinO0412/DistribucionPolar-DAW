@@ -90,6 +90,11 @@ public sealed record InvoiceResponse(
     IReadOnlyList<InvoiceItemResponse> Items, IReadOnlyList<InvoiceEmptyGroupResponse> EmptyGroups,
     bool IsCancelled, string? CancellationReason, DateTime? CancelledAt, string? CancelledBy);
 
+/// <summary>Resultado de una venta con Idempotency-Key: <c>Replayed</c> indica que se devolvió la factura ya emitida.</summary>
+/// <param name="Invoice">Factura.</param>
+/// <param name="Replayed">true si la clave ya se había usado con el mismo pedido.</param>
+public sealed record SaleResult(InvoiceResponse Invoice, bool Replayed);
+
 /// <summary>Resumen de factura para listados (proyección directa desde la base).</summary>
 /// <param name="Id">Identificador.</param>
 /// <param name="Number">Número.</param>

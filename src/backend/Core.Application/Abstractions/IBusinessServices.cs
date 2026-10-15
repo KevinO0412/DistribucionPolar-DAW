@@ -73,6 +73,12 @@ public interface IInvoiceService
 
     Task<InvoiceResponse> CreateSaleAsync(CreateSaleRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Venta idempotente: si la clave ya se usó con el mismo cuerpo devuelve la factura emitida (sin tocar el stock);
+    /// si se usó con otro cuerpo lanza <see cref="Exceptions.IdempotencyKeyReusedException"/>.
+    /// </summary>
+    Task<SaleResult> CreateSaleAsync(CreateSaleRequest request, string idempotencyKey, CancellationToken cancellationToken = default);
+
     Task<InvoiceResponse> CreateGiftAsync(CreateGiftRequest request, CancellationToken cancellationToken = default);
 
     Task<InvoiceResponse> CancelAsync(Guid id, CancelInvoiceRequest request, CancellationToken cancellationToken = default);

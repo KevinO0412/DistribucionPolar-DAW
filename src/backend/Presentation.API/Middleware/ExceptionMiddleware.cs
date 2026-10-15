@@ -58,6 +58,11 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
                 return ProblemDetailsWriter.WriteAsync(
                     context, StatusCodes.Status400BadRequest, "Solicitud inválida", exception.Message);
 
+            case IdempotencyKeyReusedException:
+                logger.LogWarning("Clave de idempotencia reutilizada: {Message}", exception.Message);
+                return ProblemDetailsWriter.WriteAsync(
+                    context, StatusCodes.Status422UnprocessableEntity, "Clave de idempotencia reutilizada", exception.Message);
+
             case UnauthorizedAccessException:
                 logger.LogWarning("Acceso no autorizado: {Message}", exception.Message);
                 return ProblemDetailsWriter.WriteAsync(
