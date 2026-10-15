@@ -39,6 +39,7 @@ cd DistribucionPolar
 cp .env.example .env              # cambiar JWT_KEY por una clave aleatoria: openssl rand -base64 48
 docker compose up -d --build
 scripts/demo-operacion.sh         # opcional: ventas y cargas de camión reales para el dashboard
+scripts/demo-fechas.sh            # opcional: reparte esas ventas en los últimos 14 días (solo Development)
 ```
 
 Con eso quedan en marcha:
