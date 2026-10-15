@@ -2,7 +2,7 @@
 # (ver .env.production.example), reinicio automático y límites de recursos.
 # Publicar detrás de un proxy inverso con HTTPS (Nginx, Traefik, Caddy...).
 services:
-  postgres:
+  db:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env.production}
     restart: always
@@ -15,7 +15,7 @@ services:
   api:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-distribucion_polar};Username=${POSTGRES_USER:-polar};Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-distribucion_polar};Username=${POSTGRES_USER:-polar};Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD};GSS Encryption Mode=Disable"
       # Origen del frontend autorizado por CORS (vacío = ninguno).
       Cors__AllowedOrigins__0: ${CORS_ORIGIN:-}
       JwtSettings__Key: ${JWT_KEY:?Defina JWT_KEY (mínimo 32 caracteres) en .env.production}
@@ -29,10 +29,20 @@ services:
       SeedUsers__0__Role: Admin
       SeedUsers__0__CanChangeAttendant: "true"
     ports:
-      - "${API_PORT:-8082}:8080"
+      - "${API_PORT:-8082}:5000"
     restart: always
     deploy:
       resources:
         limits:
           cpus: "1.0"
           memory: 512m
+
+  spa:
+    ports:
+      - "${SPA_PORT:-8090}:80"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128m

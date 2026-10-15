@@ -1,1 +1,1 @@
-postgres:5432:*:polar:polar_dev_2026
+db:5432:*:polar:polar_dev_2026
