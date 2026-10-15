@@ -5,6 +5,7 @@ import type { CreateProductRequest, Product, ProductFields } from '../api/types'
 import { DataTable } from '../components/dashboard/DataTable';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/Button';
+import { ProductThumb } from '../components/ui/ProductThumb';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States';
 import { StatusBadge, stockStatus } from '../components/ui/StatusBadge';
 import { useToast } from '../components/ui/Toast';
@@ -118,7 +119,18 @@ export function ProductsPage() {
             rows={list}
             rowKey={(p) => p.id}
             columns={[
-              { header: 'Producto', cell: (p) => <><p className="font-medium">{p.name}</p><p className="text-muted">{p.sku}, {p.brand}</p></> },
+              {
+                header: 'Producto',
+                cell: (p) => (
+                  <div className="flex items-center gap-3">
+                    <ProductThumb productId={p.id} name={p.name} />
+                    <div>
+                      <p className="font-medium">{p.name}</p>
+                      <p className="text-muted">{p.sku}, {p.brand}</p>
+                    </div>
+                  </div>
+                ),
+              },
               { header: 'Categoría', cell: (p) => <><p>{p.categoryName}</p><p className="text-muted">{p.deposit}</p></> },
               { header: 'Caja', align: 'right', cell: (p) => <><p>{formatMoney(p.priceBox)}</p><p className="text-muted">x{p.unitsPerBox}</p></> },
               { header: 'Unidad', align: 'right', cell: (p) => formatMoney(p.priceUnit) },

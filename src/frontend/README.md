@@ -27,13 +27,22 @@ src/
 ├── context/        AuthContext.tsx (JWT), ThemeContext.tsx (Azul UNET / modo oscuro)
 ├── hooks/          useAuth, useTheme, useApiQuery, useChartColors, useDebounced
 ├── components/
-│   ├── ui/         Button, Field, Modal, States, StatusBadge, Toast (átomos)
+│   ├── ui/         Button, Field, Modal, ProductThumb, States, StatusBadge, Toast (átomos)
 │   ├── layout/     AppLayout (menú colapsable), PageHeader, navigation (menú por rol)
 │   ├── dashboard/  PowerBIDashboard y sus gráficos, tarjetas KPI, filtros y tablas
 │   ├── trucks/     TruckCard (ocupación del camión), Ticket (80 mm)
 │   └── ProtectedRoute.tsx
+├── data/           productImages.json (legacyId del catálogo → foto)
 └── pages/          Login, Dashboard, Productos, Categorías, Camiones, Facturas
 ```
+
+## Fotos de los productos
+
+Las fotos están en `public/img/productos/{alimentos,bebidas,jabones}/` (webp) y Nginx las sirve como archivos estáticos.
+No van en `public/productos/` porque esa carpeta taparía la ruta `/productos` de la SPA al recargar.
+
+`src/data/productImages.json` asocia cada producto del catálogo sembrado (por su `legacyId`, que forma el `Id` en `CatalogSeedData.cs`) con su foto.
+`ProductThumb` la muestra en la tabla y en el formulario de edición; los productos creados desde la aplicación, o cuya foto no carga, muestran un ícono genérico.
 
 ## Sesión y roles
 
