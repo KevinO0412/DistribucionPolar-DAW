@@ -1,30 +1,51 @@
-# docker images (Docker 29.8.2 con almacén containerd: DISK USAGE = capas sin comprimir + contenido comprimido)
+# docker images (Docker 29.8.2, almacén containerd: SIZE = capas sin comprimir + contenido comprimido)
 REPOSITORY:TAG                             SIZE
+distribucion-polar-spa:latest              85MB
 distribucion-polar-api:latest              93.8MB
-distribucion-polar-spa:latest              75.4MB
-IMAGE                                                                                                ID             DISK USAGE   CONTENT SIZE   EXTRA
-distribucion-polar-api:latest                                                                        a93285c137dc       93.8MB         34.4MB   U    
-distribucion-polar-spa:latest                                                                        036b09963805       75.4MB         21.6MB   U    
 
-# Tamaño sin comprimir (suma de capas, lo que mostraba 'docker images' con el almacén clásico) y comprimido (descarga)
-distribucion-polar-api:latest: sin comprimir 60MB
-distribucion-polar-spa:latest: sin comprimir 54MB
+# Tamaño real sin comprimir (du del sistema de archivos de cada imagen)
+distribucion-polar-api:latest: sin comprimir 51 MB
+distribucion-polar-spa:latest: sin comprimir 57 MB
+
+# Fotos de los productos dentro de la SPA (293 webp de 320 px)
+5.3M	/usr/share/nginx/html/img/productos
 
 # Capas de la API (etapa final: runtime-deps:10.0-alpine + app publicada)
+0B	ENTRYPOINT ["./Presentation.API"]
+0B	HEALTHCHECK {Test:[CMD-SHELL wget -qO- http:…
+0B	USER 1654
+0B	EXPOSE [5000/tcp]
+0B	ENV ASPNETCORE_HTTP_PORTS=5000 DOTNET_GCHeap…
 41MB	COPY /app/publish . # buildkit
 8.19kB	WORKDIR /app
 41kB	RUN /bin/sh -c addgroup         --gid=$APP_U…
 9.27MB	RUN /bin/sh -c apk add --upgrade --no-cache …
+0B	ENV APP_UID=1654 ASPNETCORE_HTTP_PORTS=8080 …
+0B	CMD ["/bin/sh"]
 9.08MB	ADD alpine-minirootfs-3.24.2-x86_64.tar.gz /…
 
 # Capas de la SPA (etapa final: nginx:alpine + dist)
-1.2MB	COPY /app/dist /usr/share/nginx/html # build…
+0B	CMD ["nginx" "-g" "daemon off;"]
+0B	HEALTHCHECK {Test:[CMD-SHELL wget -qO- http:…
+0B	EXPOSE [80/tcp]
+6.78MB	COPY /app/dist /usr/share/nginx/html # build…
 20.5kB	COPY src/frontend/nginx.conf /etc/nginx/conf…
 38.7MB	RUN /bin/sh -c set -x     && apkArch="$(cat …
+0B	ENV NJS_RELEASE=1
+0B	ENV NJS_VERSION=0.8.10
+0B	CMD ["nginx" "-g" "daemon off;"]
+0B	STOPSIGNAL SIGQUIT
+0B	EXPOSE map[80/tcp:{}]
+0B	ENTRYPOINT ["/docker-entrypoint.sh"]
 16.4kB	COPY 30-tune-worker-processes.sh /docker-ent…
 12.3kB	COPY 20-envsubst-on-templates.sh /docker-ent…
 12.3kB	COPY 15-local-resolvers.envsh /docker-entryp…
 12.3kB	COPY 10-listen-on-ipv6-by-default.sh /docker…
 8.19kB	COPY docker-entrypoint.sh / # buildkit
 5.36MB	RUN /bin/sh -c set -x     && addgroup -g 101…
+0B	ENV DYNPKG_RELEASE=1
+0B	ENV PKG_RELEASE=1
+0B	ENV NGINX_VERSION=1.27.5
+0B	LABEL maintainer=NGINX Docker Maintainers <d…
+0B	CMD ["/bin/sh"]
 8.5MB	ADD alpine-minirootfs-3.21.3-x86_64.tar.gz /…

@@ -93,7 +93,7 @@ Complementos de la teoría de la fase también aplicados:
 | --- | --- | --- |
 | Estructura del repositorio oficial | `src/backend/` (4 proyectos), `src/frontend/`, `tests/UnitTests/` (con `Application/ProductServiceTests.cs`), `tests/IntegrationTests/`, `.github/workflows/ci.yml`, `docker-compose.yml` | Árbol del [README](../README.md#estructura) |
 | Dockerfile multi-stage de la API | `src/backend/Presentation.API/Dockerfile`: `sdk:10.0-alpine` → `runtime-deps:10.0-alpine` ([ADR 45](04-DECISIONES.md#45-imagen-de-la-api-self-contained-y-recortada-sobre-alpine)) | `docker images`: ~60 MB sin comprimir |
-| Dockerfile multi-stage de la SPA | `src/frontend/Dockerfile`: `node:20-alpine` → `nginx:alpine`, con fallback a `index.html` (`nginx.conf`) | `docker images`: ~54 MB sin comprimir; `GET /dashboard` en el puerto 8080 → 200 |
+| Dockerfile multi-stage de la SPA | `src/frontend/Dockerfile`: `node:20-alpine` → `nginx:alpine`, con fallback a `index.html` (`nginx.conf`) | `docker images`: ~57 MB sin comprimir; `GET /dashboard` en el puerto 8080 → 200 |
 | Imágenes de menos de 120 MB, sin SDK | Etapas finales sin SDK ni Node.js | El job `docker-images` del CI falla si alguna pesa 120 MB o más; cifras en [evidencias](evidencias/README.md#imágenes-docker) |
 | `docker-compose.yml` con db, api y spa | `postgres:15-alpine`, API .NET 10 y SPA Nginx | `docker compose up --build -d` |
 | Healthchecks y `depends_on` | `pg_isready`, `GET /health` (incluye PostgreSQL), `GET /healthz`; `api` espera a `db` sana y `spa` a `api` sana | `docker ps` → los tres `(healthy)` |
