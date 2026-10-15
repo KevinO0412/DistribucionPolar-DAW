@@ -4,6 +4,7 @@ import type { Category, CreateProductRequest, Product, ProductFields } from '../
 import { Button } from '../components/ui/Button';
 import { CheckboxField, SelectField, TextField } from '../components/ui/Field';
 import { Modal } from '../components/ui/Modal';
+import { ProductThumb } from '../components/ui/ProductThumb';
 
 export const EMPTY_GROUPS = [
   { key: 'RET_222ML_X36', name: '222ML RET x36' },
@@ -136,6 +137,7 @@ export function ProductForm({ open, product, categories, onClose, onSubmit }: Pr
       }
     >
       <form id="product-form" onSubmit={submit} noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {!isNew && <ProductThumb productId={product.id} name={product.name} className="h-28 w-28 sm:col-span-2" />}
         {formError && (
           <p className="rounded-md border border-status-out/40 bg-status-out/5 px-3 py-2 text-sm sm:col-span-2" role="alert">
             {formError}
