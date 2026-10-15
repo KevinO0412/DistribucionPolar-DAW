@@ -273,6 +273,29 @@ export interface Client {
   isReceivable: boolean;
   lastPurchaseAt: string | null;
   createdAt: string;
+  creditLimit: number | null;
+  creditDays: number;
+}
+
+/** Crédito y envejecimiento de la deuda (FIFO) de un cliente. */
+export interface CreditStatus {
+  debt: number;
+  creditLimit: number | null;
+  creditDays: number;
+  overdueAmount: number;
+  oldestDebtDays: number | null;
+  available: number | null;
+  isBlocked: boolean;
+  blockReason: string | null;
+  days0To30: number;
+  days31To60: number;
+  days61To90: number;
+  over90: number;
+}
+
+export interface CreditTermsRequest {
+  creditLimit: number | null;
+  creditDays: number;
 }
 
 export interface SaleLineRequest {

@@ -5,6 +5,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { homeFor } from './components/layout/navigation';
 import { useAuth } from './hooks/useAuth';
 import { CategoriesPage } from './pages/CategoriesPage';
+import { ClientsPage } from './pages/ClientsPage';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { PresalePage } from './pages/PresalePage';
 import { LoginPage } from './pages/LoginPage';
@@ -47,6 +48,7 @@ export function App() {
         <Route path="categorias" element={<CategoriesPage />} />
         <Route path="camiones" element={<TrucksPage />} />
         <Route path="facturas" element={<InvoicesPage />} />
+        <Route path="clientes" element={<ClientsPage />} />
         <Route path="preventa" element={<PresalePage />} />
         <Route path="sin-permiso" element={<ForbiddenPage />} />
         <Route path="*" element={<NotFoundPage />} />

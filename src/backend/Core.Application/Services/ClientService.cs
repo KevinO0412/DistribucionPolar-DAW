@@ -4,6 +4,7 @@ using Core.Application.Mappings;
 using Core.Domain.Common;
 using Core.Domain.Entities;
 using Core.Domain.Enums;
+using Core.Domain.Services;
 using FluentValidation;
 
 namespace Core.Application.Services;
@@ -17,8 +18,42 @@ public sealed class ClientService(
     IValidator<UpdateClientRequest> updateValidator,
     IValidator<ClientPaymentRequest> paymentValidator,
     IValidator<ClientEmptiesReturnRequest> emptiesValidator,
-    IValidator<ClientBalanceAdjustmentRequest> adjustmentValidator) : IClientService
+    IValidator<ClientBalanceAdjustmentRequest> adjustmentValidator,
+    IValidator<CreditTermsRequest> creditTermsValidator,
+    IClock clock) : IClientService
 {
+    public async Task<CreditStatusResponse> GetCreditStatusAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var client = await clients.GetByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"No existe el cliente {id}.");
+        return (await EvaluateCreditAsync(client, cancellationToken)).ToResponse();
+    }
+
+    public async Task<CreditStatusResponse> SetCreditTermsAsync(Guid id, CreditTermsRequest request, CancellationToken cancellationToken = default)
+    {
+        await creditTermsValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var client = await unitOfWork.ExecuteInTransactionAsync(async ct =>
+        {
+            var target = await clients.GetForUpdateAsync(id, ct)
+                ?? throw new KeyNotFoundException($"No existe el cliente {id}.");
+            target.SetCreditTerms(request.CreditLimit, request.CreditDays);
+            await unitOfWork.SaveChangesAsync(ct);
+            return target;
+        }, cancellationToken);
+
+        await audit.AuditAsync("client_credit_terms", "clients",
+            $"Crédito de {client.Name}: límite {(client.CreditLimit is null ? "sin límite" : BusinessMappings.Money(client.CreditLimit.Value))}, {client.CreditDays} días",
+            nameof(Client), client.Id.ToString(), client.CreditLimit,
+            metadata: new { client.CreditLimit, client.CreditDays }, cancellationToken: cancellationToken);
+        return (await EvaluateCreditAsync(client, cancellationToken)).ToResponse();
+    }
+
+    private async Task<CreditStatus> EvaluateCreditAsync(Client client, CancellationToken cancellationToken)
+    {
+        var open = await clients.GetOpenSalesAsync(client.Id, cancellationToken);
+        return CreditPolicy.Evaluate(client, open.Select(o => o.ToOpenSale(clock)), clock.Today);
+    }
+
     public async Task<IReadOnlyList<ClientResponse>> SearchAsync(string? search, CancellationToken cancellationToken = default)
     {
         var list = await clients.SearchAsync(search, receivableOnly: false, cancellationToken);

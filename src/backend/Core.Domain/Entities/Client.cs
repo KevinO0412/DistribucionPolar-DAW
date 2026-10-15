@@ -17,6 +17,8 @@ public sealed class Client : BaseEntity
     public const int TypeMaxLength = 30;
     public const string DefaultAddress = "Cliente ocasional / sin dirección registrada";
     public const string DefaultType = "Ocasional";
+    public const int DefaultCreditDays = 30;
+    public const int MaxCreditDays = 365;
 
     private readonly List<ClientEmptyBalance> emptyBalances = [];
 
@@ -56,6 +58,12 @@ public sealed class Client : BaseEntity
     public int EmptyUnitsBalance { get; private set; }
 
     public IReadOnlyCollection<ClientEmptyBalance> EmptyBalances => emptyBalances.AsReadOnly();
+
+    /// <summary>Límite de crédito en USD (divisas). null = sin límite de monto; 0 = solo ventas de contado.</summary>
+    public decimal? CreditLimit { get; private set; }
+
+    /// <summary>Días de crédito: una deuda con más días que estos está vencida y bloquea nuevas ventas a crédito.</summary>
+    public int CreditDays { get; private set; } = DefaultCreditDays;
 
     public string FormattedCode => Code.ToString("D3");
 
@@ -120,6 +128,24 @@ public sealed class Client : BaseEntity
         balance.Apply(boxesDelta, unitsDelta);
         EmptyBoxesBalance += boxesDelta;
         EmptyUnitsBalance += unitsDelta;
+        Touch();
+    }
+
+    /// <summary>Condiciones de crédito (solo administración).</summary>
+    public void SetCreditTerms(decimal? creditLimit, int creditDays)
+    {
+        if (creditLimit is < 0)
+        {
+            throw new DomainException("El límite de crédito no puede ser negativo.");
+        }
+
+        if (creditDays is < 1 or > MaxCreditDays)
+        {
+            throw new DomainException($"Los días de crédito deben estar entre 1 y {MaxCreditDays}.");
+        }
+
+        CreditLimit = creditLimit is null ? null : Math.Round(creditLimit.Value, 2);
+        CreditDays = creditDays;
         Touch();
     }
 

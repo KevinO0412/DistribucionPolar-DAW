@@ -65,6 +65,12 @@ public interface IClientService
     Task<ClientResponse> ReturnEmptiesAsync(Guid id, ClientEmptiesReturnRequest request, CancellationToken cancellationToken = default);
 
     Task<ClientResponse> AdjustBalancesAsync(Guid id, ClientBalanceAdjustmentRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Situación de crédito y envejecimiento de la deuda del cliente.</summary>
+    Task<CreditStatusResponse> GetCreditStatusAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Fija el límite y los días de crédito (solo Admin).</summary>
+    Task<CreditStatusResponse> SetCreditTermsAsync(Guid id, CreditTermsRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface IInvoiceService

@@ -21,6 +21,9 @@ public sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(c => c.MoneyBalance).IsRequired().HasPrecision(18, 2).HasDefaultValue(0m);
         builder.Property(c => c.EmptyBoxesBalance).IsRequired().HasDefaultValue(0);
         builder.Property(c => c.EmptyUnitsBalance).IsRequired().HasDefaultValue(0);
+        builder.Property(c => c.CreditLimit).HasPrecision(18, 2);
+        builder.Property(c => c.CreditDays).IsRequired().HasDefaultValue(Client.DefaultCreditDays);
+        builder.ToTable(t => t.HasCheckConstraint("CK_Clients_Credit", "\"CreditLimit\" IS NULL OR \"CreditLimit\" >= 0"));
 
         builder.HasIndex(c => c.Code).IsUnique();
         builder.HasIndex(c => c.Rif).IsUnique().HasFilter("\"IsDeleted\" = false");

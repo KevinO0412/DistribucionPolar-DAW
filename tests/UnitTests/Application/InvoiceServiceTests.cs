@@ -33,6 +33,7 @@ public sealed class InvoiceServiceTests
     private readonly Client client = new(7, "V-10000004", "Panadería Santa Rosa", null, null, null);
     private readonly Guid beverages = Guid.NewGuid();
     private readonly List<Product> catalog = [];
+    private List<OpenSaleRow> openSales = [];
 
     public InvoiceServiceTests()
     {
@@ -47,6 +48,8 @@ public sealed class InvoiceServiceTests
         mockClients.Setup(r => r.GetForUpdateAsync(client.Id, It.IsAny<CancellationToken>())).ReturnsAsync(client);
         mockClock.Setup(c => c.UtcNow).Returns(Now);
         mockClock.Setup(c => c.Today).Returns(new DateOnly(2026, 10, 15));
+        mockClock.Setup(c => c.ToLocal(It.IsAny<DateTime>())).Returns((DateTime utc) => utc);
+        mockClients.Setup(r => r.GetOpenSalesAsync(client.Id, It.IsAny<CancellationToken>())).ReturnsAsync(() => openSales);
         mockNumbers.Setup(n => n.NextAsync(It.IsAny<string>(), 2026, 10, 0, It.IsAny<CancellationToken>())).ReturnsAsync(3);
         mockProducts.Setup(r => r.GetManyForUpdateAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IEnumerable<Guid> ids, CancellationToken _) =>
@@ -325,6 +328,52 @@ public sealed class InvoiceServiceTests
         await Assert.ThrowsAsync<FluentValidation.ValidationException>(() => service.CreateSaleAsync(Sale(beer.Id, 1, 0, 0m), key));
 
         mockInvoices.Verify(r => r.FindIdempotentSaleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_OnCreditWithOverdueDebt_IsBlocked_WithoutConsumingNumberOrStock()
+    {
+        // Arrange: debe 60 de una factura de hace 40 días (crédito de 30 días).
+        var beer = Beer(360);
+        client.AdjustBalances(-60m, 0, 0);
+        openSales = [new OpenSaleRow(client.Id, Now.AddDays(-40), 60m)];
+
+        // Act: venta a crédito (abono 0).
+        var error = await Assert.ThrowsAsync<DomainException>(() => service.CreateSaleAsync(Sale(beer.Id, 1, 0, 0m)));
+
+        // Assert
+        Assert.Contains("deuda vencida", error.Message);
+        Assert.Equal(360, beer.StockUnits);
+        mockNumbers.Verify(n => n.NextAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockInvoices.Verify(r => r.Add(It.IsAny<Invoice>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_WithOverdueDebt_ButPaidInCash_IsAllowed()
+    {
+        var beer = Beer(360);
+        client.AdjustBalances(-60m, 0, 0);
+        openSales = [new OpenSaleRow(client.Id, Now.AddDays(-40), 60m)];
+
+        var invoice = await service.CreateSaleAsync(Sale(beer.Id, 1, 0, 100m));
+
+        Assert.Equal(0m, invoice.Pending);
+        Assert.Equal(-60m, client.MoneyBalance);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_OverTheCreditLimit_IsBlocked()
+    {
+        // Arrange: límite 150, debe 80 (reciente); la venta deja 100 pendientes → 180 > 150.
+        var beer = Beer(360);
+        client.SetCreditTerms(150m, 30);
+        client.AdjustBalances(-80m, 0, 0);
+        openSales = [new OpenSaleRow(client.Id, Now.AddDays(-2), 80m)];
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => service.CreateSaleAsync(Sale(beer.Id, 1, 0, 0m)));
+
+        Assert.Contains("supera el límite de crédito", error.Message);
+        Assert.Contains("disponible $70.00", error.Message);
     }
 
     private Invoice CaptureLastInvoice() =>

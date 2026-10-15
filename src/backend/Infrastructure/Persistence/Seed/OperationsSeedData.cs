@@ -79,6 +79,7 @@ internal static class OperationsSeedData
         MoneyBalance = 0m,
         EmptyBoxesBalance = 0,
         EmptyUnitsBalance = 0,
+        CreditDays = 30,
         CreatedAt = SeedDate,
         IsDeleted = false
     };

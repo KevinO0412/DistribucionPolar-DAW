@@ -148,6 +148,16 @@ public sealed class ClientPaymentRequestValidator : AbstractValidator<ClientPaym
     }
 }
 
+public sealed class CreditTermsRequestValidator : AbstractValidator<CreditTermsRequest>
+{
+    public CreditTermsRequestValidator()
+    {
+        RuleFor(x => x.CreditLimit).GreaterThanOrEqualTo(0).LessThanOrEqualTo(10_000_000).PrecisionScale(18, 2, true)
+            .When(x => x.CreditLimit is not null);
+        RuleFor(x => x.CreditDays).InclusiveBetween(1, Client.MaxCreditDays);
+    }
+}
+
 public sealed class ClientEmptiesReturnRequestValidator : AbstractValidator<ClientEmptiesReturnRequest>
 {
     public ClientEmptiesReturnRequestValidator()

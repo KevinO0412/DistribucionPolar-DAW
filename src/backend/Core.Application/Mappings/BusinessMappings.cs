@@ -1,7 +1,9 @@
 using System.Globalization;
+using Core.Application.Abstractions;
 using Core.Application.DTOs;
 using Core.Domain.Common;
 using Core.Domain.Entities;
+using Core.Domain.Services;
 using Core.Domain.ValueObjects;
 
 namespace Core.Application.Mappings;
@@ -79,7 +81,17 @@ internal static class BusinessMappings
             .ToList(),
         client.IsReceivable,
         lastPurchaseAt,
-        client.CreatedAt);
+        client.CreatedAt,
+        client.CreditLimit,
+        client.CreditDays);
+
+    /// <summary>Fecha local de la empresa de la factura abierta (el envejecimiento se cuenta en días locales).</summary>
+    public static OpenSale ToOpenSale(this OpenSaleRow row, IClock clock) =>
+        new(DateOnly.FromDateTime(clock.ToLocal(row.IssuedAtUtc)), row.Pending);
+
+    public static CreditStatusResponse ToResponse(this CreditStatus status) => new(
+        status.Debt, status.CreditLimit, status.CreditDays, status.OverdueAmount, status.OldestDebtDays, status.Available,
+        status.IsBlocked, status.BlockReason, status.Aging.Days0To30, status.Aging.Days31To60, status.Aging.Days61To90, status.Aging.Over90);
 
     public static ClientMovementResponse ToResponse(this ClientMovement movement) => new(
         movement.Id, movement.Type, movement.Title, movement.Description, movement.Amount, movement.InvoiceId, movement.CreatedAt);

@@ -5,7 +5,10 @@ import { memoryOrderStore } from '../offline/store';
 import { PresalePage } from './PresalePage';
 
 vi.mock('../api/endpoints', () => ({
-  clientsApi: { list: vi.fn().mockResolvedValue([{ id: 'c1', code: '001', name: 'Bodega La Esquina', rif: 'V-1', nickname: null }]) },
+  clientsApi: {
+    list: vi.fn().mockResolvedValue([{ id: 'c1', code: '001', name: 'Bodega La Esquina', rif: 'V-1', nickname: null }]),
+    credit: vi.fn().mockResolvedValue({ isBlocked: true, blockReason: 'Tiene $60.00 de deuda vencida.', available: null }),
+  },
   productsApi: {
     list: vi.fn().mockResolvedValue([{ id: 'p1', name: 'POLAR PILSEN RET 222ML', priceBox: 23, priceUnit: 0.75, isActive: true, stockUnits: 360 }]),
   },
@@ -35,5 +38,19 @@ describe('PresalePage', () => {
     expect(order).toMatchObject({ status: 'pending', clientName: 'Bodega La Esquina', estimatedTotal: 46 });
     expect(order.request.items).toEqual([{ productId: 'p1', boxes: 2, looseUnits: 0 }]);
     expect(screen.getByText('Pendiente de envío')).toBeInTheDocument();
+  });
+
+  it('en línea avisa si el cliente solo puede comprar de contado', async () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+    render(
+      <ToastProvider>
+        <PresalePage store={memoryOrderStore()} />
+      </ToastProvider>,
+    );
+
+    await userEvent.selectOptions(await screen.findByLabelText('Cliente'), 'c1');
+
+    expect(await screen.findByText(/Tiene \$60.00 de deuda vencida/)).toBeInTheDocument();
+    expect(screen.getByText('Solo contado.')).toBeInTheDocument();
   });
 });

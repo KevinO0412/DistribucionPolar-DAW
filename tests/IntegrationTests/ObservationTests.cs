@@ -68,4 +68,30 @@ public sealed class ObservationTests(ApiFixture api)
         Assert.Equal(80, after.StockUnits);
         Assert.Equal(-150m, balance.MoneyBalance);
     }
+
+    [Fact]
+    public async Task CreditLimit_BlocksCreditSales_ButAllowsCash_AndOnlyAdminSetsIt()
+    {
+        var admin = await api.AdminAsync();
+        var employee = await api.EmployeeAsync();
+        var product = await NewProductAsync(admin, 100m, 12m, 10, 10);
+        var client = await NewClientAsync(admin);
+
+        var forbidden = await employee.SendRawAsync(HttpMethod.Put, $"/api/clients/{client.Id}/credit", new CreditTermsRequest(150m, 30));
+        var terms = await admin.SendAsync<CreditStatusResponse>(HttpMethod.Put, $"/api/clients/{client.Id}/credit", new CreditTermsRequest(150m, 30));
+
+        // Debe 100 (dentro del límite); la siguiente venta a crédito dejaría 200 > 150.
+        await employee.PostAsync<InvoiceResponse>("/api/invoices/sales", Sale(client.Id, product.Id, 1, 0m), HttpStatusCode.Created);
+        var blocked = await employee.SendRawAsync(HttpMethod.Post, "/api/invoices/sales", Sale(client.Id, product.Id, 1, 0m));
+        var cash = await employee.SendRawAsync(HttpMethod.Post, "/api/invoices/sales", Sale(client.Id, product.Id, 1, 100m));
+        var credit = await employee.GetAsync<CreditStatusResponse>($"/api/clients/{client.Id}/credit");
+
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+        Assert.Equal(150m, terms.Available);
+        Assert.Equal(HttpStatusCode.BadRequest, blocked.StatusCode);
+        Assert.Contains("supera el límite de crédito", await blocked.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Created, cash.StatusCode);
+        Assert.Equal((100m, 50m, 100m), (credit.Debt, credit.Available, credit.Days0To30));
+        Assert.False(credit.IsBlocked);
+    }
 }

@@ -68,6 +68,26 @@ public sealed class ClientRepository(ApplicationDbContext context) : IClientRepo
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<OpenSaleRow>> GetOpenSalesAsync(Guid clientId, CancellationToken cancellationToken = default)
+    {
+        return await OpenSales(context.Invoices.Where(i => i.ClientId == clientId)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<OpenSaleRow>>> GetOpenSalesAsync(IEnumerable<Guid> clientIds, CancellationToken cancellationToken = default)
+    {
+        var ids = clientIds.Distinct().ToList();
+        var rows = await OpenSales(context.Invoices.Where(i => ids.Contains(i.ClientId))).ToListAsync(cancellationToken);
+        return rows.GroupBy(r => r.ClientId).ToDictionary(g => g.Key, g => (IReadOnlyList<OpenSaleRow>)g.ToList());
+    }
+
+    /// <summary>Proyección a DTO: solo fecha y pendiente de las ventas vigentes que dejaron saldo.</summary>
+    private static IQueryable<OpenSaleRow> OpenSales(IQueryable<Invoice> invoices) =>
+        invoices
+            .AsNoTracking()
+            .Where(i => i.Type == InvoiceType.Sale && !i.IsCancelled && i.Pending > 0)
+            .OrderByDescending(i => i.IssuedAt)
+            .Select(i => new OpenSaleRow(i.ClientId, i.IssuedAt, i.Pending));
+
     public async Task<IReadOnlyDictionary<Guid, DateTime>> GetLastSaleDatesAsync(IEnumerable<Guid> clientIds, CancellationToken cancellationToken = default)
     {
         var ids = clientIds.Distinct().ToList();

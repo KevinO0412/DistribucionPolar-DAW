@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CloudOff, Plus, RefreshCw, Send, Trash2, Wifi } from 'lucide-react';
 import { clientsApi, invoicesApi, productsApi, trucksApi } from '../api/endpoints';
 import { toApiError, type ApiError } from '../api/client';
-import type { Client, Product, Truck } from '../api/types';
+import type { Client, CreditStatus, Product, Truck } from '../api/types';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/Button';
 import { SelectField, TextField } from '../components/ui/Field';
@@ -51,6 +51,16 @@ export function PresalePage({ store = idbOrderStore }: { store?: OrderStore }) {
   const [payment, setPayment] = useState('0');
   const [observation, setObservation] = useState('');
   const [formError, setFormError] = useState<string>();
+  const [credit, setCredit] = useState<CreditStatus | null>(null);
+
+  // Crédito del cliente elegido (observación 2): avisa antes de guardar; la API es quien bloquea.
+  useEffect(() => {
+    setCredit(null);
+    if (!clientId || !online) return;
+    const controller = new AbortController();
+    clientsApi.credit(clientId, controller.signal).then(setCredit).catch(() => setCredit(null));
+    return () => controller.abort();
+  }, [clientId, online]);
 
   const loadCatalog = useCallback(async () => {
     setLoadError(null);
@@ -222,6 +232,15 @@ export function PresalePage({ store = idbOrderStore }: { store?: OrderStore }) {
                 ))}
               </SelectField>
             </div>
+
+            {credit?.isBlocked && (
+              <p className="rounded-md border border-status-critical/50 bg-status-critical/10 px-3 py-2 text-sm" role="alert">
+                <span className="font-semibold">Solo contado.</span> {credit.blockReason}
+              </p>
+            )}
+            {credit && !credit.isBlocked && credit.available !== null && (
+              <p className="text-sm text-muted">Crédito disponible: {formatMoney(credit.available)}</p>
+            )}
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto] sm:items-end">
               <SelectField label="Producto" value={productId} onChange={(e) => setProductId(e.target.value)} wrapperClassName="col-span-2 sm:col-span-1">

@@ -5,6 +5,8 @@ import type {
   CategoryRequest,
   Client,
   CreateSaleRequest,
+  CreditStatus,
+  CreditTermsRequest,
   CreateProductRequest,
   DashboardResponse,
   Invoice,
@@ -57,4 +59,6 @@ export const invoicesApi = {
 
 export const clientsApi = {
   list: (search?: string) => api.get<Client[]>('/clients', { params: { search: search || undefined } }).then((r) => r.data),
+  credit: (id: string, signal?: AbortSignal) => api.get<CreditStatus>(`/clients/${id}/credit`, { signal }).then((r) => r.data),
+  setCredit: (id: string, body: CreditTermsRequest) => api.put<CreditStatus>(`/clients/${id}/credit`, body).then((r) => r.data),
 };

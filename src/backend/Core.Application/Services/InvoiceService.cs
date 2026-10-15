@@ -4,6 +4,7 @@ using Core.Application.Mappings;
 using Core.Domain.Common;
 using Core.Domain.Entities;
 using Core.Domain.Enums;
+using Core.Domain.Services;
 using Core.Domain.ValueObjects;
 using FluentValidation;
 
@@ -97,6 +98,12 @@ public sealed class InvoiceService(
             var lines = await StockOperations.LoadLinesAsync(products, request.Items, ct);
 
             StockOperations.EnsureAvailable(request.DispatchOrigin, truck, lines);
+
+            // Control de crédito (observación 2): antes de numerar, para no consumir número si se bloquea.
+            decimal newPending = lines.Sum(l => l.Product.CalculateSubtotal(l.Quantity)) - request.Payment;
+            var openSales = await clients.GetOpenSalesAsync(client.Id, ct);
+            CreditPolicy.EnsureCanSell(client, openSales.Select(o => o.ToOpenSale(clock)), clock.Today, newPending);
+
             foreach (var line in lines)
             {
                 StockOperations.Remove(request.DispatchOrigin, truck, line.Product, line.Quantity);

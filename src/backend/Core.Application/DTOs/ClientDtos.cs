@@ -19,10 +19,13 @@ namespace Core.Application.DTOs;
 /// <param name="IsReceivable">Tiene alguna deuda (dinero o vacíos).</param>
 /// <param name="LastPurchaseAt">Fecha de la última factura de venta vigente.</param>
 /// <param name="CreatedAt">Fecha de alta (UTC).</param>
+/// <param name="CreditLimit">Límite de crédito en USD; null = sin límite.</param>
+/// <param name="CreditDays">Días de crédito.</param>
 public sealed record ClientResponse(
     Guid Id, string Code, string Rif, string Name, string Address, string? Nickname, string Type,
     decimal MoneyBalance, string MoneyStatus, int EmptyBoxesBalance, int EmptyUnitsBalance, string EmptiesStatus,
-    IReadOnlyList<EmptyGroupBalance> EmptyBalances, bool IsReceivable, DateTime? LastPurchaseAt, DateTime CreatedAt);
+    IReadOnlyList<EmptyGroupBalance> EmptyBalances, bool IsReceivable, DateTime? LastPurchaseAt, DateTime CreatedAt,
+    decimal? CreditLimit, int CreditDays);
 
 /// <summary>Alta de cliente. Se crea como "Ocasional" con saldos en 0.</summary>
 /// <param name="Rif" example="V-12345678">RIF o cédula, obligatorio y único.</param>
@@ -36,6 +39,28 @@ public sealed record CreateClientRequest(string Rif, string Name, string? Addres
 /// <param name="Nickname">Referencia o apodo.</param>
 /// <param name="Type" example="ESPECIAL">Tipo de cliente.</param>
 public sealed record UpdateClientRequest(string? Address, string? Nickname, string? Type);
+
+/// <summary>Condiciones de crédito del cliente (solo Admin).</summary>
+/// <param name="CreditLimit" example="500.00">Límite en USD; null = sin límite de monto; 0 = solo contado.</param>
+/// <param name="CreditDays" example="30">Días de crédito (1 a 365): la deuda más vieja que esto está vencida.</param>
+public sealed record CreditTermsRequest(decimal? CreditLimit, int CreditDays);
+
+/// <summary>Situación de crédito y envejecimiento de la deuda del cliente (criterio FIFO).</summary>
+/// <param name="Debt">Deuda actual en USD.</param>
+/// <param name="CreditLimit">Límite de crédito; null = sin límite.</param>
+/// <param name="CreditDays">Días de crédito.</param>
+/// <param name="OverdueAmount">Deuda con más días que los de crédito.</param>
+/// <param name="OldestDebtDays">Días de la deuda más vieja.</param>
+/// <param name="Available">Crédito disponible; null si no hay límite.</param>
+/// <param name="IsBlocked">true si solo puede comprar de contado.</param>
+/// <param name="BlockReason">Motivo del bloqueo.</param>
+/// <param name="Days0To30">Deuda de 0 a 30 días.</param>
+/// <param name="Days31To60">Deuda de 31 a 60 días.</param>
+/// <param name="Days61To90">Deuda de 61 a 90 días.</param>
+/// <param name="Over90">Deuda de más de 90 días.</param>
+public sealed record CreditStatusResponse(
+    decimal Debt, decimal? CreditLimit, int CreditDays, decimal OverdueAmount, int? OldestDebtDays, decimal? Available,
+    bool IsBlocked, string? BlockReason, decimal Days0To30, decimal Days31To60, decimal Days61To90, decimal Over90);
 
 /// <summary>Abono de dinero fuera de factura.</summary>
 /// <param name="Amount" example="25.00">Monto mayor que 0, máximo 2 decimales.</param>

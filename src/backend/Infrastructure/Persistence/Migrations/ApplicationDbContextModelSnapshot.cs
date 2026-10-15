@@ -179,6 +179,15 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamptz");
 
+                    b.Property<int>("CreditDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(30);
+
+                    b.Property<decimal?>("CreditLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<int>("EmptyBoxesBalance")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -239,7 +248,10 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("Clients", (string)null);
+                    b.ToTable("Clients", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Clients_Credit", "\"CreditLimit\" IS NULL OR \"CreditLimit\" >= 0");
+                        });
 
                     b.HasData(
                         new
@@ -248,6 +260,7 @@ namespace Infrastructure.Persistence.Migrations
                             Address = "Av. Principal, local 3",
                             Code = 1,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreditDays = 30,
                             EmptyBoxesBalance = 0,
                             EmptyUnitsBalance = 0,
                             IsDeleted = false,
@@ -263,6 +276,7 @@ namespace Infrastructure.Persistence.Migrations
                             Address = "Calle 5 con carrera 7",
                             Code = 2,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreditDays = 30,
                             EmptyBoxesBalance = 0,
                             EmptyUnitsBalance = 0,
                             IsDeleted = false,
@@ -278,6 +292,7 @@ namespace Infrastructure.Persistence.Migrations
                             Address = "Av. Los Andes, local 12",
                             Code = 3,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreditDays = 30,
                             EmptyBoxesBalance = 0,
                             EmptyUnitsBalance = 0,
                             IsDeleted = false,
@@ -293,6 +308,7 @@ namespace Infrastructure.Persistence.Migrations
                             Address = "Barrio Santa Rosa, calle 2",
                             Code = 4,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreditDays = 30,
                             EmptyBoxesBalance = 0,
                             EmptyUnitsBalance = 0,
                             IsDeleted = false,
@@ -308,6 +324,7 @@ namespace Infrastructure.Persistence.Migrations
                             Address = "Carrera 10, centro",
                             Code = 5,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreditDays = 30,
                             EmptyBoxesBalance = 0,
                             EmptyUnitsBalance = 0,
                             IsDeleted = false,

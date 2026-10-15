@@ -103,6 +103,34 @@ public sealed class ClientsController(IClientService clients) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Situación de crédito del cliente: deuda, vencido, disponible y envejecimiento (0-30, 31-60, 61-90, +90 días).</summary>
+    /// <param name="id">Identificador.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Situación de crédito; <c>isBlocked</c> indica que solo puede comprar de contado.</response>
+    /// <response code="404">El cliente no existe.</response>
+    [HttpGet("{id:guid}/credit")]
+    [ProducesResponseType<CreditStatusResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<CreditStatusResponse>> Credit(Guid id, CancellationToken cancellationToken) =>
+        Ok(await clients.GetCreditStatusAsync(id, cancellationToken));
+
+    /// <summary>Fija el límite y los días de crédito del cliente (solo Admin).</summary>
+    /// <param name="id">Identificador.</param>
+    /// <param name="request">Límite en USD (null = sin límite) y días de crédito.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Situación de crédito con las condiciones nuevas.</response>
+    /// <response code="400">Datos inválidos.</response>
+    /// <response code="403">El usuario no es Admin.</response>
+    /// <response code="404">El cliente no existe.</response>
+    [Authorize(Roles = Roles.Admin)]
+    [HttpPut("{id:guid}/credit")]
+    [ProducesResponseType<CreditStatusResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<CreditStatusResponse>> SetCredit(Guid id, CreditTermsRequest request, CancellationToken cancellationToken) =>
+        Ok(await clients.SetCreditTermsAsync(id, request, cancellationToken));
+
     /// <summary>Registra un abono de dinero fuera de factura (suma al saldo).</summary>
     /// <param name="id">Cliente.</param>
     /// <param name="request">Monto y observación.</param>
