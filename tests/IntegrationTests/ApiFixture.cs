@@ -23,6 +23,8 @@ public sealed class ApiFixture : IAsyncLifetime
 
     public WebApplicationFactory<Program> Factory { get; private set; } = default!;
 
+    private static readonly string JwtKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48));
+
     public static JsonSerializerOptions Json { get; } = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
     public async Task InitializeAsync()
@@ -38,6 +40,8 @@ public sealed class ApiFixture : IAsyncLifetime
         {
             builder.UseEnvironment("Development");
             builder.UseSetting("ConnectionStrings:DefaultConnection", database.GetConnectionString());
+            // Clave aleatoria por ejecución: la clave JWT no está escrita en el código ni en appsettings.
+            builder.UseSetting("JwtSettings:Key", JwtKey);
             builder.UseSetting("RateLimiting:LoginPermitLimit", loginLimit.ToString());
             builder.UseSetting("RateLimiting:GlobalPermitLimit", "100000");
         });

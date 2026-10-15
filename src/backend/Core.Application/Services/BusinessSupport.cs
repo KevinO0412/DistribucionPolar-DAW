@@ -1,4 +1,3 @@
-using System.Globalization;
 using Core.Application.Abstractions;
 using Core.Domain.Entities;
 using Core.Domain.Enums;
@@ -103,14 +102,13 @@ internal static class StockOperations
 /// <summary>Textos y numeración en español.</summary>
 internal static class SpanishText
 {
-    private static readonly CultureInfo Spanish = new("es-ES");
+    // Fijos en el código: la numeración no depende de que el servidor tenga datos de cultura (ICU),
+    // que la imagen Alpine de producción no incluye.
+    private static readonly string[] Months =
+        ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
     /// <summary>Nombre del mes en español con mayúscula inicial ("Octubre").</summary>
-    public static string MonthName(int month)
-    {
-        string name = Spanish.DateTimeFormat.GetMonthName(month);
-        return char.ToUpper(name[0], Spanish) + name[1..];
-    }
+    public static string MonthName(int month) => Months[month - 1];
 
     /// <summary>"Factura Octubre 2026 #3" / "Regalía Octubre 2026 #1" (el año evita choques entre años).</summary>
     public static string InvoiceNumber(InvoiceType type, int year, int month, int sequence) =>

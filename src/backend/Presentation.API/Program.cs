@@ -4,6 +4,7 @@ using Core.Application.Abstractions;
 using Infrastructure;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.HttpOverrides;
 using Presentation.API.Middleware;
 using Presentation.API.Security;
 
@@ -29,6 +30,18 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>("postgresql");
 
+// Detrás de Nginx (contenedor spa) la IP del cliente llega en X-Forwarded-For. Solo se acepta de las redes privadas
+// de Docker; así el rate limiting y la auditoría usan la IP real del cliente y no la del proxy.
+bool behindProxy = builder.Configuration.GetValue<bool>("ReverseProxy:Enabled");
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("10.0.0.0/8"));
+    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("172.16.0.0/12"));
+    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("192.168.0.0/16"));
+});
+
 var app = builder.Build();
 
 // Comportamiento por entorno (appsettings.{Development|Staging|Production}.json o variables de entorno).
@@ -40,7 +53,12 @@ await using (var scope = app.Services.CreateAsyncScope())
     await scope.ServiceProvider.GetRequiredService<DbInitializer>().InitializeAsync(migrateOnStartup);
 }
 
-// Primero en el pipeline para capturar las excepciones de todos los componentes siguientes.
+if (behindProxy)
+{
+    app.UseForwardedHeaders();
+}
+
+// Primero en el pipeline (después de leer la IP real) para capturar las excepciones de todos los componentes siguientes.
 app.UseMiddleware<ExceptionMiddleware>();
 
 if (swaggerEnabled)

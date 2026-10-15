@@ -11,7 +11,7 @@ internal sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransfor
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
         document.Info.Title = "Distribución Polar API";
-        document.Info.Description = "Fases 1, 2 y 3 (DAW-0423807T). Inicie sesión en POST /api/auth/login y pegue el token en Authorize.";
+        document.Info.Description = "Proyecto integrador DAW-0423807T, fases 1 a 5. Inicie sesión en POST /api/auth/login y pegue el token en Authorize.";
 
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
