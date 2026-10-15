@@ -299,7 +299,7 @@ erDiagram
 | Imagen | Etapa de compilación | Etapa final | Tamaño |
 | --- | --- | --- | --- |
 | API (`src/backend/Presentation.API/Dockerfile`) | `dotnet/sdk:10.0-alpine`: restore por `.csproj` (caché de capas) y publish | `dotnet/runtime-deps:10.0-alpine` con la app self-contained, recorte parcial y archivo único comprimido. Usuario sin privilegios, healthcheck `/health` | ~60 MB sin comprimir ([ADR 45](04-DECISIONES.md#45-imagen-de-la-api-self-contained-y-recortada-sobre-alpine)) |
-| SPA (`src/frontend/Dockerfile`) | `node:20-alpine`: `npm ci` y `npm run build` | `nginx:alpine` con `dist/` y `nginx.conf` (fallback a `index.html`, caché de assets, proxy de `/api`) | ~54 MB sin comprimir |
+| SPA (`src/frontend/Dockerfile`) | `node:20-alpine`: `npm ci` y `npm run build` | `nginx:alpine` con `dist/` y `nginx.conf` (fallback a `index.html`, caché de assets, proxy de `/api`) | ~57 MB sin comprimir, incluidas las fotos de los productos |
 
 Las cifras exactas y cómo medirlas están en [evidencias](evidencias/README.md#imágenes-docker).
 

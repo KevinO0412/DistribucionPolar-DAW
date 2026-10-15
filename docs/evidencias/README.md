@@ -10,4 +10,4 @@
 | Capturas de la SPA (login, dashboard, RBAC, sesión JWT) | [capturas/](capturas/) |
 
 ## Imágenes Docker
-Ver [docker-images.txt](docker-images.txt): API ≈ 60 MB y SPA ≈ 54 MB sin comprimir.
+Ver [docker-images.txt](docker-images.txt): API ≈ 51 MB y SPA ≈ 57 MB sin comprimir. Con el almacén containerd de Docker, la columna SIZE de `docker images` suma además el contenido comprimido, por eso muestra más.
