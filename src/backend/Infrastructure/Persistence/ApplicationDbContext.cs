@@ -23,6 +23,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<TruckLoad> TruckLoads => Set<TruckLoad>();
 
+    public DbSet<TruckSettlement> TruckSettlements => Set<TruckSettlement>();
+
     public DbSet<Client> Clients => Set<Client>();
 
     public DbSet<ClientEmptyBalance> ClientEmptyBalances => Set<ClientEmptyBalance>();

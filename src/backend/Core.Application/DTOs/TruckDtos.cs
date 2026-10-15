@@ -95,3 +95,69 @@ public sealed record AdjustStockRequest(Guid ProductId, int Boxes, int LooseUnit
 public sealed record TruckLoadResponse(
     Guid Id, Guid TruckId, string TruckName, Guid ProductId, string ProductName, int TotalUnits,
     int StockBefore, int StockAfter, TruckLoadSource Source, string? Observation, string? Username, DateTime CreatedAt);
+
+/// <summary>Conteo de un producto en la liquidación ciega.</summary>
+/// <param name="ProductId">Producto.</param>
+/// <param name="Boxes">Cajas contadas.</param>
+/// <param name="LooseUnits">Unidades sueltas contadas.</param>
+public sealed record SettlementCountLine(Guid ProductId, int Boxes, int LooseUnits);
+
+/// <summary>Liquidación ciega: lo que el chofer cuenta al volver, sin ver lo esperado.</summary>
+/// <param name="CashCounted" example="350.00">Efectivo recaudado que entrega, en USD.</param>
+/// <param name="Items">Mercancía que devuelve, por producto (lo que no se cuente se toma como 0).</param>
+/// <param name="Observation">Observación opcional.</param>
+public sealed record TruckSettlementRequest(decimal CashCounted, IReadOnlyList<SettlementCountLine> Items, string? Observation);
+
+/// <summary>Producto que el camión llevó, para el conteo ciego (sin cantidades).</summary>
+/// <param name="ProductId">Producto.</param>
+/// <param name="SKU">SKU.</param>
+/// <param name="Name">Nombre.</param>
+/// <param name="UnitsPerBox">Unidades por caja.</param>
+public sealed record SettlementFormProduct(Guid ProductId, string SKU, string Name, int UnitsPerBox);
+
+/// <summary>Formulario de la liquidación ciega: solo los productos, sin cantidades esperadas ni cobros.</summary>
+/// <param name="TruckId">Camión.</param>
+/// <param name="TruckName">Nombre.</param>
+/// <param name="TruckPlate">Placa.</param>
+/// <param name="Status">Estado del camión.</param>
+/// <param name="DispatchedAt">Salida a ruta.</param>
+/// <param name="Products">Productos a contar.</param>
+public sealed record SettlementFormResponse(
+    Guid TruckId, string TruckName, string TruckPlate, string Status, DateTime? DispatchedAt, IReadOnlyList<SettlementFormProduct> Products);
+
+/// <summary>Producto en la planilla de cuadre.</summary>
+/// <param name="ProductId">Producto.</param>
+/// <param name="SKU">SKU.</param>
+/// <param name="ProductName">Nombre.</param>
+/// <param name="UnitsPerBox">Unidades por caja.</param>
+/// <param name="ExpectedUnits">Unidades que el sistema esperaba de vuelta.</param>
+/// <param name="ExpectedDisplay">Lo esperado en cajas y unidades.</param>
+/// <param name="CountedUnits">Unidades contadas.</param>
+/// <param name="CountedDisplay">Lo contado en cajas y unidades.</param>
+/// <param name="DifferenceUnits">Contado − esperado (negativo = faltante).</param>
+/// <param name="DifferenceValue">Diferencia valorizada a precio por unidad.</param>
+public sealed record SettlementLineResponse(
+    Guid ProductId, string SKU, string ProductName, int UnitsPerBox, int ExpectedUnits, string ExpectedDisplay,
+    int CountedUnits, string CountedDisplay, int DifferenceUnits, decimal DifferenceValue);
+
+/// <summary>Planilla de cuadre de la ruta: esperado frente a contado, en efectivo y en mercancía.</summary>
+/// <param name="Id">Liquidación.</param>
+/// <param name="TruckId">Camión.</param>
+/// <param name="TruckName">Nombre.</param>
+/// <param name="TruckPlate">Placa.</param>
+/// <param name="TripStartedAt">Salida a ruta.</param>
+/// <param name="SettledAt">Liquidación.</param>
+/// <param name="SettledBy">Usuario que liquidó.</param>
+/// <param name="Observation">Observación.</param>
+/// <param name="ExpectedCash">Cobrado en las facturas de la ruta según el sistema.</param>
+/// <param name="CountedCash">Efectivo declarado.</param>
+/// <param name="CashDifference">Contado − esperado (negativo = falta dinero).</param>
+/// <param name="ExpectedMerchandiseValue">Valor de la mercancía esperada de vuelta.</param>
+/// <param name="CountedMerchandiseValue">Valor de la mercancía contada.</param>
+/// <param name="MerchandiseDifferenceValue">Diferencia valorizada (negativo = falta mercancía).</param>
+/// <param name="IsBalanced">La ruta cuadra sin diferencias.</param>
+/// <param name="Lines">Productos con diferencias primero.</param>
+public sealed record TruckSettlementResponse(
+    Guid Id, Guid TruckId, string TruckName, string TruckPlate, DateTime TripStartedAt, DateTime SettledAt, string? SettledBy,
+    string? Observation, decimal ExpectedCash, decimal CountedCash, decimal CashDifference, decimal ExpectedMerchandiseValue,
+    decimal CountedMerchandiseValue, decimal MerchandiseDifferenceValue, bool IsBalanced, IReadOnlyList<SettlementLineResponse> Lines);

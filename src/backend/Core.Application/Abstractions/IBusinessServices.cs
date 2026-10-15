@@ -38,6 +38,20 @@ public interface ITruckService
     Task<IReadOnlyList<TruckLoadResponse>> GetLoadsAsync(Guid? truckId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Liquidación ciega de la ruta de un camión.</summary>
+public interface ITruckSettlementService
+{
+    /// <summary>Productos a contar, sin cantidades esperadas.</summary>
+    Task<SettlementFormResponse> GetFormAsync(Guid truckId, CancellationToken cancellationToken = default);
+
+    /// <summary>Registra el conteo, calcula las diferencias y deja el camión "Liquidado".</summary>
+    Task<TruckSettlementResponse> SettleAsync(Guid truckId, TruckSettlementRequest request, CancellationToken cancellationToken = default);
+
+    Task<TruckSettlementResponse> GetAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<TruckSettlementResponse>> ListAsync(Guid? truckId, CancellationToken cancellationToken = default);
+}
+
 public interface IInventoryService
 {
     Task<ProductResponse> AdjustWarehouseStockAsync(Guid productId, AdjustWarehouseStockRequest request, CancellationToken cancellationToken = default);

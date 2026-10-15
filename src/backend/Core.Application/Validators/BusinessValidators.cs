@@ -148,6 +148,25 @@ public sealed class ClientPaymentRequestValidator : AbstractValidator<ClientPaym
     }
 }
 
+public sealed class TruckSettlementRequestValidator : AbstractValidator<TruckSettlementRequest>
+{
+    public TruckSettlementRequestValidator()
+    {
+        RuleFor(x => x.CashCounted).GreaterThanOrEqualTo(0).LessThanOrEqualTo(10_000_000).PrecisionScale(18, 2, true);
+        RuleFor(x => x.Items).NotNull();
+        RuleForEach(x => x.Items).ChildRules(line =>
+        {
+            line.RuleFor(l => l.ProductId).NotEmpty();
+            line.RuleFor(l => l.Boxes).InclusiveBetween(0, 100_000);
+            line.RuleFor(l => l.LooseUnits).InclusiveBetween(0, 100_000);
+        });
+        RuleFor(x => x.Items)
+            .Must(items => items is null || items.Select(i => i.ProductId).Distinct().Count() == items.Count)
+            .WithMessage("Cada producto se cuenta una sola vez.");
+        RuleFor(x => x.Observation).MaximumLength(TruckSettlement.ObservationMaxLength);
+    }
+}
+
 public sealed class CreditTermsRequestValidator : AbstractValidator<CreditTermsRequest>
 {
     public CreditTermsRequestValidator()

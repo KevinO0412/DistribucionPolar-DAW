@@ -40,6 +40,27 @@ public sealed class TruckRepository(ApplicationDbContext context) : ITruckReposi
         context.TruckLoads.Add(load);
     }
 
+    public void AddSettlement(TruckSettlement settlement)
+    {
+        context.TruckSettlements.Add(settlement);
+    }
+
+    public Task<TruckSettlement?> GetSettlementAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return context.TruckSettlements.AsNoTracking().Include(s => s.Lines).FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TruckSettlement>> GetSettlementsAsync(Guid? truckId, CancellationToken cancellationToken = default)
+    {
+        return await context.TruckSettlements
+            .AsNoTracking()
+            .Include(s => s.Lines)
+            .Where(s => truckId == null || s.TruckId == truckId)
+            .OrderByDescending(s => s.SettledAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, TruckTripSales>> GetTripSalesAsync(
         IReadOnlyDictionary<Guid, DateTime> fromUtcByTruck, CancellationToken cancellationToken = default)
     {
@@ -59,7 +80,7 @@ public sealed class TruckRepository(ApplicationDbContext context) : ITruckReposi
         return rows
             .Where(r => r.IssuedAt >= fromUtcByTruck[r.TruckId])
             .GroupBy(r => r.TruckId)
-            .ToDictionary(g => g.Key, g => new TruckTripSales(g.Count(), g.Sum(r => r.Total), g.Sum(r => Math.Min(r.Payment, r.Total))));
+            .ToDictionary(g => g.Key, g => new TruckTripSales(g.Count(), g.Sum(r => r.Total), g.Sum(r => r.Payment)));
     }
 
     public async Task<IReadOnlyList<TruckLoad>> GetLoadsAsync(Guid? truckId, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)

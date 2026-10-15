@@ -13,7 +13,7 @@ namespace Presentation.API.Controllers;
 [Produces("application/json")]
 [Authorize(Roles = Roles.AdminOrEmployee)]
 [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
-public sealed class TrucksController(ITruckService trucks) : ControllerBase
+public sealed class TrucksController(ITruckService trucks, ITruckSettlementService settlements) : ControllerBase
 {
     /// <summary>Lista los camiones con su inventario y valor.</summary>
     /// <response code="200">Camiones.</response>
@@ -142,6 +142,60 @@ public sealed class TrucksController(ITruckService trucks) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<ActionResult<TruckResponse>> Dispatch(Guid id, CancellationToken cancellationToken) =>
         Ok(await trucks.DispatchAsync(id, cancellationToken));
+
+    /// <summary>Formulario de la liquidación ciega: los productos que llevó el camión, sin cantidades ni cobros esperados.</summary>
+    /// <param name="id">Camión en ruta.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Productos a contar.</response>
+    /// <response code="400">El camión no está en ruta.</response>
+    /// <response code="404">No existe el camión.</response>
+    [HttpGet("{id:guid}/settlement-form")]
+    [ProducesResponseType<SettlementFormResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<SettlementFormResponse>> SettlementForm(Guid id, CancellationToken cancellationToken) =>
+        Ok(await settlements.GetFormAsync(id, cancellationToken));
+
+    /// <summary>Liquidación ciega de la ruta: registra lo contado, calcula las diferencias y deja el camión "Liquidado".</summary>
+    /// <remarks>
+    /// El efectivo esperado es lo cobrado en las facturas del camión desde su salida; la mercancía esperada es el inventario
+    /// que el sistema tiene registrado en el camión. La respuesta es la planilla de cuadre con las diferencias.
+    /// </remarks>
+    /// <param name="id">Camión en ruta.</param>
+    /// <param name="request">Efectivo y mercancía contados.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="201">Planilla de cuadre.</response>
+    /// <response code="400">Datos inválidos o el camión no está en ruta.</response>
+    /// <response code="404">No existe el camión o un producto.</response>
+    [HttpPost("{id:guid}/settlements")]
+    [ProducesResponseType<TruckSettlementResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<TruckSettlementResponse>> Settle(Guid id, TruckSettlementRequest request, CancellationToken cancellationToken)
+    {
+        var settlement = await settlements.SettleAsync(id, request, cancellationToken);
+        return CreatedAtAction(nameof(GetSettlement), new { settlementId = settlement.Id }, settlement);
+    }
+
+    /// <summary>Liquidaciones del camión, de la más reciente a la más antigua (máximo 100).</summary>
+    /// <param name="id">Camión.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Planillas de cuadre.</response>
+    [HttpGet("{id:guid}/settlements")]
+    [ProducesResponseType<IReadOnlyList<TruckSettlementResponse>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<TruckSettlementResponse>>> GetSettlements(Guid id, CancellationToken cancellationToken) =>
+        Ok(await settlements.ListAsync(id, cancellationToken));
+
+    /// <summary>Planilla de cuadre de una liquidación.</summary>
+    /// <param name="settlementId">Liquidación.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Planilla de cuadre.</response>
+    /// <response code="404">No existe la liquidación.</response>
+    [HttpGet("settlements/{settlementId:guid}")]
+    [ProducesResponseType<TruckSettlementResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<TruckSettlementResponse>> GetSettlement(Guid settlementId, CancellationToken cancellationToken) =>
+        Ok(await settlements.GetAsync(settlementId, cancellationToken));
 
     /// <summary>Historial de cargas de camiones (máximo 500, de la más reciente a la más antigua).</summary>
     /// <param name="truckId">Filtra por camión.</param>

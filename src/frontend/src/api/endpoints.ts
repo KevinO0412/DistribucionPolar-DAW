@@ -13,7 +13,10 @@ import type {
   InvoiceSummary,
   PagedResponse,
   Product,
+  SettlementForm,
+  SettlementRequest,
   Truck,
+  TruckSettlement,
   UpdateProductRequest,
 } from './types';
 
@@ -47,6 +50,9 @@ export const reportsApi = {
 export const trucksApi = {
   list: () => api.get<Truck[]>('/trucks').then((r) => r.data),
   dispatch: (id: string) => api.post<Truck>(`/trucks/${id}/dispatch`).then((r) => r.data),
+  settlementForm: (id: string) => api.get<SettlementForm>(`/trucks/${id}/settlement-form`).then((r) => r.data),
+  settle: (id: string, body: SettlementRequest) => api.post<TruckSettlement>(`/trucks/${id}/settlements`, body).then((r) => r.data),
+  settlements: (id: string) => api.get<TruckSettlement[]>(`/trucks/${id}/settlements`).then((r) => r.data),
 };
 
 export const invoicesApi = {

@@ -347,3 +347,49 @@ export interface CreateSaleRequest {
   paymentObservation: string | null;
   returnedEmpties: null;
 }
+
+export interface SettlementForm {
+  truckId: string;
+  truckName: string;
+  truckPlate: string;
+  status: string;
+  dispatchedAt: string | null;
+  products: { productId: string; sku: string; name: string; unitsPerBox: number }[];
+}
+
+export interface SettlementRequest {
+  cashCounted: number;
+  items: { productId: string; boxes: number; looseUnits: number }[];
+  observation: string | null;
+}
+
+/** Planilla de cuadre de una liquidación ciega. */
+export interface TruckSettlement {
+  id: string;
+  truckId: string;
+  truckName: string;
+  truckPlate: string;
+  tripStartedAt: string;
+  settledAt: string;
+  settledBy: string | null;
+  observation: string | null;
+  expectedCash: number;
+  countedCash: number;
+  cashDifference: number;
+  expectedMerchandiseValue: number;
+  countedMerchandiseValue: number;
+  merchandiseDifferenceValue: number;
+  isBalanced: boolean;
+  lines: {
+    productId: string;
+    sku: string;
+    productName: string;
+    unitsPerBox: number;
+    expectedUnits: number;
+    expectedDisplay: string;
+    countedUnits: number;
+    countedDisplay: string;
+    differenceUnits: number;
+    differenceValue: number;
+  }[];
+}

@@ -11,6 +11,7 @@ import { PresalePage } from './pages/PresalePage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ForbiddenPage, NotFoundPage } from './pages/StatusPages';
+import { SettlementPage } from './pages/SettlementPage';
 import { TrucksPage } from './pages/TrucksPage';
 import { LoadingState } from './components/ui/States';
 
@@ -47,6 +48,7 @@ export function App() {
         <Route path="productos" element={<ProductsPage />} />
         <Route path="categorias" element={<CategoriesPage />} />
         <Route path="camiones" element={<TrucksPage />} />
+        <Route path="camiones/:id/liquidacion" element={<SettlementPage />} />
         <Route path="facturas" element={<InvoicesPage />} />
         <Route path="clientes" element={<ClientsPage />} />
         <Route path="preventa" element={<PresalePage />} />

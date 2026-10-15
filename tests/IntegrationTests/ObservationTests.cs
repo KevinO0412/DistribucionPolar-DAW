@@ -142,4 +142,37 @@ public sealed class ObservationTests(ApiFixture api)
         Assert.Equal((1, 200m, 150m), (onRoute.TripInvoices, onRoute.TripSales, onRoute.TripCollected));
         Assert.Equal(30, onRoute.TotalUnits);
     }
+
+    [Fact]
+    public async Task BlindSettlement_ComparesTheCount_WithTheRoute_AndClosesIt()
+    {
+        var admin = await api.AdminAsync();
+        var employee = await api.EmployeeAsync();
+        var product = await NewProductAsync(admin, 100m, 12m, 10, 10);
+        var client = await NewClientAsync(admin);
+        var truck = await LoadedTruckAsync(admin, product.Id, 5);
+        await employee.PostAsync<TruckResponse>($"/api/trucks/{truck.Id}/dispatch", null);
+        await employee.PostAsync<InvoiceResponse>("/api/invoices/sales",
+            new CreateSaleRequest(client.Id, StockOrigin.Truck, truck.Id, null, [new LineRequest(product.Id, 2, 0)], 150m, null, null),
+            HttpStatusCode.Created);
+
+        // El formulario no revela cantidades ni cobros.
+        string form = await (await employee.SendRawAsync(HttpMethod.Get, $"/api/trucks/{truck.Id}/settlement-form")).Content.ReadAsStringAsync();
+        // Devuelve $140 (esperado 150) y 2 cajas + 5 und (esperado 3 cajas = 30 und).
+        var sheet = await employee.PostAsync<TruckSettlementResponse>($"/api/trucks/{truck.Id}/settlements",
+            new TruckSettlementRequest(140m, [new SettlementCountLine(product.Id, 2, 5)], "Faltan 5 und"), HttpStatusCode.Created);
+        var settled = await employee.GetAsync<TruckResponse>($"/api/trucks/{truck.Id}");
+        var again = await employee.SendRawAsync(HttpMethod.Post, $"/api/trucks/{truck.Id}/settlements", new TruckSettlementRequest(0m, [], null));
+        var stored = await admin.GetAsync<TruckSettlementResponse>($"/api/trucks/settlements/{sheet.Id}");
+
+        Assert.Contains(product.Name, form);
+        Assert.DoesNotContain("stockUnits", form);
+        Assert.Equal((150m, 140m, -10m), (sheet.ExpectedCash, sheet.CountedCash, sheet.CashDifference));
+        var line = Assert.Single(sheet.Lines);
+        Assert.Equal((30, 25, -5, -60m), (line.ExpectedUnits, line.CountedUnits, line.DifferenceUnits, line.DifferenceValue));
+        Assert.Equal("Liquidado", settled.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, again.StatusCode);
+        Assert.Equal(sheet.Id, stored.Id);
+        Assert.False(stored.IsBalanced);
+    }
 }

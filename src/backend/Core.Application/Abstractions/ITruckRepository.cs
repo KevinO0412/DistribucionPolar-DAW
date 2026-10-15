@@ -28,6 +28,14 @@ public interface ITruckRepository
 
     void AddLoad(TruckLoad load);
 
+    void AddSettlement(TruckSettlement settlement);
+
+    /// <summary>Liquidación con sus líneas (AsNoTracking).</summary>
+    Task<TruckSettlement?> GetSettlementAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Liquidaciones, de la más reciente a la más antigua (máximo 100), con sus líneas.</summary>
+    Task<IReadOnlyList<TruckSettlement>> GetSettlementsAsync(Guid? truckId, CancellationToken cancellationToken = default);
+
     /// <summary>Historial de cargas, de la más reciente a la más antigua (AsNoTracking).</summary>
     Task<IReadOnlyList<TruckLoad>> GetLoadsAsync(Guid? truckId, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default);
 }

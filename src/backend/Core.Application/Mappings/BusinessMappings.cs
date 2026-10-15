@@ -91,6 +91,20 @@ internal static class BusinessMappings
     public static OpenSale ToOpenSale(this OpenSaleRow row, IClock clock) =>
         new(DateOnly.FromDateTime(clock.ToLocal(row.IssuedAtUtc)), row.Pending);
 
+    public static TruckSettlementResponse ToResponse(this TruckSettlement settlement) => new(
+        settlement.Id, settlement.TruckId, settlement.TruckName, settlement.TruckPlate, settlement.TripStartedAt, settlement.SettledAt,
+        settlement.SettledBy, settlement.Observation, settlement.ExpectedCash, settlement.CountedCash, settlement.CashDifference,
+        settlement.ExpectedMerchandiseValue, settlement.CountedMerchandiseValue, settlement.MerchandiseDifferenceValue, settlement.IsBalanced,
+        settlement.Lines
+            .OrderBy(l => l.DifferenceUnits == 0)
+            .ThenBy(l => l.ProductName)
+            .Select(l => new SettlementLineResponse(
+                l.ProductId, l.SKU, l.ProductName, l.UnitsPerBox,
+                l.ExpectedUnits, BoxQuantity.FromUnits(l.ExpectedUnits, l.UnitsPerBox).ToString(),
+                l.CountedUnits, BoxQuantity.FromUnits(l.CountedUnits, l.UnitsPerBox).ToString(),
+                l.DifferenceUnits, l.DifferenceValue))
+            .ToList());
+
     public static CreditStatusResponse ToResponse(this CreditStatus status) => new(
         status.Debt, status.CreditLimit, status.CreditDays, status.OverdueAmount, status.OldestDebtDays, status.Available,
         status.IsBlocked, status.BlockReason, status.Aging.Days0To30, status.Aging.Days31To60, status.Aging.Days61To90, status.Aging.Over90);

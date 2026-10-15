@@ -43,6 +43,51 @@ public sealed class TruckStockConfiguration : IEntityTypeConfiguration<TruckStoc
     }
 }
 
+public sealed class TruckSettlementConfiguration : IEntityTypeConfiguration<TruckSettlement>
+{
+    public void Configure(EntityTypeBuilder<TruckSettlement> builder)
+    {
+        builder.ToTable("TruckSettlements", table =>
+            table.HasCheckConstraint("CK_TruckSettlements_CountedCash_NotNegative", "\"CountedCash\" >= 0"));
+        builder.ConfigureBaseEntity();
+        builder.Property(s => s.TruckName).IsRequired().HasMaxLength(Truck.NameMaxLength);
+        builder.Property(s => s.TruckPlate).IsRequired().HasMaxLength(Truck.PlateMaxLength);
+        builder.Property(s => s.TripStartedAt).IsRequired().HasColumnType("timestamptz");
+        builder.Property(s => s.SettledAt).IsRequired().HasColumnType("timestamptz");
+        builder.Property(s => s.SettledBy).HasMaxLength(User.UsernameMaxLength);
+        builder.Property(s => s.Observation).HasMaxLength(TruckSettlement.ObservationMaxLength);
+        foreach (var money in new[] { nameof(TruckSettlement.ExpectedCash), nameof(TruckSettlement.CountedCash), nameof(TruckSettlement.CashDifference),
+                     nameof(TruckSettlement.ExpectedMerchandiseValue), nameof(TruckSettlement.CountedMerchandiseValue), nameof(TruckSettlement.MerchandiseDifferenceValue) })
+        {
+            builder.Property<decimal>(money).IsRequired().HasPrecision(18, 2);
+        }
+
+        builder.Ignore(s => s.IsBalanced);
+        builder.HasIndex(s => new { s.TruckId, s.SettledAt });
+        builder.HasOne<Truck>().WithMany().HasForeignKey(s => s.TruckId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(s => s.Lines).WithOne().HasForeignKey(l => l.SettlementId).OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(s => s.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+public sealed class TruckSettlementLineConfiguration : IEntityTypeConfiguration<TruckSettlementLine>
+{
+    public void Configure(EntityTypeBuilder<TruckSettlementLine> builder)
+    {
+        builder.ToTable("TruckSettlementLines", table =>
+            table.HasCheckConstraint("CK_TruckSettlementLines_Units_NotNegative", "\"ExpectedUnits\" >= 0 AND \"CountedUnits\" >= 0"));
+        builder.HasKey(l => new { l.SettlementId, l.ProductId });
+        builder.Property(l => l.ProductName).IsRequired().HasMaxLength(Product.NameMaxLength);
+        builder.Property(l => l.SKU).IsRequired().HasMaxLength(Product.SkuMaxLength);
+        builder.Property(l => l.PriceUnit).IsRequired().HasPrecision(18, 2);
+        builder.Ignore(l => l.DifferenceUnits);
+        builder.Ignore(l => l.ExpectedValue);
+        builder.Ignore(l => l.CountedValue);
+        builder.Ignore(l => l.DifferenceValue);
+        builder.HasOne<Product>().WithMany().HasForeignKey(l => l.ProductId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public sealed class TruckLoadConfiguration : IEntityTypeConfiguration<TruckLoad>
 {
     public void Configure(EntityTypeBuilder<TruckLoad> builder)

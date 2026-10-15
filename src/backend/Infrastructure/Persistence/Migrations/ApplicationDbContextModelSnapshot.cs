@@ -6926,6 +6926,124 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("TruckLoads", (string)null);
                 });
 
+            modelBuilder.Entity("Core.Domain.Entities.TruckSettlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CashDifference")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("CountedCash")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("CountedMerchandiseValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<decimal>("ExpectedCash")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("ExpectedMerchandiseValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<decimal>("MerchandiseDifferenceValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Observation")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("SettledAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<string>("SettledBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("TripStartedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<Guid>("TruckId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TruckName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TruckPlate")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TruckId", "SettledAt");
+
+                    b.ToTable("TruckSettlements", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TruckSettlements_CountedCash_NotNegative", "\"CountedCash\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Core.Domain.Entities.TruckSettlementLine", b =>
+                {
+                    b.Property<Guid>("SettlementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CountedUnits")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ExpectedUnits")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PriceUnit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("SKU")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("UnitsPerBox")
+                        .HasColumnType("integer");
+
+                    b.HasKey("SettlementId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("TruckSettlementLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TruckSettlementLines_Units_NotNegative", "\"ExpectedUnits\" >= 0 AND \"CountedUnits\" >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Core.Domain.Entities.TruckStock", b =>
                 {
                     b.Property<Guid>("TruckId")
@@ -7225,6 +7343,30 @@ namespace Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Core.Domain.Entities.TruckSettlement", b =>
+                {
+                    b.HasOne("Core.Domain.Entities.Truck", null)
+                        .WithMany()
+                        .HasForeignKey("TruckId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Core.Domain.Entities.TruckSettlementLine", b =>
+                {
+                    b.HasOne("Core.Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Core.Domain.Entities.TruckSettlement", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("SettlementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Core.Domain.Entities.TruckStock", b =>
                 {
                     b.HasOne("Core.Domain.Entities.Product", "Product")
@@ -7281,6 +7423,11 @@ namespace Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Core.Domain.Entities.Truck", b =>
                 {
                     b.Navigation("Stock");
+                });
+
+            modelBuilder.Entity("Core.Domain.Entities.TruckSettlement", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }
