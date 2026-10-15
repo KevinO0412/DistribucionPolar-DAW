@@ -102,7 +102,11 @@ export interface Truck {
   capacityBoxes: number;
   loadedBoxes: number;
   occupancyPercent: number;
+  dispatchedAt: string | null;
 }
+
+/** Estados de la ruta del camión (Truck.Status en la API). */
+export type TruckStatus = 'En galpón' | 'Cargando' | 'En ruta' | 'Liquidado';
 
 export interface DashboardResponse {
   from: string;
@@ -157,6 +161,16 @@ export interface DashboardResponse {
     occupancyPercent: number;
     trucks: TruckOccupancy[];
   };
+  debtAging: DebtAging;
+}
+
+export interface DebtAging {
+  totalDebt: number;
+  debtors: number;
+  maxOverdueDays: number;
+  overdueDebt: number;
+  buckets: { label: string; fromDays: number; toDays: number | null; amount: number; clients: number }[];
+  topDebtors: { clientId: string; code: string; name: string; debt: number; overdueDebt: number; oldestDays: number; creditLimit: number | null }[];
 }
 
 export interface TruckOccupancy {
@@ -256,3 +270,82 @@ export interface ProblemDetails {
   instance?: string;
   errors?: Record<string, string[]>;
 }
+
+export interface LineRequest {
+  productId: string;
+  boxes: number;
+  looseUnits: number;
+}
+
+export interface CreateSaleRequest {
+  clientId: string;
+  dispatchOrigin: StockOrigin;
+  truckId: string | null;
+  employeeId: string | null;
+  items: LineRequest[];
+  payment: number;
+  paymentObservation: string | null;
+  returnedEmpties: { groupKey: string; boxes: number; units: number }[] | null;
+}
+
+export interface EmptyGroupBalance {
+  groupKey: string;
+  groupName: string;
+  boxes: number;
+  units: number;
+}
+
+/** Saldos con signo: negativo = el cliente debe; positivo = a favor. */
+export interface Client {
+  id: string;
+  code: string;
+  rif: string;
+  name: string;
+  address: string;
+  nickname: string | null;
+  type: string;
+  moneyBalance: number;
+  moneyStatus: string;
+  emptyBoxesBalance: number;
+  emptyUnitsBalance: number;
+  emptiesStatus: string;
+  emptyBalances: EmptyGroupBalance[];
+  isReceivable: boolean;
+  lastPurchaseAt: string | null;
+  createdAt: string;
+  creditLimit: number | null;
+}
+
+export interface RouteSettlementLine {
+  productId: string;
+  productName: string;
+  unitsPerBox: number;
+  expectedUnits: number;
+  expectedDisplay: string;
+  countedUnits: number;
+  countedDisplay: string;
+  differenceUnits: number;
+  differenceValue: number;
+}
+
+export interface RouteSettlement {
+  id: string;
+  truckId: string;
+  truckName: string;
+  truckPlate: string;
+  dispatchedAt: string;
+  settledAt: string;
+  settledBy: string | null;
+  invoicesCount: number;
+  salesTotal: number;
+  expectedCash: number;
+  countedCash: number;
+  cashDifference: number;
+  missingGoodsValue: number;
+  isBalanced: boolean;
+  observation: string | null;
+  lines: RouteSettlementLine[];
+}
+
+/** Ancho del papel de la impresora térmica. */
+export type PaperWidth = 80 | 58;

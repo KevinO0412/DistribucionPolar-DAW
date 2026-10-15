@@ -1,23 +1,19 @@
-import type { Invoice } from '../../api/types';
+import type { Invoice, PaperWidth } from '../../api/types';
 import { formatDateTime, formatMoney } from '../../lib/format';
+import { ThermalPaper, TicketHeader, TicketRule } from '../print/ThermalPaper';
 
 /**
- * Ticket térmico de 80 mm (lógica de negocio §8): empresa, cliente, despacho, productos, totales,
+ * Ticket térmico de entrega en 80 o 58 mm (lógica de negocio §8): empresa, cliente, despacho, productos, totales,
  * observación de pago, vacíos por grupo y líneas de firma. Se imprime con CSS @media print (index.css).
  */
-export function Ticket({ invoice }: { invoice: Invoice }) {
+export function Ticket({ invoice, width = 80 }: { invoice: Invoice; width?: PaperWidth }) {
   const isGift = invoice.type === 'Gift';
-  const rule = <hr className="my-2 border-t border-dashed border-black/60" />;
+  const rule = <TicketRule />;
 
   return (
-    <div id="ticket-print" className="mx-auto w-[80mm] max-w-full bg-white p-4 font-mono text-[11px] leading-snug text-black shadow-sm">
-      <div className="text-center">
-        <p className="text-[13px] font-bold">DISTRIBUIDORA VICROS C.A.</p>
-        <p>RIF J-301798740</p>
-        <p className="mt-1 font-bold">{invoice.number}</p>
-        <p>{formatDateTime(invoice.issuedAt)}</p>
-        {invoice.isCancelled && <p className="mt-1 font-bold">ANULADA: {invoice.cancellationReason}</p>}
-      </div>
+    <ThermalPaper width={width}>
+      <TicketHeader title={invoice.number} subtitle={formatDateTime(invoice.issuedAt)} />
+      {invoice.isCancelled && <p className="mt-1 text-center font-bold">ANULADA: {invoice.cancellationReason}</p>}
       {rule}
       <p className="font-bold">Cliente</p>
       <p>{invoice.clientName}</p>
@@ -77,6 +73,6 @@ export function Ticket({ invoice }: { invoice: Invoice }) {
         <p className="border-t border-black/70 pt-1 text-center">Firma</p>
       </div>
       <p className="mt-3 text-center">Gracias por su compra</p>
-    </div>
+    </ThermalPaper>
   );
 }

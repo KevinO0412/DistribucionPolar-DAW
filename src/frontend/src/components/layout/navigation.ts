@@ -1,4 +1,4 @@
-import { BarChart3, Boxes, FolderTree, ReceiptText, Truck, type LucideIcon } from 'lucide-react';
+import { BarChart3, Boxes, ClipboardList, FolderTree, ReceiptText, Truck, Users, type LucideIcon } from 'lucide-react';
 import type { Role } from '../../api/types';
 
 export interface NavItem {
@@ -13,6 +13,8 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: BarChart3, role: 'Admin' },
   { to: '/productos', label: 'Productos', icon: Boxes },
   { to: '/categorias', label: 'Categorías', icon: FolderTree },
+  { to: '/preventa', label: 'Preventa', icon: ClipboardList },
+  { to: '/clientes', label: 'Clientes', icon: Users },
   { to: '/camiones', label: 'Camiones', icon: Truck },
   { to: '/facturas', label: 'Facturas', icon: ReceiptText },
 ];

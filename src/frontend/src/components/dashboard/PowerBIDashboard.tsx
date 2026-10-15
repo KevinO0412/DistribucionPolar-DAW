@@ -7,6 +7,7 @@ import { TruckCard } from '../trucks/TruckCard';
 import { CategorySalesChart } from './CategorySalesChart';
 import { DashboardFilters, type DashboardFilterValue } from './DashboardFilters';
 import { DataTable } from './DataTable';
+import { DebtAgingPanel } from './DebtAgingPanel';
 import { KpiTile } from './KpiTile';
 import { SalesTrendChart } from './SalesTrendChart';
 import { Section } from './Section';
@@ -113,6 +114,13 @@ export function PowerBIDashboard({ data, categories, filters, onFiltersChange, i
             </TruckCard>
           ))}
         </div>
+      </Section>
+
+      <Section
+        title="Antigüedad de la deuda"
+        description={`A la fecha, sin importar el filtro. Los abonos saldan primero lo más antiguo; la deuda con más de ${data.debtAging.maxOverdueDays} días bloquea las ventas a crédito.`}
+      >
+        <DebtAgingPanel aging={data.debtAging} />
       </Section>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">

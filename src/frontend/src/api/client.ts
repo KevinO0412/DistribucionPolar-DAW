@@ -22,6 +22,12 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Sin conexión con la API: no hay red (status 0) o el proxy no la alcanza (502, 503, 504). La preventa guarda los
+ * pedidos y usa la copia local del catálogo en estos casos.
+ */
+export const isConnectivityError = (error: ApiError) => error.status === 0 || [502, 503, 504].includes(error.status);
+
 const NETWORK_MESSAGE = 'No hay conexión con el servidor. Revisa tu red o que la API esté en marcha.';
 
 /** Convierte cualquier error de Axios en ApiError, leyendo el Problem Details si viene en la respuesta. */

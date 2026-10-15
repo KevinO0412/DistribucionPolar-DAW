@@ -5,6 +5,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { cn } from '../../lib/cn';
 import { visibleNavItems } from './navigation';
+import { ConnectionIndicator } from '../../offline/ConnectionIndicator';
+import { clearCatalogCache } from '../../offline/catalogCache';
 
 const COLLAPSE_KEY = 'dp.sidebar.collapsed';
 
@@ -164,6 +166,7 @@ export function AppLayout() {
             <Brand compact />
           </div>
           <div className="ml-auto flex items-center gap-1 sm:gap-3">
+            <ConnectionIndicator />
             <ThemeToggle />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-semibold leading-tight">{user?.fullName}</p>
@@ -171,7 +174,7 @@ export function AppLayout() {
             </div>
             <button
               type="button"
-              onClick={() => logout()}
+              onClick={() => void clearCatalogCache().finally(() => logout())}
               className="flex h-10 cursor-pointer items-center gap-2 rounded-md px-3 text-sm font-medium text-muted hover:bg-sunken hover:text-ink"
             >
               <LogOut className="h-4 w-4" aria-hidden />
