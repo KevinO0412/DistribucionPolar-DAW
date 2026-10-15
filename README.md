@@ -18,6 +18,8 @@ Es el proyecto integrador de Desarrollo de Aplicaciones Web (DAW-0423807T, UNET)
 | 4 | SPA React + Vite + Tailwind, Context API (sesión JWT y tema), dashboard KPI, pruebas xUnit + Moq | `src/frontend/`, `tests/UnitTests/` |
 | 5 | Dockerfiles multi-stage (< 120 MB), Docker Compose, CI con GitHub Actions, modelo de datos | `src/*/Dockerfile`, `docker-compose*.yml`, `.github/workflows/ci.yml`, `docs/07-MODELO-DATOS.md` |
 
+Además incorpora todas las observaciones del docente ([docs/09](docs/09-OBSERVACIONES-PROFESOR.md)): **preventa sin conexión** (PWA con IndexedDB y sincronización idempotente), **liquidación ciega de ruta**, **control de crédito**, estados de ruta de los camiones, impresión de 80 y 58 mm con recibos de cobro y antigüedad de la deuda.
+
 Sobre esa base, el sistema implementa la operación completa del negocio:
 - Inventario en galpón y camiones.
 - Clientes con saldos y estado de cuenta.
@@ -58,12 +60,13 @@ Estos usuarios solo existen en Development. Los de Staging y Production salen de
 | [Guía de incorporación](docs/01-ONBOARDING.md) | Puesta en marcha, recorrido del código, flujo de una petición, cómo agregar una funcionalidad, convenciones |
 | [Arquitectura](docs/02-ARQUITECTURA.md) | Capas, transacciones y concurrencia, errores, validación, seguridad, persistencia, entornos, contenedores, CI, pruebas |
 | [Lógica de negocio](docs/03-LOGICA-NEGOCIO.md) | Cada regla del negocio, su razón, el archivo donde vive y ejemplos verificados |
-| [Decisiones de arquitectura](docs/04-DECISIONES.md) | 48 decisiones (ADR) con su justificación y la alternativa descartada |
+| [Decisiones de arquitectura](docs/04-DECISIONES.md) | 52 decisiones (ADR) con su justificación y la alternativa descartada |
 | [Requisitos por fase](docs/05-REQUISITOS-POR-FASE.md) | Requisitos de las Fases 1 a 5, su implementación y cómo verificarlos |
 | [Fundamentos](docs/06-FUNDAMENTOS.md) | Conceptos teóricos de cada fase y cómo se aplican en el código |
 | [Modelo de datos](docs/07-MODELO-DATOS.md) | Las cuatro dimensiones del dominio y el diccionario de datos de Categories, Products y Users |
+| [Observaciones del profesor](docs/09-OBSERVACIONES-PROFESOR.md) | Cada observación de la evaluación del 9 de octubre, su fuente y dónde quedó implementada |
 | [Evidencias](docs/evidencias/README.md) | Capturas y reportes para la sustentación: pruebas, cobertura, imágenes, `docker ps`, sesión JWT |
-| [Contrato OpenAPI](docs/openapi/openapi.yaml) | Especificación OpenAPI 3.1 de los 79 endpoints (también en JSON) |
+| [Contrato OpenAPI](docs/openapi/openapi.yaml) | Especificación OpenAPI 3.1 de los 83 endpoints (también en JSON) |
 | [Script SQL](docs/fase2/schema.sql) | Esquema completo y datos iniciales (idempotente) |
 
 ## Estructura
@@ -150,15 +153,15 @@ cd src/frontend && npm ci && npm run dev                   # http://localhost:51
 
 ## API
 
-79 endpoints, todos documentados en Swagger. Por módulo:
+83 endpoints, todos documentados en Swagger. Por módulo:
 
 | Módulo | Ruta base | Acceso |
 | --- | --- | --- |
 | Autenticación | `/api/auth` (login, me, change-password) | Público / autenticado |
 | Catálogo | `/api/categories`, `/api/products` | Consulta: ambos roles; registrar producto: ambos; editar y eliminar: Admin |
-| Inventario y camiones | `/api/inventory`, `/api/trucks` | Consulta, carga y transferencia: ambos; ajustes, vaciado y alta de camiones: Admin |
-| Clientes | `/api/clients` | Ambos; eliminar y ajustar saldos: Admin |
-| Facturación | `/api/invoices` (sales, gifts, cancel, ticket) | Emitir y consultar: ambos; anular: Admin |
+| Inventario y camiones | `/api/inventory`, `/api/trucks` (`dispatch`, `settlement`) | Consulta, carga, transferencia, salida a ruta y liquidación: ambos; ajustes, vaciado, alta de camiones e historial de liquidaciones: Admin |
+| Clientes | `/api/clients` | Ambos; eliminar, ajustar saldos y límite de crédito (`credit-limit`): Admin |
+| Facturación | `/api/invoices` (sales con `Idempotency-Key`, gifts, cancel, ticket) | Emitir y consultar: ambos; anular: Admin |
 | Consignación | `/api/consignments` | Ambos |
 | Compras, averías, consumos | `/api/purchases`, `/api/damages`, `/api/internal-consumptions` | Admin |
 | Empleados y usuarios | `/api/employees`, `/api/users` | Consulta de empleados: ambos; gestión: Admin |
@@ -172,18 +175,18 @@ Todos los errores responden `application/problem+json` (RFC 7807) con los códig
 ## Pruebas
 
 ```bash
-dotnet test DistribucionPolar.slnx                                            # 184 pruebas (las de integración requieren Docker)
+dotnet test DistribucionPolar.slnx                                            # 213 pruebas (las de integración requieren Docker)
 scripts/cobertura.sh                                                          # reporte HTML en docs/evidencias/cobertura
-(cd src/frontend && npm test)                                                 # 31 pruebas del frontend
+(cd src/frontend && npm test)                                                 # 44 pruebas del frontend
 npx newman run postman/collections/DistribucionPolar.postman_collection.json  # 50 peticiones, 97 aserciones
 ```
 
 | Suite | Pruebas | Qué cubre |
 | --- | ---: | --- |
-| `tests/UnitTests/Domain` | 80 | Reglas del dominio |
-| `tests/UnitTests/Application` | 88 | Validadores y servicios con Moq: `ProductServiceTests` (mock de `IProductRepository`), facturación, camiones, clientes, dashboard y operaciones |
-| `tests/IntegrationTests` | 16 | Procesos completos contra PostgreSQL real: casos de referencia, dashboard, concurrencia, permisos, auditoría, CORS y rate limiting |
-| `src/frontend` (Vitest) | 31 | Sesión JWT, rutas por rol, tema, errores de la API y validaciones del formulario |
+| `tests/UnitTests/Domain` | 93 | Reglas del dominio |
+| `tests/UnitTests/Application` | 100 | Validadores y servicios con Moq: `ProductServiceTests` (mock de `IProductRepository`), facturación, camiones, clientes, dashboard y operaciones |
+| `tests/IntegrationTests` | 20 | Procesos completos contra PostgreSQL real: casos de referencia, dashboard, concurrencia, permisos, auditoría, CORS y rate limiting |
+| `src/frontend` (Vitest) | 44 | Sesión JWT, rutas por rol, tema, errores de la API y validaciones del formulario |
 | Postman | 50 / 97 | Escenarios obligatorios de la Fase 3 y operación completa |
 
 Detalle de las pruebas y de la cobertura: [tests/README.md](tests/README.md).

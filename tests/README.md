@@ -2,9 +2,9 @@
 
 | Proyecto | Tipo | Pruebas | Necesita |
 | --- | --- | ---: | --- |
-| `UnitTests/` | Unitarias del núcleo con xUnit + Moq | 168 | Solo el SDK de .NET 10 |
-| `IntegrationTests/` | API real (`WebApplicationFactory`) contra PostgreSQL 15 desechable (Testcontainers) | 16 | Docker |
-| `../src/frontend` | SPA con Vitest + Testing Library | 31 | Node.js 20 |
+| `UnitTests/` | Unitarias del núcleo con xUnit + Moq | 193 | Solo el SDK de .NET 10 |
+| `IntegrationTests/` | API real (`WebApplicationFactory`) contra PostgreSQL 15 desechable (Testcontainers) | 20 | Docker |
+| `../src/frontend` | SPA con Vitest + Testing Library | 44 | Node.js 20 |
 
 ```bash
 dotnet test tests/UnitTests                      # unitarias, sin base de datos
@@ -20,8 +20,8 @@ Un solo proyecto, como en la estructura del curso, con dos carpetas:
 
 | Carpeta | Pruebas | Qué cubre |
 | --- | ---: | --- |
-| `Domain/` | 80 | Reglas puras del dominio: cajas ↔ unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones (incluida la capacidad), facturas, regalías, anulación, consignación, compras y averías |
-| `Application/` | 88 | Servicios y validadores con **todas** las dependencias simuladas con Moq. Ninguna toca PostgreSQL ni EF Core |
+| `Domain/` | 93 | Reglas puras del dominio: cajas ↔ unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones (incluida la capacidad), facturas, regalías, anulación, consignación, compras y averías |
+| `Application/` | 100 | Servicios y validadores con **todas** las dependencias simuladas con Moq. Ninguna toca PostgreSQL ni EF Core |
 
 ### Prueba de `ProductService` con mock de `IProductRepository`
 
@@ -69,6 +69,9 @@ Dos diferencias con el ejemplo del curso, ambas por el diseño de la Fase 2:
 | `ReportServiceTests` | Dashboard: rango por defecto, valorización costo/venta, ventas sin regalías, agrupación por día local, alertas MinStock/MaxStock, rotación, ocupación de flota, filtro de categoría, rangos inválidos |
 | `OperationServicesTests` | Consignación (entrega 2 cajas, devuelve 30 und, cobra 18 und), averías y consumos con stock insuficiente, compras numeradas, ajuste de galpón |
 | `CategoryServiceTests`, `AuthServiceTests`, `UserAndEmployeeServiceTests` | Unicidad, login por username o email, usuario inactivo, hash de claves, autoprotección del admin, desactivar en lugar de borrar |
+| `InvoiceServiceTests` (observaciones) | Venta idempotente (misma clave → misma factura, sin descontar stock dos veces), bloqueo por deuda vencida y por límite, contado permitido |
+| `TruckServiceTests` (observaciones) | Carga deja el camión "Cargando", salida a ruta, liquidación ciega con planilla y reintegro de lo contado, liquidación de un camión que no está en ruta |
+| `Domain/ProfessorObservationTests` | Antigüedad de la deuda FIFO, control de crédito, estados de ruta del camión y planilla de cuadre |
 | `ValidatorTests` | Reglas FluentValidation: precios > 0, stock ≥ 0, máximo > mínimo, textos obligatorios |
 
 `TestDoubles.cs` arma la unidad de trabajo simulada: `ExecuteInTransactionAsync` ejecuta la operación recibida para que el servicio corra su lógica completa.

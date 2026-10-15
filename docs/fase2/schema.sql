@@ -1708,3 +1708,207 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    ALTER TABLE "Trucks" ADD "DispatchedAt" timestamptz;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    ALTER TABLE "Invoices" ADD "IdempotencyKey" uuid;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    ALTER TABLE "Clients" ADD "CreditLimit" numeric(18,2);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    CREATE TABLE "RouteSettlements" (
+        "Id" uuid NOT NULL,
+        "TruckId" uuid NOT NULL,
+        "TruckName" character varying(50) NOT NULL,
+        "TruckPlate" character varying(20) NOT NULL,
+        "DispatchedAt" timestamptz NOT NULL,
+        "SettledAt" timestamptz NOT NULL,
+        "SettledBy" character varying(50),
+        "Observation" character varying(500),
+        "InvoicesCount" integer NOT NULL,
+        "SalesTotal" numeric(18,2) NOT NULL,
+        "ExpectedCash" numeric(18,2) NOT NULL,
+        "CountedCash" numeric(18,2) NOT NULL,
+        "CashDifference" numeric(18,2) NOT NULL,
+        "MissingGoodsValue" numeric(18,2) NOT NULL,
+        "CreatedAt" timestamptz NOT NULL,
+        "LastModifiedAt" timestamptz,
+        "IsDeleted" boolean NOT NULL DEFAULT FALSE,
+        CONSTRAINT "PK_RouteSettlements" PRIMARY KEY ("Id"),
+        CONSTRAINT "CK_RouteSettlements_CountedCash_NotNegative" CHECK ("CountedCash" >= 0),
+        CONSTRAINT "FK_RouteSettlements_Trucks_TruckId" FOREIGN KEY ("TruckId") REFERENCES "Trucks" ("Id") ON DELETE RESTRICT
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    CREATE TABLE "RouteSettlementLines" (
+        "Id" uuid NOT NULL,
+        "SettlementId" uuid NOT NULL,
+        "ProductId" uuid NOT NULL,
+        "ProductName" character varying(150) NOT NULL,
+        "UnitsPerBox" integer NOT NULL,
+        "PriceUnit" numeric(18,2) NOT NULL,
+        "ExpectedUnits" integer NOT NULL,
+        "CountedUnits" integer NOT NULL,
+        "DifferenceUnits" integer NOT NULL,
+        "DifferenceValue" numeric(18,2) NOT NULL,
+        CONSTRAINT "PK_RouteSettlementLines" PRIMARY KEY ("Id"),
+        CONSTRAINT "FK_RouteSettlementLines_Products_ProductId" FOREIGN KEY ("ProductId") REFERENCES "Products" ("Id") ON DELETE RESTRICT,
+        CONSTRAINT "FK_RouteSettlementLines_RouteSettlements_SettlementId" FOREIGN KEY ("SettlementId") REFERENCES "RouteSettlements" ("Id") ON DELETE CASCADE
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Clients" SET "CreditLimit" = NULL
+    WHERE "Id" = '00000300-0000-4000-8000-000000000001';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Clients" SET "CreditLimit" = NULL
+    WHERE "Id" = '00000300-0000-4000-8000-000000000002';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Clients" SET "CreditLimit" = NULL
+    WHERE "Id" = '00000300-0000-4000-8000-000000000003';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Clients" SET "CreditLimit" = NULL
+    WHERE "Id" = '00000300-0000-4000-8000-000000000004';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Clients" SET "CreditLimit" = NULL
+    WHERE "Id" = '00000300-0000-4000-8000-000000000005';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Trucks" SET "DispatchedAt" = NULL
+    WHERE "Id" = '00000200-0000-4000-8000-000000000001';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Trucks" SET "DispatchedAt" = NULL
+    WHERE "Id" = '00000200-0000-4000-8000-000000000002';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Trucks" SET "DispatchedAt" = NULL
+    WHERE "Id" = '00000200-0000-4000-8000-000000000003';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Trucks" SET "DispatchedAt" = NULL
+    WHERE "Id" = '00000200-0000-4000-8000-000000000004';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Trucks" SET "DispatchedAt" = NULL
+    WHERE "Id" = '00000200-0000-4000-8000-000000000005';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    UPDATE "Trucks" SET "DispatchedAt" = NULL
+    WHERE "Id" = '00000200-0000-4000-8000-000000000006';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    CREATE UNIQUE INDEX "IX_Invoices_IdempotencyKey" ON "Invoices" ("IdempotencyKey") WHERE "IdempotencyKey" IS NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    ALTER TABLE "Clients" ADD CONSTRAINT "CK_Clients_CreditLimit_NotNegative" CHECK ("CreditLimit" IS NULL OR "CreditLimit" >= 0);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    CREATE INDEX "IX_RouteSettlementLines_ProductId" ON "RouteSettlementLines" ("ProductId");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    CREATE INDEX "IX_RouteSettlementLines_SettlementId" ON "RouteSettlementLines" ("SettlementId");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    CREATE INDEX "IX_RouteSettlements_TruckId_SettledAt" ON "RouteSettlements" ("TruckId", "SettledAt");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20261015205223_ProfessorObservations') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20261015205223_ProfessorObservations', '10.0.12');
+    END IF;
+END $EF$;
+COMMIT;
+
