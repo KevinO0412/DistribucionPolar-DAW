@@ -1,25 +1,33 @@
 # Entorno Development: se aplica automáticamente con "docker compose up".
-# Puertos abiertos al host, Swagger, usuarios de prueba (appsettings.Development.json) y pgAdmin.
+# Puertos del curso abiertos al host (SPA 8080, API 5000, DB 5432), Swagger, usuarios de prueba
+# (appsettings.Development.json) y pgAdmin en 5050.
 services:
-  postgres:
+  db:
     container_name: distribucion-polar-db
     ports:
       - "5432:5432"
+    restart: unless-stopped
 
   api:
     container_name: distribucion-polar-api
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "8080:8080"
+      - "5000:5000"
+    restart: unless-stopped
+
+  spa:
+    container_name: distribucion-polar-spa
+    ports:
+      - "8080:80"
     restart: unless-stopped
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:9.8
     container_name: distribucion-polar-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@distribucionpolar.dev
-      PGADMIN_DEFAULT_PASSWORD: pgadmin_dev_2026
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-pgadmin_dev_2026}
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     ports:
@@ -30,7 +38,7 @@ services:
     # libpq ignora un pgpass con permisos abiertos: se copia con permisos 600 antes de arrancar.
     entrypoint: ["/bin/sh", "-c", "cp /pgpass.src /var/lib/pgadmin/pgpass && chmod 600 /var/lib/pgadmin/pgpass && exec /entrypoint.sh"]
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     networks:
       - backend

@@ -1,19 +1,21 @@
-# Orquestación base común a todos los entornos.
+# Orquestación base común a todos los entornos: db (PostgreSQL 15), api (.NET 10) y spa (React + Nginx).
 #
-#   Development: docker compose up -d --build                     (carga docker-compose.override.yml)
+#   Development: cp .env.example .env && docker compose up -d --build        (carga docker-compose.override.yml)
 #   Staging:     docker compose -p distribucion-polar-staging --env-file .env.staging \
 #                  -f docker-compose.yml -f docker-compose.staging.yml up -d --build
 #   Production:  docker compose -p distribucion-polar-prod --env-file .env.production \
 #                  -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Redes: "backend" une db y api; "frontend" une api y spa. La SPA no tiene acceso a la base de datos.
 name: distribucion-polar
 
 services:
-  postgres:
+  db:
     image: postgres:15-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-distribucion_polar}
       POSTGRES_USER: ${POSTGRES_USER:-polar}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-polar_dev_2026}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -27,24 +29,46 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: src/backend/Presentation.API/Dockerfile
     image: distribucion-polar-api:${API_IMAGE_TAG:-latest}
     environment:
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-distribucion_polar};Username=${POSTGRES_USER:-polar};Password=${POSTGRES_PASSWORD:-polar_dev_2026}"
+      ASPNETCORE_HTTP_PORTS: "5000"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-distribucion_polar};Username=${POSTGRES_USER:-polar};Password=${POSTGRES_PASSWORD};GSS Encryption Mode=Disable"
+      # La clave JWT nunca está en el código ni en appsettings: llega desde .env.
+      JwtSettings__Key: ${JWT_KEY:?Defina JWT_KEY (mínimo 32 caracteres) en .env}
+      ReverseProxy__Enabled: "true"
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5000/health > /dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
     networks:
       - backend
+      - frontend
+
+  spa:
+    build:
+      context: .
+      dockerfile: src/frontend/Dockerfile
+    image: distribucion-polar-spa:${SPA_IMAGE_TAG:-latest}
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - frontend
 
 networks:
   backend:
+  frontend:
 
 volumes:
   postgres-data:

@@ -7,6 +7,12 @@ La solución aplica la **Arquitectura Cebolla (Onion)** de Jeffrey Palermo con p
 
 ```mermaid
 flowchart TB
+    subgraph UI["SPA React (src/frontend) — servida por Nginx"]
+        PAGES[Páginas: dashboard, catálogo, camiones, facturas]
+        CTX[AuthContext JWT · ThemeContext]
+        AX[Axios: Bearer + errores RFC 7807]
+    end
+    UI -->|"HTTP/JSON /api (proxy Nginx)"| P
     subgraph P["Presentation.API — HTTP"]
         CTL[Controladores]
         MW[ExceptionMiddleware RFC 7807]
@@ -108,7 +114,7 @@ Ninguna entidad se puede construir ni dejar en estado inválido.
 
 ## 3. Pipeline HTTP
 
-Orden definido en `Presentation.API/Program.cs`:
+Orden definido en `src/backend/Presentation.API/Program.cs`:
 
 ```text
 Arranque:  DbInitializer → migraciones (si Database:MigrateOnStartup) + usuarios iniciales (si la tabla está vacía)
@@ -182,7 +188,7 @@ El error 500 nunca incluye el stack trace.
 
 | Nivel | Dónde | Propósito |
 | --- | --- | --- |
-| 1. Entrada | `Core.Application/Validators` | Rechazar datos mal formados con un 400 que lista todos los errores, en español |
+| 1. Entrada | `src/backend/Core.Application/Validators` | Rechazar datos mal formados con un 400 que lista todos los errores, en español |
 | 2. Dominio | Constructores y métodos de las entidades | Ninguna entidad existe en estado inválido, venga de donde venga |
 | 3. Base de datos | Check constraints, índices únicos y claves foráneas | Última red de seguridad ante cualquier acceso |
 
@@ -224,13 +230,13 @@ PBKDF2 con HMAC-SHA256, 100.000 iteraciones, sal aleatoria de 16 bytes y compara
   - Login: por IP, 5 intentos/min en Production y 10 en Staging (en Development el límite es alto para no frenar las pruebas).
   - Global: por usuario o por IP.
 - **CORS:** solo los orígenes configurados por entorno (`Cors:AllowedOrigins`) pueden llamar a la API desde un navegador, y solo con los métodos y encabezados necesarios.
-- **Secretos:** fuera del código (variables de entorno en Staging y Production).
-- **Contenedor:** se ejecuta con un usuario sin privilegios.
+- **Secretos:** fuera del código y de `appsettings` en todos los entornos: la clave JWT y la de PostgreSQL llegan por variables de entorno (`.env*`) o, en desarrollo sin Docker, por user-secrets. Las pruebas de integración generan una clave aleatoria en cada ejecución.
+- **Contenedores:** se ejecutan con usuarios sin privilegios, y la SPA no tiene red hacia la base de datos.
 
 ## 8. Persistencia
 
 PostgreSQL 15 con enfoque Code-First (EF Core 10). Las migraciones se versionan en
-`Infrastructure/Persistence/Migrations`.
+`src/backend/Infrastructure/Persistence/Migrations`.
 
 ```mermaid
 erDiagram
@@ -286,26 +292,69 @@ erDiagram
 - *Declarativa* (`HasData`, UUID fijos): categorías, productos, empleados, camiones y clientes de ejemplo.
 - *Dinámica* (`DbInitializer`): usuarios, que necesitan un hash con sal.
 
-## 9. Entornos y despliegue
+## 9. Entornos, contenedores y CI
 
-La imagen de la API se construye en dos etapas (`Dockerfile`), se ejecuta como usuario sin privilegios y tiene
-un healthcheck sobre `/health`, que comprueba también PostgreSQL.
+### Imágenes (multi-stage)
+
+| Imagen | Etapa de compilación | Etapa final | Tamaño |
+| --- | --- | --- | --- |
+| API (`src/backend/Presentation.API/Dockerfile`) | `dotnet/sdk:10.0-alpine`: restore por `.csproj` (caché de capas) y publish | `dotnet/runtime-deps:10.0-alpine` con la app self-contained, recorte parcial y archivo único comprimido. Usuario sin privilegios, healthcheck `/health` | ~59 MB sin comprimir ([ADR 45](04-DECISIONES.md#45-imagen-de-la-api-self-contained-y-recortada-sobre-alpine)) |
+| SPA (`src/frontend/Dockerfile`) | `node:20-alpine`: `npm ci` y `npm run build` | `nginx:alpine` con `dist/` y `nginx.conf` (fallback a `index.html`, caché de assets, proxy de `/api`) | ~50 MB sin comprimir |
+
+Las cifras exactas y cómo medirlas están en [evidencias](evidencias/README.md#imágenes-docker).
+
+### Orquestación
+
+```mermaid
+flowchart LR
+    B[Navegador] -->|":8080"| SPA[spa · Nginx]
+    SPA -->|"/api → api:5000"| API[api · .NET 10]
+    API -->|"db:5432"| DB[(db · PostgreSQL 15)]
+    DB --- VOL[(volumen postgres-data)]
+    subgraph frontend [red frontend]
+        SPA
+        API
+    end
+    subgraph backend [red backend]
+        API
+        DB
+    end
+```
+
+- `api` arranca cuando `db` responde a `pg_isready`, y `spa` cuando la API responde a `/health`.
+- La SPA y el navegador comparten origen (`/api` reenviado por Nginx), así que no hace falta CORS.
+- La API lee la IP real del cliente desde `X-Forwarded-For` (solo de redes privadas) para el rate limiting y la auditoría.
+- Secretos: `POSTGRES_PASSWORD` y `JWT_KEY` llegan desde `.env`, `.env.staging` o `.env.production` (ignorados por Git). Compose no arranca si faltan.
 
 | | Development | Staging | Production |
 | --- | :-: | :-: | :-: |
 | Archivo | `docker-compose.override.yml` | `docker-compose.staging.yml` | `docker-compose.prod.yml` |
-| Puerto de la API | 8080 | 8081 | 8082 |
+| Puerto de la SPA | 8080 | 8091 | 8090 |
+| Puerto de la API | 5000 | 8081 | 8082 |
 | Swagger / OpenAPI | ✔ | ✔ | ✘ |
 | BD expuesta al host | ✔ | ✘ | ✘ |
-| Secretos | valores de desarrollo | `.env.staging` obligatorio | `.env.production` obligatorio |
+| Secretos | `.env` | `.env.staging` obligatorio | `.env.production` obligatorio |
 | Usuarios iniciales | admin, empleado, inactivo | admin, empleado | solo admin |
 | Duración del JWT | 480 min | 120 min | 60 min |
 | Login (intentos/min por IP) | 30 | 10 | 5 |
-| CORS | `localhost:5173`, `localhost:3000` | `CORS_ORIGIN` | `CORS_ORIGIN` |
+| CORS (solo si se llama a la API desde otro origen) | `localhost:5173`, `localhost:8080` | `CORS_ORIGIN` | `CORS_ORIGIN` |
 | Nivel de log | Information | Information | Warning |
 
 El comportamiento se controla con opciones de configuración (`Swagger:Enabled`, `Database:MigrateOnStartup`,
-`RateLimiting:*`, `Cors:AllowedOrigins`, `Business:TimeZone`, `ExchangeRates:*`), no con condicionales en el código.
+`RateLimiting:*`, `Cors:AllowedOrigins`, `ReverseProxy:Enabled`, `Business:TimeZone`, `ExchangeRates:*`), no con condicionales en el código.
+
+### Integración continua (`.github/workflows/ci.yml`)
+
+Se dispara con cada push y pull request a `main` y a `develop`.
+
+| Job | Qué hace | Depende de |
+| --- | --- | --- |
+| `backend-ci` | Restaura, compila en Release y ejecuta las pruebas unitarias (con cobertura) y de integración (Testcontainers). Publica los `.trx` y el reporte de cobertura | — |
+| `frontend-ci` | `npm ci`, pruebas con Vitest y `npm run build` (incluye `tsc`) | — |
+| `publish-artifacts` | Publica la API (`dotnet publish`) y la SPA (`dist/`) como artefactos | ambos jobs anteriores |
+| `docker-images` | Construye las dos imágenes con caché de GitHub Actions, falla si alguna pesa 120 MB o más y levanta la pila con Compose como prueba de humo | ambos jobs anteriores |
+
+Los artefactos y las imágenes solo se generan si todas las pruebas pasan.
 
 ## 10. Resiliencia
 
@@ -336,9 +385,11 @@ Ningún Singleton depende de un servicio Scoped, así que no hay dependencias ca
 
 | Tipo | Proyecto o herramienta | Cantidad | Qué cubre |
 | --- | --- | ---: | --- |
-| Unitarias de dominio | `Core.Domain.Tests` | 75 | Cajas y unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones, facturas, regalías, anulación, consignación, compras y averías |
-| Unitarias de aplicación | `Core.Application.Tests` | 18 | Validadores y servicios con repositorios falsos |
-| Integración | `Integration.Tests` | 15 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
+| Unitarias de dominio | `tests/UnitTests/Domain` | 80 | Cajas y unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones, facturas, regalías, anulación, consignación, compras y averías |
+| Unitarias de aplicación | `tests/UnitTests/Application` | 88 | Validadores y servicios con repositorios simulados con Moq (`Setup`/`Verify`) |
+| Integración | `tests/IntegrationTests` | 16 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
 | API de punta a punta | Colección de Postman | 50 peticiones, 97 aserciones | Fases 1–3 y la operación completa del negocio |
 
-Las pruebas de integración requieren Docker.
+| Frontend | Vitest + Testing Library | 25 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807 y validaciones del formulario |
+
+Las pruebas de integración requieren Docker. La cobertura de las unitarias se genera con `scripts/cobertura.sh` (coverlet + ReportGenerator).

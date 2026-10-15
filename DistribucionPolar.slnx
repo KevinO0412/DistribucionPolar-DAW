@@ -1,9 +1,13 @@
 <Solution>
-  <Project Path="Core.Application.Tests/Core.Application.Tests.csproj" />
-  <Project Path="Core.Application/Core.Application.csproj" />
-  <Project Path="Core.Domain.Tests/Core.Domain.Tests.csproj" />
-  <Project Path="Core.Domain/Core.Domain.csproj" />
-  <Project Path="Infrastructure/Infrastructure.csproj" />
-  <Project Path="Integration.Tests/Integration.Tests.csproj" />
-  <Project Path="Presentation.API/Presentation.API.csproj" />
+  <Folder Name="/src/" />
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/Core.Domain/Core.Domain.csproj" />
+    <Project Path="src/backend/Core.Application/Core.Application.csproj" />
+    <Project Path="src/backend/Infrastructure/Infrastructure.csproj" />
+    <Project Path="src/backend/Presentation.API/Presentation.API.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/UnitTests/UnitTests.csproj" />
+    <Project Path="tests/IntegrationTests/IntegrationTests.csproj" />
+  </Folder>
 </Solution>

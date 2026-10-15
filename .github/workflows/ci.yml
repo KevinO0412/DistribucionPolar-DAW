@@ -1,0 +1,188 @@
+name: CI Pipeline - Distribución Polar
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  backend-ci:
+    name: Backend (.NET 10) - compilación y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restaurar dependencias y herramientas
+        run: |
+          dotnet restore DistribucionPolar.slnx
+          dotnet tool restore
+
+      - name: Compilar solución
+        run: dotnet build DistribucionPolar.slnx --configuration Release --no-restore
+
+      - name: Pruebas unitarias (xUnit + Moq) con cobertura
+        run: >
+          dotnet test tests/UnitTests/UnitTests.csproj --configuration Release --no-build
+          --collect "XPlat Code Coverage" --settings coverlet.runsettings
+          --results-directory TestResults/unit --logger "trx;LogFileName=unit.trx"
+
+      - name: Pruebas de integración (PostgreSQL 15 con Testcontainers)
+        run: >
+          dotnet test tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-build
+          --results-directory TestResults/integration --logger "trx;LogFileName=integration.trx"
+
+      - name: Reporte de cobertura (ReportGenerator)
+        if: always()
+        run: >
+          dotnet reportgenerator -reports:"TestResults/unit/**/coverage.cobertura.xml" -targetdir:coverage-report
+          -reporttypes:"HtmlInline;MarkdownSummaryGithub" -title:"Distribución Polar: pruebas unitarias"
+          && cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar resultados de pruebas y cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            TestResults/**/*.trx
+            coverage-report/
+
+  frontend-ci:
+    name: Frontend (React + Vite) - tipos, pruebas y compilación
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Pruebas (Vitest)
+        run: npm test
+
+      - name: Compilar SPA (tsc + vite build)
+        run: npm run build
+
+  publish-artifacts:
+    name: Publicar artefactos compilados
+    # Solo se publica si todas las pruebas del backend y del frontend pasaron.
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Publicar API
+        run: dotnet publish src/backend/Presentation.API/Presentation.API.csproj --configuration Release --output artifacts/api
+
+      - name: Compilar SPA
+        working-directory: ./src/frontend
+        run: npm ci && npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-publish
+          path: artifacts/api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spa-dist
+          path: src/frontend/dist
+
+  docker-images:
+    name: Imágenes Docker multi-stage (< 120 MB)
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen de la API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/backend/Presentation.API/Dockerfile
+          tags: distribucion-polar-api:ci
+          load: true
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Construir imagen de la SPA
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/frontend/Dockerfile
+          tags: distribucion-polar-spa:ci
+          load: true
+          cache-from: type=gha,scope=spa
+          cache-to: type=gha,mode=max,scope=spa
+
+      - name: Verificar tamaño de las imágenes
+        run: |
+          limit=$((120 * 1000 * 1000))
+          for image in distribucion-polar-api:ci distribucion-polar-spa:ci; do
+            size=$(docker image inspect -f '{{.Size}}' "$image")
+            echo "$image: $((size / 1000 / 1000)) MB" | tee -a "$GITHUB_STEP_SUMMARY"
+            if [ "$size" -ge "$limit" ]; then
+              echo "::error::$image pesa $((size / 1000 / 1000)) MB (límite 120 MB)"
+              exit 1
+            fi
+          done
+
+      - name: Prueba de humo con Docker Compose
+        env:
+          POSTGRES_PASSWORD: ci_postgres_password
+          JWT_KEY: ${{ github.run_id }}-ci-only-key-not-a-secret-0123456789abcdef
+          API_IMAGE_TAG: ci
+          SPA_IMAGE_TAG: ci
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.override.yml up -d --no-build db api spa
+          for _ in $(seq 1 30); do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' distribucion-polar-spa 2>/dev/null)" = "healthy" ]; then break; fi
+            sleep 3
+          done
+          docker ps
+          curl -fsS http://localhost:8080/healthz
+          curl -fsS http://localhost:5000/health
+          curl -fsS http://localhost:8080/api/info
+          curl -fsS -o /dev/null http://localhost:8080/dashboard
+
+      - name: Logs de los contenedores
+        if: failure()
+        run: docker compose -f docker-compose.yml -f docker-compose.override.yml logs --no-color

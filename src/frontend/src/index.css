@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Valores RGB sin "rgb()" para que Tailwind pueda aplicar opacidad (bg-brand/10). */
+@layer base {
+  :root {
+    --paper: 242 244 246;
+    --surface: 255 255 255;
+    --sunken: 233 237 241;
+    --line: 213 220 227;
+    --ink: 15 34 54;
+    --muted: 84 102 122;
+    --brand: 0 51 102; /* Azul UNET #003366 */
+    --on-brand: 255 255 255;
+    --crate: 242 169 0; /* Ámbar de gavera: solo para la carga de los camiones */
+    --status-out: 180 35 24;
+    --status-critical: 196 80 11;
+    --status-low: 161 98 7;
+    --status-ok: 21 128 61;
+    --status-full: 29 78 216;
+    --status-excess: 124 58 237;
+    color-scheme: light;
+  }
+
+  .dark {
+    --paper: 10 25 47; /* unet.dark #0a192f */
+    --surface: 16 36 63;
+    --sunken: 13 30 53;
+    --line: 34 60 94;
+    --ink: 227 234 242;
+    --muted: 150 170 194;
+    --brand: 141 184 232;
+    --on-brand: 10 25 47;
+    --crate: 245 185 51;
+    --status-out: 248 113 113;
+    --status-critical: 251 146 60;
+    --status-low: 250 204 21;
+    --status-ok: 74 222 128;
+    --status-full: 96 165 250;
+    --status-excess: 192 132 252;
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-paper;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-lg border border-line bg-surface;
+  }
+}
+
+/* Ticket térmico de 80 mm: al imprimir solo se muestra el ticket. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #ticket-print,
+  #ticket-print * {
+    visibility: visible;
+  }
+  #ticket-print {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 80mm;
+    padding: 3mm 4mm;
+    color: #000;
+    background: #fff;
+    font-size: 11px;
+  }
+}

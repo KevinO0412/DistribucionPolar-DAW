@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <!-- Comentarios XML: alimentan las descripciones del documento OpenAPI / Swagger. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Sin ICU: la imagen aspnet Alpine no lo trae y agregarlo suma ~40 MB. Los textos en español (meses, mensajes)
+      están en el código; "es" sigue sirviendo como clave de idioma de FluentValidation.
+    -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PredefinedCulturesOnly>false</PredefinedCulturesOnly>
+    <!-- Clave JWT local con "dotnet user-secrets set JwtSettings:Key ..." (nunca en appsettings). -->
+    <UserSecretsId>distribucion-polar-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
+  </ItemGroup>
+
+  <!--
+    Imagen de producción (<120 MB): publicación self-contained con TrimMode=partial, que solo recorta los ensamblados
+    marcados como recortables. Los que usan reflexión (MVC, EF Core, Npgsql, validación, PDF, OpenAPI y la propia
+    solución) se conservan completos. Solo aplica al publicar con PublishTrimmed=true (Dockerfile).
+  -->
+  <ItemGroup Condition="'$(PublishTrimmed)' == 'true'">
+    <TrimmerRootAssembly Include="Presentation.API" />
+    <TrimmerRootAssembly Include="Infrastructure" />
+    <TrimmerRootAssembly Include="Core.Application" />
+    <TrimmerRootAssembly Include="Core.Domain" />
+    <TrimmerRootAssembly Include="Microsoft.AspNetCore.Mvc.Core" />
+    <TrimmerRootAssembly Include="Microsoft.AspNetCore.Mvc.Abstractions" />
+    <TrimmerRootAssembly Include="Microsoft.AspNetCore.Mvc.ApiExplorer" />
+    <TrimmerRootAssembly Include="Microsoft.AspNetCore.Routing" />
+    <TrimmerRootAssembly Include="Microsoft.AspNetCore.Http.Extensions" />
+    <TrimmerRootAssembly Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <TrimmerRootAssembly Include="Microsoft.AspNetCore.OpenApi" />
+    <TrimmerRootAssembly Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <TrimmerRootAssembly Include="Microsoft.Extensions.Configuration.Binder" />
+    <TrimmerRootAssembly Include="Microsoft.EntityFrameworkCore" />
+    <TrimmerRootAssembly Include="Microsoft.EntityFrameworkCore.Relational" />
+    <TrimmerRootAssembly Include="Npgsql" />
+    <TrimmerRootAssembly Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <TrimmerRootAssembly Include="FluentValidation" />
+    <TrimmerRootAssembly Include="QuestPDF" />
+    <TrimmerRootAssembly Include="System.Text.Json" />
+    <TrimmerRootAssembly Include="System.Linq.Expressions" />
+    <TrimmerRootAssembly Include="System.Private.CoreLib" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(PublishTrimmed)' == 'true'">
+    <!-- ApiExplorer (OpenAPI) desactiva sus metadatos ampliados al recortar; la API los necesita al arrancar. -->
+    <MvcEnhancedModelMetadataSupport>true</MvcEnhancedModelMetadataSupport>
+    <!-- La siembra del catálogo y las respuestas usan System.Text.Json por reflexión. -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core.Application\Core.Application.csproj" />
+    <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
