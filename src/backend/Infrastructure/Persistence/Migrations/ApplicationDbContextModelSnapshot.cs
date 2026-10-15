@@ -179,6 +179,10 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamptz");
 
+                    b.Property<decimal?>("CreditLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<int>("EmptyBoxesBalance")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -239,7 +243,10 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("Clients", (string)null);
+                    b.ToTable("Clients", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Clients_CreditLimit_NotNegative", "\"CreditLimit\" IS NULL OR \"CreditLimit\" >= 0");
+                        });
 
                     b.HasData(
                         new
@@ -808,6 +815,9 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<int>("GeneratedEmptyUnits")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("IdempotencyKey")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsCancelled")
                         .HasColumnType("boolean");
 
@@ -874,6 +884,10 @@ namespace Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.HasIndex("IssuedAt");
 
@@ -6714,6 +6728,128 @@ namespace Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Core.Domain.Entities.RouteSettlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CashDifference")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("CountedCash")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<DateTime>("DispatchedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<decimal>("ExpectedCash")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("InvoicesCount")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<decimal>("MissingGoodsValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Observation")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("SalesTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("SettledAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<string>("SettledBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("TruckId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TruckName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TruckPlate")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TruckId", "SettledAt");
+
+                    b.ToTable("RouteSettlements", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RouteSettlements_CountedCash_NotNegative", "\"CountedCash\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Core.Domain.Entities.RouteSettlementLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CountedUnits")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DifferenceUnits")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("DifferenceValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("ExpectedUnits")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PriceUnit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("SettlementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("UnitsPerBox")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SettlementId");
+
+                    b.ToTable("RouteSettlementLines", (string)null);
+                });
+
             modelBuilder.Entity("Core.Domain.Entities.Truck", b =>
                 {
                     b.Property<Guid>("Id")
@@ -6725,6 +6861,9 @@ namespace Infrastructure.Persistence.Migrations
                         .HasDefaultValue(500);
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<DateTime?>("DispatchedAt")
                         .HasColumnType("timestamptz");
 
                     b.Property<bool>("IsDeleted")
@@ -7159,6 +7298,30 @@ namespace Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Core.Domain.Entities.RouteSettlement", b =>
+                {
+                    b.HasOne("Core.Domain.Entities.Truck", null)
+                        .WithMany()
+                        .HasForeignKey("TruckId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Core.Domain.Entities.RouteSettlementLine", b =>
+                {
+                    b.HasOne("Core.Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Core.Domain.Entities.RouteSettlement", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("SettlementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Core.Domain.Entities.TruckLoad", b =>
                 {
                     b.HasOne("Core.Domain.Entities.Product", null)
@@ -7216,6 +7379,11 @@ namespace Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Core.Domain.Entities.Purchase", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Core.Domain.Entities.RouteSettlement", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Core.Domain.Entities.Truck", b =>

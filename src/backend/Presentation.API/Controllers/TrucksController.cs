@@ -130,6 +130,53 @@ public sealed class TrucksController(ITruckService trucks) : ControllerBase
     public async Task<ActionResult<TruckResponse>> Unload(Guid id, CancellationToken cancellationToken) =>
         Ok(await trucks.UnloadAsync(id, cancellationToken));
 
+    /// <summary>Sale a ruta: el camión pasa a "En ruta" y empieza el período que se liquidará.</summary>
+    /// <param name="id">Camión.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Camión en ruta.</response>
+    /// <response code="400">Ya está en ruta o no tiene mercancía.</response>
+    /// <response code="404">No existe el camión.</response>
+    [HttpPost("{id:guid}/dispatch")]
+    [ProducesResponseType<TruckResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<TruckResponse>> Dispatch(Guid id, CancellationToken cancellationToken) =>
+        Ok(await trucks.DispatchAsync(id, cancellationToken));
+
+    /// <summary>Liquidación ciega de la ruta.</summary>
+    /// <remarks>
+    /// El chofer declara el dinero recaudado y la mercancía que trae sin ver lo esperado. La respuesta es la planilla de
+    /// cuadre: lo esperado (abonos de las facturas del camión desde su salida e inventario que debía traer), lo declarado
+    /// y las diferencias. Lo contado vuelve al galpón y el camión queda "Liquidado".
+    /// </remarks>
+    /// <param name="id">Camión en ruta.</param>
+    /// <param name="request">Dinero y mercancía declarados.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Planilla de cuadre.</response>
+    /// <response code="400">El camión no está en ruta o los datos son inválidos.</response>
+    /// <response code="404">No existe el camión.</response>
+    [HttpPost("{id:guid}/settlement")]
+    [ProducesResponseType<RouteSettlementResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<RouteSettlementResponse>> Settle(Guid id, SettleRouteRequest request, CancellationToken cancellationToken) =>
+        Ok(await trucks.SettleAsync(id, request, cancellationToken));
+
+    /// <summary>Historial de liquidaciones de ruta (solo Admin).</summary>
+    /// <param name="truckId">Filtra por camión.</param>
+    /// <param name="from">Desde (fecha local, inclusive).</param>
+    /// <param name="to">Hasta (fecha local, inclusive).</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Planillas, de la más reciente a la más antigua.</response>
+    /// <response code="403">El rol no es Admin.</response>
+    [Authorize(Roles = Roles.Admin)]
+    [HttpGet("settlements")]
+    [ProducesResponseType<IReadOnlyList<RouteSettlementResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, "application/problem+json")]
+    public async Task<ActionResult<IReadOnlyList<RouteSettlementResponse>>> GetSettlements(
+        [FromQuery] Guid? truckId, [FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken cancellationToken) =>
+        Ok(await trucks.GetSettlementsAsync(truckId, from, to, cancellationToken));
+
     /// <summary>Historial de cargas de camiones (máximo 500, de la más reciente a la más antigua).</summary>
     /// <param name="truckId">Filtra por camión.</param>
     /// <param name="from">Desde (fecha local, inclusive).</param>

@@ -57,6 +57,12 @@ public sealed class Client : BaseEntity
 
     public IReadOnlyCollection<ClientEmptyBalance> EmptyBalances => emptyBalances.AsReadOnly();
 
+    /// <summary>Límite de crédito en USD; null = sin límite, 0 = solo de contado.</summary>
+    public decimal? CreditLimit { get; private set; }
+
+    /// <summary>Lo que el cliente debe (0 si su saldo está limpio o a favor).</summary>
+    public decimal Debt => MoneyBalance < 0 ? -MoneyBalance : 0m;
+
     public string FormattedCode => Code.ToString("D3");
 
     /// <summary>Tiene alguna deuda pendiente (dinero o vacíos).</summary>
@@ -124,6 +130,45 @@ public sealed class Client : BaseEntity
     }
 
     /// <summary>Ajuste manual (solo administración): fija valores absolutos de los saldos totales.</summary>
+    public void SetCreditLimit(decimal? limit)
+    {
+        if (limit is < 0)
+        {
+            throw new DomainException("El límite de crédito no puede ser negativo.");
+        }
+
+        CreditLimit = limit is null ? null : decimal.Round(limit.Value, 2);
+        Touch();
+    }
+
+    /// <summary>
+    /// Control de crédito: una venta que deja deuda (<paramref name="newPending"/> &gt; 0) se rechaza si el cliente tiene
+    /// deuda vencida o si supera su límite. Las ventas de contado siempre se permiten.
+    /// </summary>
+    public void EnsureCreditAvailable(decimal newPending, decimal overdueDebt, int maxOverdueDays)
+    {
+        if (newPending <= 0)
+        {
+            return;
+        }
+
+        if (overdueDebt > 0)
+        {
+            throw new DomainException(
+                $"Crédito bloqueado: {Name} tiene {Usd(overdueDebt)} de deuda con más de {maxOverdueDays} días. " +
+                "Registre un abono o cobre la venta completa (de contado).");
+        }
+
+        if (CreditLimit is { } limit && Debt + newPending > limit)
+        {
+            throw new DomainException(
+                $"Crédito bloqueado: la venta dejaría a {Name} con {Usd(Debt + newPending)} de deuda y su límite es {Usd(limit)}. " +
+                $"Cobre al menos {Usd(Debt + newPending - limit)} en esta factura.");
+        }
+    }
+
+    private static string Usd(decimal value) => "$" + value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+
     public void AdjustBalances(decimal moneyBalance, int emptyBoxesBalance, int emptyUnitsBalance)
     {
         MoneyBalance = moneyBalance;

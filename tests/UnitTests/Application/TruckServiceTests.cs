@@ -12,6 +12,7 @@ public sealed class TruckServiceTests
 {
     private readonly Mock<ITruckRepository> mockTrucks = new();
     private readonly Mock<IProductRepository> mockProducts = new();
+    private readonly Mock<IInvoiceRepository> mockInvoices = new();
     private readonly Mock<IUnitOfWork> mockUnitOfWork = TestDoubles.UnitOfWork();
     private readonly Mock<IAuditService> mockAudit = new();
     private readonly Mock<ICurrentUser> mockCurrentUser = new();
@@ -23,9 +24,9 @@ public sealed class TruckServiceTests
     {
         mockCurrentUser.Setup(u => u.Username).Returns("empleado");
         service = new TruckService(
-            mockTrucks.Object, mockProducts.Object, mockUnitOfWork.Object, mockAudit.Object, mockCurrentUser.Object,
+            mockTrucks.Object, mockProducts.Object, mockInvoices.Object, mockUnitOfWork.Object, mockAudit.Object, mockCurrentUser.Object,
             Mock.Of<IClock>(), new TruckRequestValidator(), new LoadTruckRequestValidator(),
-            new TransferFromTruckRequestValidator(), new AdjustStockRequestValidator());
+            new TransferFromTruckRequestValidator(), new AdjustStockRequestValidator(), new SettleRouteRequestValidator());
 
         mockTrucks.Setup(r => r.GetForUpdateAsync(truck.Id, It.IsAny<CancellationToken>())).ReturnsAsync(truck);
         mockTrucks.Setup(r => r.GetByIdAsync(truck.Id, It.IsAny<CancellationToken>())).ReturnsAsync(truck);
@@ -97,6 +98,57 @@ public sealed class TruckServiceTests
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             service.LoadAsync(unknown, new LoadTruckRequest(beer.Id, TruckLoadMode.Add, 1, 0, null)));
+    }
+
+    [Fact]
+    public async Task LoadAsync_LeavesTheTruckLoading()
+    {
+        await service.LoadAsync(truck.Id, new LoadTruckRequest(beer.Id, TruckLoadMode.Add, 1, 0, null));
+
+        Assert.Equal(Truck.StatusLoading, truck.Status);
+    }
+
+    [Fact]
+    public async Task DispatchAsync_PutsTheTruckOnRoute()
+    {
+        truck.AddStock(beer.Id, 36);
+
+        var response = await service.DispatchAsync(truck.Id);
+
+        Assert.Equal(Truck.StatusOnRoute, response.Status);
+        mockAudit.Verify(a => a.RecordAsync(It.Is<AuditEntry>(e => e.Action == "truck_dispatched"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SettleAsync_BlindSettlement_ReturnsCountedGoodsAndReportsDifferences()
+    {
+        // Arrange: sale con 72 und; durante la ruta factura $230 y cobra $40 de abonos.
+        truck.AddStock(beer.Id, 72);
+        truck.Dispatch(new DateTime(2026, 10, 15, 8, 0, 0, DateTimeKind.Utc));
+        mockInvoices.Setup(r => r.GetTruckRouteSalesAsync(truck.Id, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((3, 230m, 40m));
+        mockProducts.Setup(r => r.GetManyForUpdateAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, Product> { [beer.Id] = beer });
+        RouteSettlement? saved = null;
+        mockTrucks.Setup(r => r.AddSettlement(It.IsAny<RouteSettlement>())).Callback<RouteSettlement>(s => saved = s);
+
+        // Act: el chofer declara $35 y 1 caja + 24 und (60 und), sin ver lo esperado.
+        var planilla = await service.SettleAsync(truck.Id, new SettleRouteRequest(35m, [new LineRequest(beer.Id, 1, 24)], null));
+
+        // Assert
+        Assert.Equal((40m, 35m, -5m), (planilla.ExpectedCash, planilla.CountedCash, planilla.CashDifference));
+        Assert.Equal((72, 60, -12), (planilla.Lines[0].ExpectedUnits, planilla.Lines[0].CountedUnits, planilla.Lines[0].DifferenceUnits));
+        Assert.Equal(420, beer.StockUnits);                     // 360 + 60 contadas
+        Assert.Equal(Truck.StatusSettled, truck.Status);
+        Assert.NotNull(saved);
+        mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SettleAsync_TruckNotOnRoute_IsRejected()
+    {
+        await Assert.ThrowsAsync<DomainException>(() => service.SettleAsync(truck.Id, new SettleRouteRequest(0m, [], null)));
+        mockTrucks.Verify(r => r.AddSettlement(It.IsAny<RouteSettlement>()), Times.Never);
     }
 
     [Fact]

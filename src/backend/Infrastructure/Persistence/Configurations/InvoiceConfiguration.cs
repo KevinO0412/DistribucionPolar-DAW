@@ -37,6 +37,7 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.CancelledBy).HasMaxLength(User.UsernameMaxLength);
 
         builder.HasIndex(i => i.Number).IsUnique();
+        builder.HasIndex(i => i.IdempotencyKey).IsUnique().HasFilter("\"IdempotencyKey\" IS NOT NULL");
         builder.HasIndex(i => i.IssuedAt);
         builder.HasIndex(i => new { i.ClientId, i.IssuedAt });
 

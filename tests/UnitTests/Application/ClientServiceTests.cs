@@ -22,7 +22,7 @@ public sealed class ClientServiceTests
         service = new ClientService(
             mockClients.Object, Mock.Of<IDocumentNumberGenerator>(), mockUnitOfWork.Object, mockAudit.Object,
             new CreateClientRequestValidator(), new UpdateClientRequestValidator(), new ClientPaymentRequestValidator(),
-            new ClientEmptiesReturnRequestValidator(), new ClientBalanceAdjustmentRequestValidator());
+            new ClientEmptiesReturnRequestValidator(), new ClientBalanceAdjustmentRequestValidator(), new SetCreditLimitRequestValidator());
 
         mockClients.Setup(r => r.GetForUpdateAsync(client.Id, It.IsAny<CancellationToken>())).ReturnsAsync(client);
         mockClients.Setup(r => r.GetByIdAsync(client.Id, It.IsAny<CancellationToken>())).ReturnsAsync(client);
@@ -65,6 +65,22 @@ public sealed class ClientServiceTests
 
         Assert.Equal(0m, client.MoneyBalance);
         mockClients.Verify(r => r.AddMovement(It.IsAny<ClientMovement>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetCreditLimitAsync_StoresTheLimitAndAudits()
+    {
+        var response = await service.SetCreditLimitAsync(client.Id, new SetCreditLimitRequest(250m));
+
+        Assert.Equal(250m, response.CreditLimit);
+        mockAudit.Verify(a => a.RecordAsync(It.Is<AuditEntry>(e => e.Action == "client_credit_limit"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetCreditLimitAsync_Negative_ThrowsValidation()
+    {
+        await Assert.ThrowsAsync<ValidationException>(() => service.SetCreditLimitAsync(client.Id, new SetCreditLimitRequest(-1m)));
+        Assert.Null(client.CreditLimit);
     }
 
     [Fact]

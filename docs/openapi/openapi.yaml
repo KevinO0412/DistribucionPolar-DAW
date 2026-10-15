@@ -1151,6 +1151,68 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
             application/json: { }
+  '/api/clients/{id}/credit-limit':
+    put:
+      tags:
+        - Clientes
+      summary: Fija el límite de crédito del cliente (solo Admin).
+      description: null = sin límite; 0 = solo de contado. Una venta que deja deuda por encima del límite se rechaza.
+      parameters:
+        - name: id
+          in: path
+          description: Cliente.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Token de cancelación.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetCreditLimitRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/SetCreditLimitRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/SetCreditLimitRequest'
+        required: true
+      responses:
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+        '200':
+          description: Cliente actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Límite negativo.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+            application/json: { }
+        '403':
+          description: El rol no es Admin.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+        '404':
+          description: No existe el cliente.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
   '/api/clients/{id}/balance-adjustments':
     post:
       tags:
@@ -1752,8 +1814,14 @@ paths:
         - Facturación
       summary: Emite una factura de venta.
       description: "En una sola transacción: verifica el stock de todas las líneas en el origen, descuenta el inventario,\nasigna el número mensual (\"Factura Octubre 2026 #3\"), carga el pendiente (total − abono) al cliente\n—un abono mayor al total deja saldo a favor—, registra el abono y los vacíos generados y devueltos por grupo."
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+            format: uuid
       requestBody:
-        description: Token de cancelación.
+        description: "Clave UUID opcional del pedido. Reenviar el mismo pedido con la misma clave devuelve la factura ya emitida (200)\nen lugar de duplicarla; la usa la preventa sin conexión al sincronizar."
         content:
           application/json:
             schema:
@@ -1779,8 +1847,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InvoiceResponse'
+        '200':
+          description: Ya existía una factura con esa clave de idempotencia; no se creó otra.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
         '400':
-          description: 'Datos inválidos, stock insuficiente o vendedor no permitido.'
+          description: 'Datos inválidos, stock insuficiente, crédito bloqueado o vendedor no permitido.'
           content:
             application/problem+json:
               schema:
@@ -3108,6 +3182,149 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
             application/json: { }
+  '/api/trucks/{id}/dispatch':
+    post:
+      tags:
+        - Camiones
+      summary: 'Sale a ruta: el camión pasa a "En ruta" y empieza el período que se liquidará.'
+      parameters:
+        - name: id
+          in: path
+          description: Camión.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+        '200':
+          description: Camión en ruta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TruckResponse'
+        '400':
+          description: Ya está en ruta o no tiene mercancía.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+        '404':
+          description: No existe el camión.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+  '/api/trucks/{id}/settlement':
+    post:
+      tags:
+        - Camiones
+      summary: Liquidación ciega de la ruta.
+      description: "El chofer declara el dinero recaudado y la mercancía que trae sin ver lo esperado. La respuesta es la planilla de\ncuadre: lo esperado (abonos de las facturas del camión desde su salida e inventario que debía traer), lo declarado\ny las diferencias. Lo contado vuelve al galpón y el camión queda \"Liquidado\"."
+      parameters:
+        - name: id
+          in: path
+          description: Camión en ruta.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Token de cancelación.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettleRouteRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/SettleRouteRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/SettleRouteRequest'
+        required: true
+      responses:
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+        '200':
+          description: Planilla de cuadre.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteSettlementResponse'
+        '400':
+          description: El camión no está en ruta o los datos son inválidos.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+            application/json: { }
+        '404':
+          description: No existe el camión.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+  /api/trucks/settlements:
+    get:
+      tags:
+        - Camiones
+      summary: Historial de liquidaciones de ruta (solo Admin).
+      parameters:
+        - name: truckId
+          in: query
+          description: Filtra por camión.
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          description: 'Desde (fecha local, inclusive).'
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: 'Hasta (fecha local, inclusive).'
+          schema:
+            type: string
+            format: date
+      responses:
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
+        '200':
+          description: 'Planillas, de la más reciente a la más antigua.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RouteSettlementResponse'
+        '403':
+          description: El rol no es Admin.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json: { }
   /api/trucks/loads:
     get:
       tags:
@@ -3573,6 +3790,50 @@ components:
           type: string
           description: 'Motivo, obligatorio.'
       description: 'Ajuste manual de saldos (solo Admin): fija valores absolutos con signo.'
+    ClientDebtAging:
+      required:
+        - clientId
+        - code
+        - name
+        - debt
+        - overdueDebt
+        - oldestDays
+        - creditLimit
+      type: object
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        debt:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          format: double
+        overdueDebt:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          format: double
+        oldestDays:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+        creditLimit:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - 'null'
+            - number
+            - string
+          format: double
+      description: Deuda de un cliente por antigüedad.
     ClientEmptiesReturnRequest:
       required:
         - groups
@@ -3672,6 +3933,7 @@ components:
         - isReceivable
         - lastPurchaseAt
         - createdAt
+        - creditLimit
       type: object
       properties:
         id:
@@ -3743,6 +4005,14 @@ components:
           type: string
           description: Fecha de alta (UTC).
           format: date-time
+        creditLimit:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - 'null'
+            - number
+            - string
+          description: 'Límite de crédito en USD (null = sin límite, 0 = solo de contado).'
+          format: double
       description: 'Cliente con sus saldos. Convención de signo: negativo = debe; positivo = a favor.'
     ClientStatementResponse:
       required:
@@ -4813,6 +5083,7 @@ components:
         - salesByCategory
         - topProducts
         - fleet
+        - debtAging
       type: object
       properties:
         from:
@@ -4863,6 +5134,9 @@ components:
         fleet:
           description: Ocupación y ventas por camión.
           $ref: '#/components/schemas/DashboardFleetKpi'
+        debtAging:
+          description: Antigüedad de la deuda de los clientes a la fecha (no depende del filtro).
+          $ref: '#/components/schemas/DebtAgingResponse'
       description: "Dashboard KPI del rango indicado. Las ventas excluyen documentos anulados; con categoría,\nlas ventas son la suma de los renglones de esa categoría."
     DashboardSalesKpi:
       required:
@@ -4933,6 +5207,92 @@ components:
           description: 'Rotación del período: unidades vendidas / unidades en existencia.'
           format: double
       description: Ventas del rango.
+    DebtAgingBucket:
+      required:
+        - label
+        - fromDays
+        - toDays
+        - amount
+        - clients
+      type: object
+      properties:
+        label:
+          type: string
+        fromDays:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+        toDays:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - 'null'
+            - integer
+            - string
+          format: int32
+        amount:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          format: double
+        clients:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+      description: 'Tramo de antigüedad: "0–7 días", "8–15 días", "16–30 días" o "Más de 30 días".'
+    DebtAgingResponse:
+      required:
+        - totalDebt
+        - debtors
+        - maxOverdueDays
+        - overdueDebt
+        - buckets
+        - topDebtors
+      type: object
+      properties:
+        totalDebt:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          description: Dinero en la calle.
+          format: double
+        debtors:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          description: Clientes que deben.
+          format: int32
+        maxOverdueDays:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          description: Días a partir de los cuales la deuda bloquea el crédito.
+          format: int32
+        overdueDebt:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          description: Deuda con más de MaxOverdueDays días.
+          format: double
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/DebtAgingBucket'
+          description: Deuda por tramo de antigüedad.
+        topDebtors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientDebtAging'
+          description: Clientes con más deuda vencida (máximo 10).
+      description: Antigüedad de la deuda (los abonos saldan primero lo más antiguo).
     EmployeeResponse:
       required:
         - id
@@ -6152,6 +6512,151 @@ components:
           type: string
           description: 'Nueva clave, mínimo 6 caracteres.'
       description: Restablecimiento de clave (solo Admin).
+    RouteSettlementLineResponse:
+      required:
+        - productId
+        - productName
+        - unitsPerBox
+        - expectedUnits
+        - expectedDisplay
+        - countedUnits
+        - countedDisplay
+        - differenceUnits
+        - differenceValue
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        unitsPerBox:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+        expectedUnits:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+        expectedDisplay:
+          type: string
+        countedUnits:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+        countedDisplay:
+          type: string
+        differenceUnits:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+        differenceValue:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          format: double
+      description: Línea de la planilla de cuadre.
+    RouteSettlementResponse:
+      required:
+        - id
+        - truckId
+        - truckName
+        - truckPlate
+        - dispatchedAt
+        - settledAt
+        - settledBy
+        - invoicesCount
+        - salesTotal
+        - expectedCash
+        - countedCash
+        - cashDifference
+        - missingGoodsValue
+        - isBalanced
+        - observation
+        - lines
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        truckId:
+          type: string
+          format: uuid
+        truckName:
+          type: string
+        truckPlate:
+          type: string
+        dispatchedAt:
+          type: string
+          format: date-time
+        settledAt:
+          type: string
+          format: date-time
+        settledBy:
+          type:
+            - 'null'
+            - string
+        invoicesCount:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          format: int32
+        salesTotal:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          format: double
+        expectedCash:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          description: Abonos cobrados en las facturas del camión durante la ruta.
+          format: double
+        countedCash:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          description: Dinero declarado.
+          format: double
+        cashDifference:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          description: Declarado − esperado (negativo = faltante).
+          format: double
+        missingGoodsValue:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          description: Valor de la mercancía faltante.
+          format: double
+        isBalanced:
+          type: boolean
+          description: Sin diferencias de dinero ni de mercancía.
+        observation:
+          type:
+            - 'null'
+            - string
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteSettlementLineResponse'
+      description: Planilla de cuadre de una ruta.
     SalesPoint:
       required:
         - date
@@ -6182,6 +6687,45 @@ components:
             - string
           format: int32
       description: Ventas de un día local.
+    SetCreditLimitRequest:
+      required:
+        - creditLimit
+      type: object
+      properties:
+        creditLimit:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - 'null'
+            - number
+            - string
+          description: Límite en USD; null = sin límite; 0 = solo de contado.
+          format: double
+      description: Límite de crédito del cliente (solo Admin).
+    SettleRouteRequest:
+      required:
+        - countedCash
+        - returned
+        - observation
+      type: object
+      properties:
+        countedCash:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?$'
+          type:
+            - number
+            - string
+          description: Dinero recaudado según el conteo físico (USD).
+          format: double
+        returned:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineRequest'
+          description: 'Mercancía que trae de vuelta, por producto (cajas + unidades sueltas).'
+        observation:
+          type:
+            - 'null'
+            - string
+          description: Observación opcional.
+      description: 'Liquidación ciega de ruta: el chofer declara lo que trae sin ver lo esperado.'
     SkuGenerationResult:
       required:
         - rawInput
@@ -6578,6 +7122,7 @@ components:
         - capacityBoxes
         - loadedBoxes
         - occupancyPercent
+        - dispatchedAt
       type: object
       properties:
         id:
@@ -6633,6 +7178,12 @@ components:
             - string
           description: 'Ocupación: carga / capacidad × 100.'
           format: double
+        dispatchedAt:
+          type:
+            - 'null'
+            - string
+          description: 'Salida a ruta vigente (UTC), o null si no está en ruta.'
+          format: date-time
       description: Camión de reparto con su inventario.
     TruckStockLineResponse:
       required:

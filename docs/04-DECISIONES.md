@@ -53,6 +53,10 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
 | [46](#46-nginx-como-servidor-de-la-spa-y-proxy-de-la-api) | Nginx como servidor de la SPA y proxy de la API | Despliegue |
 | [47](#47-secretos-solo-por-variables-de-entorno) | Secretos solo por variables de entorno | Seguridad |
 | [48](#48-ci-con-jobs-separados-y-artefactos-condicionados-a-las-pruebas) | CI con jobs separados y artefactos condicionados a las pruebas | Calidad |
+| [49](#49-liquidación-ciega-de-ruta) | Liquidación ciega de ruta | Dominio |
+| [50](#50-control-de-crédito-con-deuda-vencida-y-límite) | Control de crédito con deuda vencida y límite | Dominio |
+| [51](#51-preventa-offline-first-con-pwa-e-indexeddb) | Preventa offline-first con PWA e IndexedDB | Frontend |
+| [52](#52-ventas-idempotentes) | Ventas idempotentes | API |
 
 ---
 
@@ -340,4 +344,26 @@ Antes de cambiar una de estas decisiones, conviene agregar una entrada nueva que
   - Nada se publica ni se empaqueta si alguna prueba falla.
   - `develop` también se valida, porque es la rama de integración del equipo.
 - **Controles extra:** reporte de cobertura en el resumen del job, límite de 120 MB por imagen y prueba de humo con Compose (salud de la SPA y de la API, y fallback del SPA).
+
+### 49. Liquidación ciega de ruta
+- **Decisión:** el camión tiene estados de ruta (En galpón → Cargando → En ruta → Liquidado). Al volver, el chofer declara el dinero y la mercancía sin ver lo esperado, y `RouteSettlement` guarda la planilla con lo esperado, lo declarado y las diferencias. Lo contado vuelve al galpón y los faltantes quedan registrados (observación del docente, [docs/09](09-OBSERVACIONES-PROFESOR.md)).
+- **Esperado:** el dinero esperado son los abonos cobrados en las facturas de venta del camión desde su salida (`DispatchedAt`); la mercancía esperada es lo que el camión tiene registrado.
+- **Por qué:** comparar a ciegas evita que el conteo se "ajuste" a lo esperado. Reintegrar lo contado, y no lo esperado, deja el galpón con la existencia física real.
+
+### 50. Control de crédito con deuda vencida y límite
+- **Decisión:** una venta que deja deuda se rechaza si el cliente tiene deuda con más de `Credit:MaxOverdueDays` días (30 por defecto) o si supera su límite de crédito (`Clients.CreditLimit`, solo Admin; null = sin límite, 0 = solo de contado). Las ventas de contado siempre se permiten.
+- **Antigüedad:** el sistema lleva un saldo único por cliente, así que los abonos se imputan primero a lo más antiguo (FIFO, `DebtAging`). La deuda actual corresponde a los pendientes más recientes, y lo que ninguna factura explica (saldo inicial o ajuste) cuenta como lo más antiguo. El mismo cálculo alimenta el KPI de antigüedad de la deuda del dashboard.
+- **Por qué no se bloquea el contado:** el objetivo es no aumentar la deuda de quien ya debe; impedirle pagar de contado solo haría perder la venta.
+
+### 51. Preventa offline-first con PWA e IndexedDB
+- **Decisión:** `vite-plugin-pwa` genera el manifest y un service worker que precarga la app (sin las fotos, que se guardan a medida que se ven) y guarda las respuestas de productos, clientes y camiones (red primero). La SPA guarda además una copia del catálogo en IndexedDB, que funciona aunque no haya service worker (desarrollo). Los pedidos se guardan en IndexedDB y se envían en orden al volver la conexión (evento `online`, al iniciar sesión y cada 30 s).
+- **Errores:**
+  - Sin red, 502, 503 o 504: el pedido sigue pendiente y la app se muestra "Sin conexión".
+  - 400 (stock insuficiente en el camión, crédito bloqueado): el pedido queda "rechazado" con el mensaje RFC 7807 para corregirlo o descartarlo.
+- **Privacidad:** al cerrar sesión se borra la copia local del catálogo y de los clientes.
+- **Alcance:** solo ventas. Las regalías, las anulaciones y los ajustes requieren conexión.
+
+### 52. Ventas idempotentes
+- **Decisión:** `POST /api/invoices/sales` acepta el encabezado `Idempotency-Key` (UUID). La clave se guarda en `Invoices.IdempotencyKey` con un índice único parcial. Si llega de nuevo, la API devuelve la factura existente (200) sin descontar stock ni cargar saldo.
+- **Por qué:** sin conexión estable, el teléfono puede enviar un pedido, perder la respuesta y reintentar. Sin idempotencia, eso duplicaría la factura. Si dos envíos simultáneos chocan, el índice único deja pasar uno y el otro devuelve esa misma factura.
 

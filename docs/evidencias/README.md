@@ -20,6 +20,10 @@
 | [05-employee-sin-dashboard.jpg](capturas/05-employee-sin-dashboard.jpg) | Catálogo como Employee: el menú no tiene Dashboard y la tabla no tiene botones de editar ni de eliminar |
 | [06-employee-sin-permiso.jpg](capturas/06-employee-sin-permiso.jpg) | El Employee abre `/dashboard` por URL y `ProtectedRoute` lo lleva a "sin permiso" |
 | [07-ci-verde.png](capturas/07-ci-verde.png) | Último run de GitHub Actions en `main`: backend, frontend, artefactos e imágenes en verde |
+| [08-preventa-sin-conexion.jpg](capturas/08-preventa-sin-conexion.jpg) | Preventa con el servidor apagado: la app abre desde el service worker y el pedido queda guardado ("Sin conexión: 1 pedido pendiente") |
+| [09-liquidacion-ciega.jpg](capturas/09-liquidacion-ciega.jpg) | Liquidación ciega: el chofer declara dinero y mercancía sin ver lo esperado |
+| [10-planilla-cuadre.jpg](capturas/10-planilla-cuadre.jpg) | Planilla de cuadre con lo esperado, lo declarado y las diferencias |
+| [11-recibo-58mm.jpg](capturas/11-recibo-58mm.jpg) | Recibo de cobro de un abono en papel térmico de 58 mm |
 
 ## Imágenes Docker
 

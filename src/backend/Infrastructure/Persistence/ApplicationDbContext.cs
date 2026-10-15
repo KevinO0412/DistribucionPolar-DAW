@@ -23,6 +23,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<TruckLoad> TruckLoads => Set<TruckLoad>();
 
+    public DbSet<RouteSettlement> RouteSettlements => Set<RouteSettlement>();
+
+    public DbSet<RouteSettlementLine> RouteSettlementLines => Set<RouteSettlementLine>();
+
     public DbSet<Client> Clients => Set<Client>();
 
     public DbSet<ClientEmptyBalance> ClientEmptyBalances => Set<ClientEmptyBalance>();

@@ -32,6 +32,12 @@ public interface ITruckService
 
     Task<TruckResponse> UnloadAsync(Guid truckId, CancellationToken cancellationToken = default);
 
+    Task<TruckResponse> DispatchAsync(Guid truckId, CancellationToken cancellationToken = default);
+
+    Task<RouteSettlementResponse> SettleAsync(Guid truckId, SettleRouteRequest request, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<RouteSettlementResponse>> GetSettlementsAsync(Guid? truckId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<TruckLoadResponse>> GetLoadsAsync(Guid? truckId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 }
 
@@ -65,6 +71,8 @@ public interface IClientService
     Task<ClientResponse> ReturnEmptiesAsync(Guid id, ClientEmptiesReturnRequest request, CancellationToken cancellationToken = default);
 
     Task<ClientResponse> AdjustBalancesAsync(Guid id, ClientBalanceAdjustmentRequest request, CancellationToken cancellationToken = default);
+
+    Task<ClientResponse> SetCreditLimitAsync(Guid id, SetCreditLimitRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface IInvoiceService
@@ -72,6 +80,13 @@ public interface IInvoiceService
     Task<AttendantOptionsResponse> GetAttendantOptionsAsync(CancellationToken cancellationToken = default);
 
     Task<InvoiceResponse> CreateSaleAsync(CreateSaleRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Venta idempotente: si ya existe una factura con <paramref name="idempotencyKey"/>, la devuelve sin crear otra
+    /// (Created = false). Es lo que usa la preventa sin conexión al sincronizar.
+    /// </summary>
+    Task<(InvoiceResponse Invoice, bool Created)> CreateSaleAsync(
+        CreateSaleRequest request, Guid? idempotencyKey, CancellationToken cancellationToken = default);
 
     Task<InvoiceResponse> CreateGiftAsync(CreateGiftRequest request, CancellationToken cancellationToken = default);
 

@@ -12,7 +12,13 @@ public sealed class Truck : BaseEntity
     public const int NameMaxLength = 50;
     public const int PlateMaxLength = 20;
     public const int StatusMaxLength = 30;
-    public const string DefaultStatus = "En galpón";
+    public const string DefaultStatus = StatusInWarehouse;
+
+    // Estados de la ruta: En galpón → Cargando → En ruta → Liquidado → (nueva carga) Cargando…
+    public const string StatusInWarehouse = "En galpón";
+    public const string StatusLoading = "Cargando";
+    public const string StatusOnRoute = "En ruta";
+    public const string StatusSettled = "Liquidado";
     public const int DefaultCapacityBoxes = 500;
     public const int MaxCapacityBoxes = 5000;
 
@@ -34,6 +40,11 @@ public sealed class Truck : BaseEntity
     public string Plate { get; private set; } = default!;
 
     public string Status { get; private set; } = default!;
+
+    /// <summary>Salida a ruta vigente; marca el inicio del período que se liquida.</summary>
+    public DateTime? DispatchedAt { get; private set; }
+
+    public bool IsOnRoute => Status == StatusOnRoute;
 
     /// <summary>Capacidad de carga en cajas: base del KPI de ocupación de flota.</summary>
     public int CapacityBoxes { get; private set; }
@@ -84,6 +95,47 @@ public sealed class Truck : BaseEntity
         }
 
         Touch();
+    }
+
+    /// <summary>Una carga desde el galpón deja el camión "Cargando", salvo que ya esté en ruta.</summary>
+    public void MarkLoading()
+    {
+        if (!IsOnRoute)
+        {
+            Status = StatusLoading;
+            Touch();
+        }
+    }
+
+    /// <summary>Sale a ruta con la mercancía cargada.</summary>
+    public void Dispatch(DateTime dispatchedAt)
+    {
+        if (IsOnRoute)
+        {
+            throw new DomainException($"El camión {Name} ya está en ruta.");
+        }
+
+        if (TotalUnits == 0)
+        {
+            throw new DomainException($"El camión {Name} no tiene mercancía cargada.");
+        }
+
+        Status = StatusOnRoute;
+        DispatchedAt = dispatchedAt;
+        Touch();
+    }
+
+    /// <summary>Cierra la ruta: retira la mercancía (se reintegra al galpón según el conteo) y queda "Liquidado".</summary>
+    public IReadOnlyList<(Guid ProductId, int Units)> Settle()
+    {
+        if (!IsOnRoute)
+        {
+            throw new DomainException($"Solo se liquida un camión en ruta; {Name} está \"{Status}\".");
+        }
+
+        var expected = Unload();
+        Status = StatusSettled;
+        return expected;
     }
 
     /// <summary>Fija la cantidad absoluta de un producto (ajuste manual). En 0 elimina la línea.</summary>

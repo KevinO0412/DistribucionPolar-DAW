@@ -2,8 +2,21 @@ import type { ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 import { formatDecimal, formatInt, formatPercent } from '../../lib/format';
 
+/** Estado de la ruta con color y texto (el color nunca es la única señal). */
+const STATUS_TONE: Record<string, string> = {
+  'En galpón': 'bg-sunken text-muted',
+  Cargando: 'bg-crate/20 text-ink',
+  'En ruta': 'bg-brand text-on-brand',
+  Liquidado: 'bg-status-ok/15 text-status-ok',
+};
+
+export function TruckStatusBadge({ status }: { status: string }) {
+  return <span className={cn('inline-flex rounded px-2 py-0.5 text-sm font-semibold', STATUS_TONE[status] ?? 'bg-sunken text-muted')}>{status}</span>;
+}
+
 interface TruckCardProps {
   name: string;
+  status?: string;
   plate: string;
   capacityBoxes: number;
   loadedBoxes: number;
@@ -23,7 +36,7 @@ export function occupancyLevel(percent: number) {
  * Camión de perfil: la caja de carga se llena de gaveras según la ocupación (cajas cargadas / capacidad).
  * Es el elemento distintivo del dashboard y de la pantalla de camiones.
  */
-export function TruckCard({ name, plate, capacityBoxes, loadedBoxes, occupancyPercent, children }: TruckCardProps) {
+export function TruckCard({ name, status, plate, capacityBoxes, loadedBoxes, occupancyPercent, children }: TruckCardProps) {
   const fill = Math.min(occupancyPercent, 100);
   const level = occupancyLevel(occupancyPercent);
   const bedWidth = 196;
@@ -36,6 +49,7 @@ export function TruckCard({ name, plate, capacityBoxes, loadedBoxes, occupancyPe
         <div>
           <h3 className="font-display text-xl font-semibold leading-tight">{name}</h3>
           <p className="font-display text-sm tracking-wide text-muted">{plate}</p>
+          {status && <div className="mt-1"><TruckStatusBadge status={status} /></div>}
         </div>
         <div className="text-right">
           <p className={cn('font-display text-3xl font-semibold leading-none', level.tone)}>{formatPercent(occupancyPercent)}</p>

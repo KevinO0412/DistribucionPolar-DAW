@@ -53,6 +53,8 @@ public static class DependencyInjection
         services.AddSingleton<IClock, BusinessClock>();
         services.AddSingleton<IDocumentPdfGenerator, QuestPdfGenerator>();
         services.AddSingleton<ExchangeRateCache>();
+        services.AddSingleton(new CreditPolicy(
+            configuration.GetValue("Credit:MaxOverdueDays", CreditPolicy.DefaultMaxOverdueDays)));
 
         // Transient: una instancia nueva cada vez que se emite un token.
         services.AddTransient<ITokenService, JwtTokenService>();

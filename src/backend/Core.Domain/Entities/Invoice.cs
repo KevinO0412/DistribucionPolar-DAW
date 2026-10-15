@@ -6,7 +6,11 @@ using Core.Domain.ValueObjects;
 namespace Core.Domain.Entities;
 
 /// <summary>Línea solicitada para un documento: producto + cantidad en cajas y unidades sueltas.</summary>
-public readonly record struct ProductLine(Product Product, BoxQuantity Quantity);
+public readonly record struct ProductLine(Product Product, BoxQuantity Quantity)
+{
+    /// <summary>Subtotal con los precios actuales del producto (la misma fórmula de <see cref="InvoiceItem"/>).</summary>
+    public decimal Subtotal => Product.CalculateSubtotal(Quantity);
+}
 
 /// <summary>
 /// Factura de venta o regalía. Guarda una copia (snapshot) del producto en cada línea, así que
@@ -110,6 +114,9 @@ public sealed class Invoice : BaseEntity
 
     public string? CancelledBy { get; private set; }
 
+    /// <summary>Clave enviada por el cliente para no duplicar la factura al reintentar (preventa sin conexión).</summary>
+    public Guid? IdempotencyKey { get; private set; }
+
     public IReadOnlyCollection<InvoiceItem> Items => items.AsReadOnly();
 
     public IReadOnlyCollection<InvoiceEmptyGroup> EmptyGroups => emptyGroups.AsReadOnly();
@@ -173,6 +180,16 @@ public sealed class Invoice : BaseEntity
         invoice.PaymentObservation = GiftObservation;
         invoice.BuildEmptyGroups(new Dictionary<string, BoxQuantity>());
         return invoice;
+    }
+
+    public void AssignIdempotencyKey(Guid key)
+    {
+        if (key == Guid.Empty)
+        {
+            throw new DomainException("La clave de idempotencia no puede estar vacía.");
+        }
+
+        IdempotencyKey = key;
     }
 
     public void Cancel(string reason, string? cancelledBy, DateTime cancelledAt)

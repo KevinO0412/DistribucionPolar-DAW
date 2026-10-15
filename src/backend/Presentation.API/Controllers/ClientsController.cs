@@ -131,6 +131,24 @@ public sealed class ClientsController(IClientService clients) : ControllerBase
     public async Task<ActionResult<ClientResponse>> ReturnEmpties(Guid id, ClientEmptiesReturnRequest request, CancellationToken cancellationToken) =>
         Ok(await clients.ReturnEmptiesAsync(id, request, cancellationToken));
 
+    /// <summary>Fija el límite de crédito del cliente (solo Admin).</summary>
+    /// <remarks>null = sin límite; 0 = solo de contado. Una venta que deja deuda por encima del límite se rechaza.</remarks>
+    /// <param name="id">Cliente.</param>
+    /// <param name="request">Límite en USD.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Cliente actualizado.</response>
+    /// <response code="400">Límite negativo.</response>
+    /// <response code="403">El rol no es Admin.</response>
+    /// <response code="404">No existe el cliente.</response>
+    [Authorize(Roles = Roles.Admin)]
+    [HttpPut("{id:guid}/credit-limit")]
+    [ProducesResponseType<ClientResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<ClientResponse>> SetCreditLimit(Guid id, SetCreditLimitRequest request, CancellationToken cancellationToken) =>
+        Ok(await clients.SetCreditLimitAsync(id, request, cancellationToken));
+
     /// <summary>Ajuste manual de saldos (solo Admin): fija valores absolutos con signo.</summary>
     /// <param name="id">Cliente.</param>
     /// <param name="request">Saldos finales y motivo.</param>

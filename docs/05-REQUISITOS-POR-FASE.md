@@ -14,7 +14,7 @@ Todas las verificaciones se pueden repetir con el entorno de Development en marc
 | Reto 1: evaluador de salud con *switch* sobre tuplas | `src/backend/Core.Domain/Services/ProductHealthEvaluator.cs` | `ProductHealthEvaluatorTests`; `POST /api/demo/csharp/health-calculator` |
 | Reto 2: generador de SKU con expresiones regulares y rangos | `src/backend/Core.Domain/Services/CorporateSkuGenerator.cs` | `CorporateSkuGeneratorTests`; `POST /api/demo/csharp/sku-generator` → `HER-TAL-0007` |
 | Inyección de dependencias con Transient, Scoped y Singleton | `DependencyInjection.cs` de Application e Infrastructure ([Arquitectura §11](02-ARQUITECTURA.md#11-inyección-de-dependencias)) | Revisión de código |
-| Pruebas unitarias xUnit pasando al 100% | `tests/UnitTests` (80 de dominio y 88 de aplicación), además de `tests/IntegrationTests` (16) | `dotnet test DistribucionPolar.slnx` → 184/184 |
+| Pruebas unitarias xUnit pasando al 100% | `tests/UnitTests` (93 de dominio y 100 de aplicación), además de `tests/IntegrationTests` (20) | `dotnet test DistribucionPolar.slnx` → 213/213 |
 
 **Adaptaciones al dominio respecto de la guía de laboratorio:**
 - `Product` usa `PriceBox`/`PriceUnit` en lugar de `Price`, por la venta por caja y por unidad ([ADR 05](04-DECISIONES.md#05-precio-por-caja-y-precio-por-unidad-independientes)).
@@ -81,7 +81,7 @@ Complementos de la teoría de la fase también aplicados:
 | CRUD de productos y categorías según el rol | `ProductsPage`, `CategoriesPage` | Employee no ve los botones de editar ni eliminar |
 | Dashboard solo para Admin | Oculto del menú para Employee (`navigation.ts`) y protegido con `ProtectedRoute role="Admin"`; la API responde 403 | `ProtectedRoute.test.tsx`; prueba de integración del dashboard |
 | Pruebas xUnit + Moq de `ProductService` con mock de `IProductRepository` | `tests/UnitTests/Application/ProductServiceTests.cs`: `GetByIdAsync_ExistingId_ReturnsProductDto`, `GetProductByIdAsync_WhenNotFound_ThrowsKeyNotFoundException` y 13 casos más | `dotnet test` |
-| Casos exitosos y de excepción, aislados de la base de datos | 88 pruebas de aplicación con Moq (`Setup`/`Verify`) en todos los servicios | Reporte de cobertura (coverlet + ReportGenerator): 85,8 % de líneas del núcleo |
+| Casos exitosos y de excepción, aislados de la base de datos | 100 pruebas de aplicación con Moq (`Setup`/`Verify`) en todos los servicios | Reporte de cobertura (coverlet + ReportGenerator): 85,8 % de líneas del núcleo |
 
 **Ideas del profesor incorporadas:** tarjetas por camión con ocupación ([ADR 42](04-DECISIONES.md#42-capacidad-del-camión-en-cajas)), KPI de ocupación de flota y ventas por camión, ticket de 80 mm imprimible desde el navegador (`Ticket.tsx`, `@media print`) y menú lateral colapsable.
 
@@ -112,6 +112,10 @@ Complementos de la teoría de la fase también aplicados:
 | Proyecto integrador "otro, notificado al facilitador" | Distribución Polar (logística de flota, preventa y envases retornables), evaluado como Grupo 1 | — |
 | Dashboard KPI específico de la propuesta | Ocupación de la flota por camión y ventas por camión ([ADR 42](04-DECISIONES.md#42-capacidad-del-camión-en-cajas)) | Dashboard en http://localhost:8080 |
 | Sustentación: demostración en vivo | `docker compose down -v`, `docker compose up --build -d`, `docker ps`, `scripts/demo-operacion.sh`, `scripts/demo-fechas.sh`, login Admin y Employee en la SPA | [Evidencias](evidencias/README.md) |
+
+## Observaciones del profesor
+
+Todas las observaciones de la evaluación del 9 de octubre al Grupo 1 están incorporadas: liquidación ciega de ruta, control de crédito, envases retornables, estados de ruta de los camiones, impresión de 80 y 58 mm con recibos de cobro, preventa offline-first (PWA e IndexedDB), sincronización idempotente, descarga de respaldos, errores RFC 7807 en la preventa y antigüedad de la deuda. El detalle, con la fuente y dónde quedó cada una, está en [Observaciones del profesor](09-OBSERVACIONES-PROFESOR.md).
 
 ## Teoría de las fases implementada
 

@@ -11,15 +11,18 @@ import { App } from './App';
 import { ToastProvider } from './components/ui/Toast';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { OfflineProvider } from './offline/OfflineContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ThemeProvider>
         <AuthProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
+          <OfflineProvider>
+            <ToastProvider>
+              <App />
+            </ToastProvider>
+          </OfflineProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

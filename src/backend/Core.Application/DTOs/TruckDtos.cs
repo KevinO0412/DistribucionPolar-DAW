@@ -28,9 +28,11 @@ public sealed record TruckStockLineResponse(
 /// <param name="CapacityBoxes">Capacidad de carga en cajas.</param>
 /// <param name="LoadedBoxes">Carga actual en cajas equivalentes (unidades / unidades por caja).</param>
 /// <param name="OccupancyPercent">Ocupación: carga / capacidad × 100.</param>
+/// <param name="DispatchedAt">Salida a ruta vigente (UTC), o null si no está en ruta.</param>
 public sealed record TruckResponse(
     Guid Id, string Name, string Plate, string Status, int TotalUnits, decimal InventoryValue,
-    IReadOnlyList<TruckStockLineResponse> Stock, int CapacityBoxes, decimal LoadedBoxes, decimal OccupancyPercent);
+    IReadOnlyList<TruckStockLineResponse> Stock, int CapacityBoxes, decimal LoadedBoxes, decimal OccupancyPercent,
+    DateTime? DispatchedAt);
 
 /// <summary>Alta o edición de camión (solo Admin).</summary>
 /// <param name="Name" example="NPR">Nombre o modelo.</param>
@@ -89,3 +91,27 @@ public sealed record AdjustStockRequest(Guid ProductId, int Boxes, int LooseUnit
 public sealed record TruckLoadResponse(
     Guid Id, Guid TruckId, string TruckName, Guid ProductId, string ProductName, int TotalUnits,
     int StockBefore, int StockAfter, TruckLoadSource Source, string? Observation, string? Username, DateTime CreatedAt);
+
+/// <summary>
+/// Liquidación ciega de ruta: el chofer declara lo que trae sin ver lo esperado.
+/// </summary>
+/// <param name="CountedCash" example="350.00">Dinero recaudado según el conteo físico (USD).</param>
+/// <param name="Returned">Mercancía que trae de vuelta, por producto (cajas + unidades sueltas).</param>
+/// <param name="Observation">Observación opcional.</param>
+public sealed record SettleRouteRequest(decimal CountedCash, IReadOnlyList<LineRequest> Returned, string? Observation);
+
+/// <summary>Línea de la planilla de cuadre.</summary>
+public sealed record RouteSettlementLineResponse(
+    Guid ProductId, string ProductName, int UnitsPerBox, int ExpectedUnits, string ExpectedDisplay,
+    int CountedUnits, string CountedDisplay, int DifferenceUnits, decimal DifferenceValue);
+
+/// <summary>Planilla de cuadre de una ruta.</summary>
+/// <param name="ExpectedCash">Abonos cobrados en las facturas del camión durante la ruta.</param>
+/// <param name="CountedCash">Dinero declarado.</param>
+/// <param name="CashDifference">Declarado − esperado (negativo = faltante).</param>
+/// <param name="MissingGoodsValue">Valor de la mercancía faltante.</param>
+/// <param name="IsBalanced">Sin diferencias de dinero ni de mercancía.</param>
+public sealed record RouteSettlementResponse(
+    Guid Id, Guid TruckId, string TruckName, string TruckPlate, DateTime DispatchedAt, DateTime SettledAt, string? SettledBy,
+    int InvoicesCount, decimal SalesTotal, decimal ExpectedCash, decimal CountedCash, decimal CashDifference,
+    decimal MissingGoodsValue, bool IsBalanced, string? Observation, IReadOnlyList<RouteSettlementLineResponse> Lines);

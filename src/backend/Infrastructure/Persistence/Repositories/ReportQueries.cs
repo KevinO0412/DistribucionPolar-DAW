@@ -154,7 +154,23 @@ public sealed class ReportQueries(ApplicationDbContext context) : IReportQueries
                 context.TruckStocks.Where(s => s.TruckId == t.Id).Sum(s => (decimal?)(s.StockUnits * s.Product!.PriceUnit)) ?? 0))
             .ToListAsync(cancellationToken);
 
-        return new DashboardData(products, saleLines, collections ?? new DashboardCollections(0, 0), trucks);
+        var debtorClients = await context.Clients
+            .AsNoTracking()
+            .Where(c => c.MoneyBalance < 0)
+            .Select(c => new { c.Id, c.Code, c.Name, Debt = -c.MoneyBalance, c.CreditLimit })
+            .ToListAsync(cancellationToken);
+        var debtorIds = debtorClients.Select(c => c.Id).ToList();
+        var pendingSales = (await context.Invoices
+                .AsNoTracking()
+                .Where(i => debtorIds.Contains(i.ClientId) && !i.IsCancelled && i.Type == InvoiceType.Sale && i.Pending > 0)
+                .Select(i => new { i.ClientId, i.IssuedAt, i.Pending })
+                .ToListAsync(cancellationToken))
+            .ToLookup(i => i.ClientId, i => new Core.Domain.Services.PendingSale(i.IssuedAt, i.Pending));
+        var debtors = debtorClients
+            .Select(c => new DebtorRow(c.Id, c.Code, c.Name, c.Debt, c.CreditLimit, pendingSales[c.Id].ToList()))
+            .ToList();
+
+        return new DashboardData(products, saleLines, collections ?? new DashboardCollections(0, 0), trucks, debtors);
     }
 
     public async Task<ProductLocationResponse?> GetProductLocationAsync(Guid productId, CancellationToken cancellationToken = default)
