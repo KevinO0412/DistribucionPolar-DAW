@@ -16,6 +16,7 @@ vi.mock('../api/endpoints', () => ({
       blockReason: 'Tiene $150.00 de deuda vencida.', days0To30: 100, days31To60: 100, days61To90: 0, over90: 50,
     }),
     setCredit: vi.fn().mockResolvedValue({}),
+    pay: vi.fn().mockResolvedValue({ id: 'c1', moneyBalance: -200 }),
   },
 }));
 
@@ -47,5 +48,21 @@ describe('ClientsPage', () => {
 
     expect(await screen.findByText(/Solo un administrador cambia estas condiciones/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Guardar', hidden: true })).toBeNull();
+  });
+
+  it('registra un cobro y muestra el recibo con el saldo anterior y el nuevo', async () => {
+    isAdmin = false;
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Cobrar a Bodega La Esquina' }));
+    await userEvent.type(screen.getByLabelText('Monto (USD)'), '50');
+    await userEvent.type(screen.getByLabelText('Observación'), 'Efectivo');
+    await userEvent.click(screen.getByRole('button', { name: 'Registrar cobro', hidden: true }));
+
+    expect(clientsApi.pay).toHaveBeenCalledWith('c1', { amount: 50, observation: 'Efectivo' });
+    expect(await screen.findByText('RECIBO DE COBRO')).toBeInTheDocument();
+    expect(screen.getByText('Debe USD 250,00')).toBeInTheDocument();
+    expect(screen.getByText('Debe USD 200,00')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: '58 mm', hidden: true }));
+    expect(document.querySelector('#ticket-print')).toHaveClass('w-[58mm]');
   });
 });

@@ -1,18 +1,20 @@
 import type { Invoice } from '../../api/types';
+import { cn } from '../../lib/cn';
 import { formatDateTime, formatMoney } from '../../lib/format';
+import { paperClass, type PaperWidth } from '../../lib/print';
 
 /**
- * Ticket térmico de 80 mm (lógica de negocio §8): empresa, cliente, despacho, productos, totales,
- * observación de pago, vacíos por grupo y líneas de firma. Se imprime con CSS @media print (index.css).
+ * Ticket térmico de 80 mm o 58 mm (lógica de negocio §8): empresa, cliente, despacho, productos, totales,
+ * observación de pago, vacíos por grupo y líneas de firma. Se imprime con CSS @media print (index.css y lib/print).
  */
-export function Ticket({ invoice }: { invoice: Invoice }) {
+export function Ticket({ invoice, width = 80 }: { invoice: Invoice; width?: PaperWidth }) {
   const isGift = invoice.type === 'Gift';
   const rule = <hr className="my-2 border-t border-dashed border-black/60" />;
 
   return (
-    <div id="ticket-print" className="mx-auto w-[80mm] max-w-full bg-white p-4 font-mono text-[11px] leading-snug text-black shadow-sm">
+    <div id="ticket-print" data-paper={width} className={cn('mx-auto max-w-full bg-white p-4 font-mono leading-snug text-black shadow-sm', paperClass[width])}>
       <div className="text-center">
-        <p className="text-[13px] font-bold">DISTRIBUIDORA VICROS C.A.</p>
+        <p className={cn('font-bold', width === 58 ? 'text-[11px]' : 'text-[13px]')}>DISTRIBUIDORA VICROS C.A.</p>
         <p>RIF J-301798740</p>
         <p className="mt-1 font-bold">{invoice.number}</p>
         <p>{formatDateTime(invoice.issuedAt)}</p>
@@ -67,7 +69,7 @@ export function Ticket({ invoice }: { invoice: Invoice }) {
           <p className="font-bold">Vacíos retornables</p>
           {invoice.emptyGroups.map((g) => (
             <p key={g.groupKey}>
-              {g.groupName}: gen. {g.generatedBoxes} cj + {g.generatedUnits} und, dev. {g.returnedBoxes} cj + {g.returnedUnits} und
+              {g.groupName}:{width === 58 ? <br /> : ' '}gen. {g.generatedBoxes} cj + {g.generatedUnits} und, dev. {g.returnedBoxes} cj + {g.returnedUnits} und
             </p>
           ))}
         </>

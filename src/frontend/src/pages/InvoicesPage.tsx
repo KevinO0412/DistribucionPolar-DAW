@@ -4,6 +4,7 @@ import { invoicesApi } from '../api/endpoints';
 import { DataTable } from '../components/dashboard/DataTable';
 import { presetRange } from '../components/dashboard/DashboardFilters';
 import { PageHeader } from '../components/layout/PageHeader';
+import { PaperWidthSelector } from '../components/trucks/PaperWidthSelector';
 import { Ticket } from '../components/trucks/Ticket';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -11,6 +12,7 @@ import { EmptyState, ErrorState, LoadingState } from '../components/ui/States';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { cn } from '../lib/cn';
 import { formatDateTime, formatInt, formatMoney } from '../lib/format';
+import { printThermal, type PaperWidth } from '../lib/print';
 
 const RANGES = [
   { days: 1, label: 'Hoy' },
@@ -20,26 +22,30 @@ const RANGES = [
 
 function TicketDialog({ invoiceId, onClose }: { invoiceId: string; onClose: () => void }) {
   const invoice = useApiQuery(() => invoicesApi.get(invoiceId), [invoiceId]);
+  const [width, setWidth] = useState<PaperWidth>(80);
   return (
     <Modal
       open
       onClose={onClose}
-      title="Ticket de 80 mm"
-      description="Vista previa del ticket para impresora térmica."
+      title={`Ticket de ${width} mm`}
+      description="Vista previa para impresora térmica: 80 mm o 58 mm (impresoras POS portátiles)."
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
             Cerrar
           </Button>
-          <Button onClick={() => window.print()} disabled={!invoice.data}>
+          <Button onClick={() => printThermal(width)} disabled={!invoice.data}>
             <Printer className="h-4 w-4" aria-hidden />
             Imprimir ticket
           </Button>
         </>
       }
     >
+      <div className="mb-3 flex justify-center">
+        <PaperWidthSelector value={width} onChange={setWidth} />
+      </div>
       <div className="rounded-md bg-sunken p-3">
-        {invoice.error ? <ErrorState error={invoice.error} onRetry={invoice.reload} /> : invoice.data ? <Ticket invoice={invoice.data} /> : <LoadingState />}
+        {invoice.error ? <ErrorState error={invoice.error} onRetry={invoice.reload} /> : invoice.data ? <Ticket invoice={invoice.data} width={width} /> : <LoadingState />}
       </div>
     </Modal>
   );

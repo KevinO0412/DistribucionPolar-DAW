@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { CreditCard, Search } from 'lucide-react';
+import { Banknote, CreditCard, Printer, Search } from 'lucide-react';
 import { clientsApi } from '../api/endpoints';
 import { toApiError, type ApiError } from '../api/client';
 import type { Client } from '../api/types';
 import { AGING_BUCKETS, DebtAgingBar } from '../components/clients/DebtAgingBar';
+import { PaymentReceipt, type ReceiptData } from '../components/clients/PaymentReceipt';
+import { PaperWidthSelector } from '../components/trucks/PaperWidthSelector';
 import { DataTable } from '../components/dashboard/DataTable';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/Button';
@@ -16,6 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useDebounced } from '../hooks/useDebounced';
 import { cn } from '../lib/cn';
 import { formatInt, formatMoney } from '../lib/format';
+import { printThermal, type PaperWidth } from '../lib/print';
 
 export const creditLabel = (client: Pick<Client, 'creditLimit' | 'creditDays'>) =>
   `${client.creditLimit === null ? 'Sin límite' : `Límite ${formatMoney(client.creditLimit)}`} · ${client.creditDays} días`;
@@ -103,11 +106,94 @@ function CreditDialog({ client, onClose, onSaved }: { client: Client; onClose: (
   );
 }
 
+/** Registra un abono fuera de factura y deja listo el recibo de cobro para imprimir (observación 5). */
+function PaymentDialog({ client, onClose, onPaid }: { client: Client; onClose: () => void; onPaid: () => void }) {
+  const { user } = useAuth();
+  const [amount, setAmount] = useState('');
+  const [observation, setObservation] = useState('');
+  const [error, setError] = useState<ApiError | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  const [width, setWidth] = useState<PaperWidth>(80);
+
+  async function pay() {
+    setSaving(true);
+    setError(null);
+    try {
+      const value = Number(amount);
+      const updated = await clientsApi.pay(client.id, { amount: value, observation: observation.trim() || null });
+      setReceipt({
+        clientCode: client.code,
+        clientName: client.name,
+        clientRif: client.rif,
+        amount: value,
+        observation: observation.trim() || null,
+        previousBalance: client.moneyBalance,
+        newBalance: updated.moneyBalance,
+        receivedAt: new Date().toISOString(),
+        receivedBy: user?.fullName ?? user?.username ?? '',
+      });
+      onPaid();
+    } catch (err) {
+      setError(toApiError(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={receipt ? 'Recibo de cobro' : `Cobrar a ${client.name}`}
+      description={receipt ? 'Listo para impresora térmica de 80 o 58 mm.' : `Saldo actual: ${client.moneyStatus}`}
+      footer={
+        receipt ? (
+          <>
+            <Button variant="secondary" onClick={onClose}>Cerrar</Button>
+            <Button onClick={() => printThermal(width)}>
+              <Printer className="h-4 w-4" aria-hidden />
+              Imprimir recibo
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+            <Button onClick={() => void pay()} isLoading={saving}>Registrar cobro</Button>
+          </>
+        )
+      }
+    >
+      {receipt ? (
+        <>
+          <div className="mb-3 flex justify-center">
+            <PaperWidthSelector value={width} onChange={setWidth} />
+          </div>
+          <div className="rounded-md bg-sunken p-3">
+            <PaymentReceipt receipt={receipt} width={width} />
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <TextField label="Monto (USD)" type="number" min={0} step="0.01" inputMode="decimal" value={amount}
+            onChange={(e) => setAmount(e.target.value)} error={error?.fieldError('amount')} />
+          <TextField label="Observación" value={observation} onChange={(e) => setObservation(e.target.value)} placeholder="Ej.: pago en efectivo"
+            error={error?.fieldError('observation')} />
+          {error && !error.fieldError('amount') && !error.fieldError('observation') && (
+            <p className="text-sm text-status-out" role="alert">{error.message}</p>
+          )}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 /** Clientes y cuentas por cobrar con su situación de crédito (observación 2). */
 export function ClientsPage() {
   const [search, setSearch] = useState('');
   const [onlyDebtors, setOnlyDebtors] = useState(false);
   const [selected, setSelected] = useState<Client | null>(null);
+  const [paying, setPaying] = useState<Client | null>(null);
   const debouncedSearch = useDebounced(search.trim());
   const clients = useApiQuery(() => clientsApi.list(debouncedSearch), [debouncedSearch]);
   const rows = (clients.data ?? []).filter((c) => !onlyDebtors || c.moneyBalance < 0);
@@ -149,10 +235,16 @@ export function ClientsPage() {
                 header: 'Acciones',
                 align: 'right',
                 cell: (c) => (
-                  <Button variant="secondary" size="sm" onClick={() => setSelected(c)} aria-label={`Crédito de ${c.name}`}>
-                    <CreditCard className="h-4 w-4" aria-hidden />
-                    Crédito
-                  </Button>
+                  <div className="flex justify-end gap-1">
+                    <Button variant="secondary" size="sm" onClick={() => setPaying(c)} aria-label={`Cobrar a ${c.name}`}>
+                      <Banknote className="h-4 w-4" aria-hidden />
+                      Cobrar
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => setSelected(c)} aria-label={`Crédito de ${c.name}`}>
+                      <CreditCard className="h-4 w-4" aria-hidden />
+                      Crédito
+                    </Button>
+                  </div>
                 ),
               },
             ]}
@@ -163,6 +255,7 @@ export function ClientsPage() {
         </div>
       )}
       {selected && <CreditDialog client={selected} onClose={() => setSelected(null)} onSaved={clients.reload} />}
+      {paying && <PaymentDialog client={paying} onClose={() => setPaying(null)} onPaid={clients.reload} />}
     </>
   );
 }
