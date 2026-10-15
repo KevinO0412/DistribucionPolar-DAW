@@ -6,7 +6,7 @@ Distribución Polar - Fases 1, 2 y 3
 
 ❏ 1. Autenticación (login exitoso Admin y Employee)
 ↳ Login Admin
-  POST http://localhost:8080/api/auth/login [200 OK, 994B, 48ms]
+  POST http://localhost:8080/api/auth/login [200 OK, 994B, 46ms]
   ✓  Responde 200
   ✓  Devuelve JWT con rol Admin
   ┌
@@ -16,7 +16,7 @@ Distribución Polar - Fases 1, 2 y 3
   ✓  JWT firmado con HS256 y con claims requeridos
 
 ↳ Login Employee (con email)
-  POST http://localhost:8080/api/auth/login [200 OK, 999B, 28ms]
+  POST http://localhost:8080/api/auth/login [200 OK, 999B, 29ms]
   ✓  Responde 200
   ✓  Devuelve JWT con rol Employee
   ┌
@@ -43,17 +43,17 @@ Distribución Polar - Fases 1, 2 y 3
 
 ❏ 2. Escenarios obligatorios Fase 3
 ↳ Endpoint protegido sin token → 401
-  GET http://localhost:8080/api/products [401 Unauthorized, 510B, 2ms]
+  GET http://localhost:8080/api/products [401 Unauthorized, 510B, 3ms]
   ✓  Responde 401
   ✓  Formato RFC 7807 (application/problem+json)
 
 ↳ Employee elimina producto → 403
-  DELETE http://localhost:8080/api/products/00000000-0000-4000-8000-000000000006 [403 Forbidden, 519B, 2ms]
+  DELETE http://localhost:8080/api/products/00000000-0000-4000-8000-000000000006 [403 Forbidden, 519B, 3ms]
   ✓  Responde 403
   ✓  Formato RFC 7807 (application/problem+json)
 
 ↳ Producto con precio negativo → 400
-  POST http://localhost:8080/api/products [400 Bad Request, 565B, 3ms]
+  POST http://localhost:8080/api/products [400 Bad Request, 565B, 4ms]
   ✓  Responde 400
   ✓  Formato RFC 7807 (application/problem+json)
   ✓  Lista el error de validación del precio
@@ -70,15 +70,15 @@ Distribución Polar - Fases 1, 2 y 3
   ✓  Formato RFC 7807 (application/problem+json)
 
 ↳ Crear categoría (Admin) → 201
-  POST http://localhost:8080/api/categories [201 Created, 573B, 44ms]
+  POST http://localhost:8080/api/categories [201 Created, 573B, 7ms]
   ✓  Responde 201
 
 ↳ Editar categoría (Admin)
-  PUT http://localhost:8080/api/categories/a3adb7c8-c76e-433e-a8ad-742428b6f1c1 [200 OK, 544B, 7ms]
+  PUT http://localhost:8080/api/categories/3960b62a-6a62-4546-b79a-0eb8a534cb95 [200 OK, 545B, 6ms]
   ✓  Responde 200
 
 ↳ Eliminar categoría vacía (Admin) → 204
-  DELETE http://localhost:8080/api/categories/a3adb7c8-c76e-433e-a8ad-742428b6f1c1 [204 No Content, 209B, 6ms]
+  DELETE http://localhost:8080/api/categories/3960b62a-6a62-4546-b79a-0eb8a534cb95 [204 No Content, 209B, 7ms]
   ✓  Responde 204
 
 ↳ Eliminar categoría con productos → 400
@@ -87,7 +87,7 @@ Distribución Polar - Fases 1, 2 y 3
   ✓  Formato RFC 7807 (application/problem+json)
 
 ↳ Buscar productos
-  GET http://localhost:8080/api/products?search=polar [200 OK, 7.69kB, 7ms]
+  GET http://localhost:8080/api/products?search=polar [200 OK, 7.69kB, 6ms]
   ✓  Responde 200
   ✓  Encuentra productos Polar
 
@@ -97,11 +97,11 @@ Distribución Polar - Fases 1, 2 y 3
   ✓  Es Maltín retornable
 
 ↳ Productos con stock bajo
-  GET http://localhost:8080/api/products/low-stock [200 OK, 21.98kB, 8ms]
+  GET http://localhost:8080/api/products/low-stock [200 OK, 21.98kB, 7ms]
   ✓  Responde 200
 
 ↳ Salud del inventario de un producto
-  GET http://localhost:8080/api/products/00000000-0000-4000-8000-000000000006/health [200 OK, 528B, 4ms]
+  GET http://localhost:8080/api/products/00000000-0000-4000-8000-000000000006/health [200 OK, 528B, 6ms]
   ✓  Responde 200
   ✓  Incluye diagnóstico
 
@@ -111,21 +111,21 @@ Distribución Polar - Fases 1, 2 y 3
   ✓  SKU generado y stock en unidades
 
 ↳ Editar producto (Employee) → 403
-  PUT http://localhost:8080/api/products/1b74b7ab-a814-4aa5-a27a-14a9dcbd0b3e [403 Forbidden, 519B, 2ms]
+  PUT http://localhost:8080/api/products/d50e359c-923a-4379-90ae-860c952591c8 [403 Forbidden, 519B, 2ms]
   ✓  Responde 403
   ✓  Formato RFC 7807 (application/problem+json)
 
 ↳ Editar producto (Admin)
-  PUT http://localhost:8080/api/products/1b74b7ab-a814-4aa5-a27a-14a9dcbd0b3e [200 OK, 925B, 6ms]
+  PUT http://localhost:8080/api/products/d50e359c-923a-4379-90ae-860c952591c8 [200 OK, 925B, 5ms]
   ✓  Responde 200
   ✓  Precio actualizado
 
 ↳ Eliminar producto (Admin) → 204
-  DELETE http://localhost:8080/api/products/1b74b7ab-a814-4aa5-a27a-14a9dcbd0b3e [204 No Content, 209B, 4ms]
+  DELETE http://localhost:8080/api/products/d50e359c-923a-4379-90ae-860c952591c8 [204 No Content, 209B, 4ms]
   ✓  Responde 204
 
 ↳ Producto inexistente → 404
-  GET http://localhost:8080/api/products/99999999-9999-9999-9999-999999999999 [404 Not Found, 530B, 3ms]
+  GET http://localhost:8080/api/products/99999999-9999-9999-9999-999999999999 [404 Not Found, 530B, 4ms]
   ✓  Responde 404
   ✓  Formato RFC 7807 (application/problem+json)
 
@@ -136,46 +136,46 @@ Distribución Polar - Fases 1, 2 y 3
   ✓  Riesgo crítico
 
 ↳ Generador de SKU
-  POST http://localhost:8080/api/demo/csharp/sku-generator [200 OK, 556B, 2ms]
+  POST http://localhost:8080/api/demo/csharp/sku-generator [200 OK, 556B, 3ms]
   ✓  Responde 200
   ✓  SKU corporativo
 
 ↳ Excepción no controlada → 500
-  GET http://localhost:8080/api/demo/exception [500 Internal Server Error, 511B, 4ms]
+  GET http://localhost:8080/api/demo/exception [500 Internal Server Error, 511B, 3ms]
   ✓  Responde 500
   ✓  Formato RFC 7807 (application/problem+json)
   ✓  No expone el stack trace
 
 ❏ 5. Operación del negocio
 ↳ Crear cliente (Employee)
-  POST http://localhost:8080/api/clients [201 Created, 796B, 10ms]
+  POST http://localhost:8080/api/clients [201 Created, 796B, 9ms]
   ✓  Responde 201
   ✓  Código correlativo y dirección por defecto
 
 ↳ Cargar camión desde galpón (Employee)
-  POST http://localhost:8080/api/trucks/00000200-0000-4000-8000-000000000002/load [200 OK, 1.95kB, 14ms]
+  POST http://localhost:8080/api/trucks/00000200-0000-4000-8000-000000000002/load [200 OK, 1.96kB, 11ms]
   ✓  Responde 200
   ✓  El camión tiene el producto
 
 ↳ Factura de venta desde camión (Employee)
-  POST http://localhost:8080/api/invoices/sales [201 Created, 1.46kB, 17ms]
+  POST http://localhost:8080/api/invoices/sales [201 Created, 1.46kB, 14ms]
   ✓  Responde 201
   ✓  2 cajas a $23 + 5 und a $0.64 = $49.20; pendiente $29.20
   ✓  Número mensual con año
   ✓  Vacíos: generados 2c+5u, devueltos 1c
 
 ↳ Saldo del cliente tras la factura
-  GET http://localhost:8080/api/clients/720b3062-95fd-46a4-9246-10e4ac5e66ab [200 OK, 853B, 5ms]
+  GET http://localhost:8080/api/clients/f8a1e432-ff76-41ff-9963-b9dfedde8ad8 [200 OK, 853B, 4ms]
   ✓  Responde 200
   ✓  Debe $29.20 y 1 caja + 5 und de vacíos
 
 ↳ Abono de dinero (Employee)
-  POST http://localhost:8080/api/clients/720b3062-95fd-46a4-9246-10e4ac5e66ab/payments [200 OK, 853B, 9ms]
+  POST http://localhost:8080/api/clients/f8a1e432-ff76-41ff-9963-b9dfedde8ad8/payments [200 OK, 853B, 7ms]
   ✓  Responde 200
   ✓  Saldo -29.20 + 10 = -19.20
 
 ↳ Devolución de vacíos (Employee)
-  POST http://localhost:8080/api/clients/720b3062-95fd-46a4-9246-10e4ac5e66ab/empties-returns [200 OK, 766B, 9ms]
+  POST http://localhost:8080/api/clients/f8a1e432-ff76-41ff-9963-b9dfedde8ad8/empties-returns [200 OK, 766B, 9ms]
   ✓  Responde 200
   ✓  Vacíos en 0
 
@@ -185,78 +185,78 @@ Distribución Polar - Fases 1, 2 y 3
   ✓  Regalía sin cobro que genera vacíos
 
 ↳ Estado de cuenta
-  GET http://localhost:8080/api/clients/720b3062-95fd-46a4-9246-10e4ac5e66ab/statement [200 OK, 3.33kB, 6ms]
+  GET http://localhost:8080/api/clients/f8a1e432-ff76-41ff-9963-b9dfedde8ad8/statement [200 OK, 3.33kB, 6ms]
   ✓  Responde 200
   ✓  Pestañas con movimientos
 
 ↳ Ticket PDF de la factura
-  GET http://localhost:8080/api/invoices/59cb588c-e546-4091-8efc-bccb713356c5/ticket [200 OK, 48.39kB, 16ms]
+  GET http://localhost:8080/api/invoices/d53ce3e3-2359-41cb-8321-b573c77031cd/ticket [200 OK, 48.39kB, 17ms]
   ✓  Responde 200
   ✓  Es un PDF
 
 ↳ Anular factura (Employee) → 403
-  POST http://localhost:8080/api/invoices/59cb588c-e546-4091-8efc-bccb713356c5/cancel [403 Forbidden, 526B, 2ms]
+  POST http://localhost:8080/api/invoices/d53ce3e3-2359-41cb-8321-b573c77031cd/cancel [403 Forbidden, 526B, 2ms]
   ✓  Responde 403
 
 ↳ Anular factura (Admin)
-  POST http://localhost:8080/api/invoices/59cb588c-e546-4091-8efc-bccb713356c5/cancel [200 OK, 1.44kB, 11ms]
+  POST http://localhost:8080/api/invoices/d53ce3e3-2359-41cb-8321-b573c77031cd/cancel [200 OK, 1.44kB, 9ms]
   ✓  Responde 200
   ✓  Anulada
 
 ↳ Saldo tras la anulación
-  GET http://localhost:8080/api/clients/720b3062-95fd-46a4-9246-10e4ac5e66ab [200 OK, 836B, 5ms]
+  GET http://localhost:8080/api/clients/f8a1e432-ff76-41ff-9963-b9dfedde8ad8 [200 OK, 836B, 5ms]
   ✓  Responde 200
   ✓  Se revierte el pendiente ($29.20) y los vacíos de la factura
 
 ↳ Consignación: crear evento
-  POST http://localhost:8080/api/consignments [201 Created, 790B, 9ms]
+  POST http://localhost:8080/api/consignments [201 Created, 791B, 10ms]
   ✓  Responde 201
 
 ↳ Consignación: devolución de 30 und
-  POST http://localhost:8080/api/consignments/031e39bd-85a9-40cf-be6b-893432bc8f0d/returns [200 OK, 725B, 8ms]
+  POST http://localhost:8080/api/consignments/3a18d846-f6be-4c9b-95bd-f21b04063b76/returns [200 OK, 725B, 7ms]
   ✓  Responde 200
   ✓  Entrega 2 cajas x24, devuelve 30 und → vendidas 18 und
 
 ↳ Consignación: cerrar
-  POST http://localhost:8080/api/consignments/031e39bd-85a9-40cf-be6b-893432bc8f0d/close [200 OK, 750B, 6ms]
+  POST http://localhost:8080/api/consignments/3a18d846-f6be-4c9b-95bd-f21b04063b76/close [200 OK, 750B, 6ms]
   ✓  Responde 200
   ✓  Cerrado y cobra solo lo vendido
 
 ↳ Compra (Admin)
-  POST http://localhost:8080/api/purchases [201 Created, 765B, 11ms]
+  POST http://localhost:8080/api/purchases [201 Created, 764B, 7ms]
   ✓  Responde 201
   ✓  Numerada y suma 360 und
 
 ↳ Compra (Employee) → 403
-  POST http://localhost:8080/api/purchases [403 Forbidden, 483B, 2ms]
+  POST http://localhost:8080/api/purchases [403 Forbidden, 483B, 1ms]
   ✓  Responde 403
 
 ↳ Avería (Admin)
-  POST http://localhost:8080/api/damages [201 Created, 644B, 10ms]
+  POST http://localhost:8080/api/damages [201 Created, 644B, 8ms]
   ✓  Responde 201
   ✓  Pérdida = 3 × $0.64
 
 ↳ Consumo interno (Admin)
-  POST http://localhost:8080/api/internal-consumptions [201 Created, 643B, 8ms]
+  POST http://localhost:8080/api/internal-consumptions [201 Created, 644B, 6ms]
   ✓  Responde 201
   ✓  Valor = 6 × $0.48
 
 ↳ Reporte diario (Admin)
-  GET http://localhost:8080/api/reports/daily [200 OK, 603B, 8ms]
+  GET http://localhost:8080/api/reports/daily [200 OK, 603B, 7ms]
   ✓  Responde 200
   ✓  Incluye ventas y regalías del día
 
 ↳ Reporte diario (Employee) → 403
-  GET http://localhost:8080/api/reports/daily [403 Forbidden, 487B, 2ms]
+  GET http://localhost:8080/api/reports/daily [403 Forbidden, 487B, 1ms]
   ✓  Responde 403
 
 ↳ Balance (Admin)
-  GET http://localhost:8080/api/reports/balance [200 OK, 1.56kB, 8ms]
+  GET http://localhost:8080/api/reports/balance [200 OK, 1.56kB, 10ms]
   ✓  Responde 200
   ✓  Inventario total = galpón + camiones
 
 ↳ Auditoría (Admin)
-  GET http://localhost:8080/api/reports/audit?module=invoices&pageSize=10 [200 OK, 4.89kB, 7ms]
+  GET http://localhost:8080/api/reports/audit?module=invoices&pageSize=10 [200 OK, 4.89kB, 6ms]
   ✓  Responde 200
   ✓  Registra las operaciones de facturación
 
@@ -277,9 +277,9 @@ Distribución Polar - Fases 1, 2 y 3
 ├─────────────────────────┼─────────────────┼─────────────────┤
 │              assertions │              97 │               0 │
 ├─────────────────────────┴─────────────────┴─────────────────┤
-│ total run duration: 1105ms                                  │
+│ total run duration: 1048ms                                  │
 ├─────────────────────────────────────────────────────────────┤
 │ total data received: 104.63kB (approx)                      │
 ├─────────────────────────────────────────────────────────────┤
-│ average response time: 9ms [min: 2ms, max: 48ms, s.d.: 9ms] │
+│ average response time: 8ms [min: 1ms, max: 46ms, s.d.: 8ms] │
 └─────────────────────────────────────────────────────────────┘
