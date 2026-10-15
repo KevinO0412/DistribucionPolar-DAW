@@ -1,13 +1,13 @@
-# docker compose up --build -d   (Development: docker-compose.yml + docker-compose.override.yml)
-# docker ps --filter label=com.docker.compose.project=distribucion-polar   (2026-10-15T15:47Z)
-NAMES                        IMAGE                           STATUS                    PORTS
-distribucion-polar-spa       distribucion-polar-spa:latest   Up 6 seconds (healthy)    0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
-distribucion-polar-api       distribucion-polar-api:latest   Up 9 minutes (healthy)    0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp
-distribucion-polar-pgadmin   dpage/pgadmin4:9.8              Up 21 minutes             443/tcp, 0.0.0.0:5050->80/tcp, [::]:5050->80/tcp
-distribucion-polar-db        postgres:15-alpine              Up 21 minutes (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+# docker compose down -v && docker compose up --build -d   (Development)
+# docker ps --filter label=com.docker.compose.project=distribucion-polar   (2026-10-15T20:36Z)
+NAMES                        IMAGE                           STATUS                   PORTS
+distribucion-polar-spa       distribucion-polar-spa:latest   Up 3 minutes (healthy)   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
+distribucion-polar-pgadmin   dpage/pgadmin4:9.8              Up 3 minutes             443/tcp, 0.0.0.0:5050->80/tcp, [::]:5050->80/tcp
+distribucion-polar-api       distribucion-polar-api:latest   Up 3 minutes (healthy)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp
+distribucion-polar-db        postgres:15-alpine              Up 3 minutes (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
 
 # Redes: qué contenedores ve cada una
-distribucion-polar_backend: distribucion-polar-db distribucion-polar-pgadmin distribucion-polar-api 
+distribucion-polar_backend: distribucion-polar-db distribucion-polar-api distribucion-polar-pgadmin 
 distribucion-polar_frontend: distribucion-polar-spa distribucion-polar-api 
 
 # Volumen persistente

@@ -85,7 +85,10 @@ Complementos de la teoría de la fase también aplicados:
 
 **Ideas del profesor incorporadas:** tarjetas por camión con ocupación ([ADR 42](04-DECISIONES.md#42-capacidad-del-camión-en-cajas)), KPI de ocupación de flota y ventas por camión, ticket de 80 mm imprimible desde el navegador (`Ticket.tsx`, `@media print`) y menú lateral colapsable.
 
-**Datos de la demostración:** `scripts/demo-operacion.sh` carga camiones y emite facturas a través de la API; no inserta datos en la base directamente. Como la API emite cada factura con la fecha del momento, `scripts/demo-fechas.sh` las reparte después en los últimos días (junto con sus movimientos de saldo) para que el dashboard muestre ventas por día. Es el único paso que modifica la base: solo cambia fechas y se usa únicamente en Development.
+**Datos de la demostración:**
+- `scripts/demo-operacion.sh` genera **ventas reales a través de la API**: carga camiones y emite facturas con los mismos endpoints que usa la SPA, con todas sus validaciones (las ventas sin stock suficiente se rechazan). No inserta nada en la base directamente.
+- `scripts/demo-fechas.sh` **solo reparte las fechas** de esas facturas (y de sus movimientos de saldo) entre los últimos días, porque la API emite cada factura con la fecha del momento y el dashboard no tendría ventas por día. No crea ni cambia montos, cantidades ni inventario.
+- `demo-fechas.sh` modifica la base directamente, así que se usa **únicamente en Development**, nunca en Staging ni en Production.
 
 ## Fase 5: Contenerización multi-stage, Docker Compose, CI/CD y modelo de datos
 
@@ -93,7 +96,7 @@ Complementos de la teoría de la fase también aplicados:
 | --- | --- | --- |
 | Estructura del repositorio oficial | `src/backend/` (4 proyectos), `src/frontend/`, `tests/UnitTests/` (con `Application/ProductServiceTests.cs`), `tests/IntegrationTests/`, `.github/workflows/ci.yml`, `docker-compose.yml` | Árbol del [README](../README.md#estructura) |
 | Dockerfile multi-stage de la API | `src/backend/Presentation.API/Dockerfile`: `sdk:10.0-alpine` → `runtime-deps:10.0-alpine` ([ADR 45](04-DECISIONES.md#45-imagen-de-la-api-self-contained-y-recortada-sobre-alpine)) | `docker images`: ~60 MB sin comprimir |
-| Dockerfile multi-stage de la SPA | `src/frontend/Dockerfile`: `node:20-alpine` → `nginx:alpine`, con fallback a `index.html` (`nginx.conf`) | `docker images`: ~59 MB sin comprimir; `GET /dashboard` en el puerto 8080 → 200 |
+| Dockerfile multi-stage de la SPA | `src/frontend/Dockerfile`: `node:20-alpine` → `nginx:alpine`, con fallback a `index.html` (`nginx.conf`) | 54 MB sin comprimir según el CI; `GET /dashboard` en el puerto 8080 → 200 |
 | Imágenes de menos de 120 MB, sin SDK | Etapas finales sin SDK ni Node.js | El job `docker-images` del CI falla si alguna pesa 120 MB o más; cifras en [evidencias](evidencias/README.md#imágenes-docker) |
 | `docker-compose.yml` con db, api y spa | `postgres:15-alpine`, API .NET 10 y SPA Nginx | `docker compose up --build -d` |
 | Healthchecks y `depends_on` | `pg_isready`, `GET /health` (incluye PostgreSQL), `GET /healthz`; `api` espera a `db` sana y `spa` a `api` sana | `docker ps` → los tres `(healthy)` |
@@ -137,4 +140,4 @@ El detalle de cada uno está en [Fundamentos](06-FUNDAMENTOS.md).
 | Sondas de salud y de entorno | `/health`, `/api/info` |
 | pgAdmin preconfigurado en Development | `docker-compose.override.yml`, `docker/pgadmin/` |
 | Prueba de humo con Compose y control del tamaño de las imágenes en el CI | Job `docker-images` |
-| Datos de demostración generados a través de la API, sin insertar en la base, y repartidos en los últimos días | `scripts/demo-operacion.sh`, `scripts/demo-fechas.sh` |
+| Ventas de demostración reales, generadas a través de la API, y sus fechas repartidas en los últimos días solo en Development | `scripts/demo-operacion.sh` (API), `scripts/demo-fechas.sh` (solo fechas) |
