@@ -13,6 +13,8 @@ public sealed class Truck : BaseEntity
     public const int PlateMaxLength = 20;
     public const int StatusMaxLength = 30;
     public const string DefaultStatus = "En galpón";
+    public const int DefaultCapacityBoxes = 500;
+    public const int MaxCapacityBoxes = 5000;
 
     private readonly List<TruckStock> stock = [];
 
@@ -21,9 +23,9 @@ public sealed class Truck : BaseEntity
     {
     }
 
-    public Truck(string name, string plate)
+    public Truck(string name, string plate, int capacityBoxes = DefaultCapacityBoxes)
     {
-        Apply(name, plate);
+        Apply(name, plate, capacityBoxes);
         Status = DefaultStatus;
     }
 
@@ -33,13 +35,16 @@ public sealed class Truck : BaseEntity
 
     public string Status { get; private set; } = default!;
 
+    /// <summary>Capacidad de carga en cajas: base del KPI de ocupación de flota.</summary>
+    public int CapacityBoxes { get; private set; }
+
     public IReadOnlyCollection<TruckStock> Stock => stock.AsReadOnly();
 
     public int TotalUnits => stock.Sum(s => s.StockUnits);
 
-    public void Update(string name, string plate)
+    public void Update(string name, string plate, int capacityBoxes)
     {
-        Apply(name, plate);
+        Apply(name, plate, capacityBoxes);
         Touch();
     }
 
@@ -114,9 +119,23 @@ public sealed class Truck : BaseEntity
         return unloaded;
     }
 
-    private void Apply(string name, string plate)
+    /// <summary>
+    /// Ocupación en cajas equivalentes (unidades / unidades por caja) frente a la capacidad.
+    /// Requiere los productos cargados en las líneas; puede superar el 100 % si el camión va sobrecargado.
+    /// </summary>
+    public decimal LoadedBoxes => stock.Sum(s => s.Product is { UnitsPerBox: > 0 } p ? (decimal)s.StockUnits / p.UnitsPerBox : 0);
+
+    public decimal OccupancyPercent => CapacityBoxes > 0 ? Math.Round(LoadedBoxes * 100 / CapacityBoxes, 1) : 0;
+
+    private void Apply(string name, string plate, int capacityBoxes)
     {
         Name = Guard.RequiredText(name, "nombre del camión", NameMaxLength);
         Plate = Guard.RequiredText(plate, "placa", PlateMaxLength).ToUpperInvariant();
+        if (capacityBoxes <= 0 || capacityBoxes > MaxCapacityBoxes)
+        {
+            throw new DomainException($"La capacidad del camión debe estar entre 1 y {MaxCapacityBoxes} cajas.");
+        }
+
+        CapacityBoxes = capacityBoxes;
     }
 }

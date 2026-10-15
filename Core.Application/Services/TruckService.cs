@@ -42,7 +42,7 @@ public sealed class TruckService(
             throw new InvalidOperationException($"Ya existe un camión con la placa {request.Plate}.");
         }
 
-        var truck = new Truck(request.Name, request.Plate);
+        var truck = new Truck(request.Name, request.Plate, request.CapacityBoxes);
         trucks.Add(truck);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -61,7 +61,7 @@ public sealed class TruckService(
             throw new InvalidOperationException($"Ya existe un camión con la placa {request.Plate}.");
         }
 
-        truck.Update(request.Name, request.Plate);
+        truck.Update(request.Name, request.Plate, request.CapacityBoxes);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await audit.AuditAsync("truck_updated", "trucks", $"Camión actualizado: {truck.Name} ({truck.Plate})",

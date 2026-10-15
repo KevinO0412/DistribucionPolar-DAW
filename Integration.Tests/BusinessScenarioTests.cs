@@ -132,6 +132,33 @@ public sealed class BusinessScenarioTests(ApiFixture api)
     }
 
     [Fact]
+    public async Task Dashboard_ReflectsTruckSaleOccupancyAndRotation_AndIsAdminOnly()
+    {
+        var admin = await api.AdminAsync();
+        var product = await NewProductAsync(admin, 24m, 1m, 24, 20, 0);
+        var truck = await admin.PostAsync<TruckResponse>("/api/trucks", new TruckRequest("Dashboard", $"D{Random.Shared.Next(100000, 999999)}", 40), HttpStatusCode.Created);
+        var loaded = await admin.PostAsync<TruckResponse>($"/api/trucks/{truck.Id}/load", new LoadTruckRequest(product.Id, TruckLoadMode.Add, 10, 0, null));
+        var client = await NewClientAsync(admin);
+        var before = await admin.GetAsync<DashboardResponse>($"/api/reports/dashboard?categoryId={ApiFixture.BeveragesCategoryId}");
+
+        await admin.PostAsync<InvoiceResponse>("/api/invoices/sales",
+            Sale(client.Id, product.Id, 2, 0, 48m, StockOrigin.Truck, truck.Id), HttpStatusCode.Created);
+        var after = await admin.GetAsync<DashboardResponse>($"/api/reports/dashboard?categoryId={ApiFixture.BeveragesCategoryId}");
+        var employee = await (await api.EmployeeAsync()).SendRawAsync(HttpMethod.Get, "/api/reports/dashboard", null);
+        var invalid = await admin.SendRawAsync(HttpMethod.Get, "/api/reports/dashboard?from=2026-10-10&to=2026-10-01", null);
+
+        Assert.Equal(25.0m, loaded.OccupancyPercent);                               // 10 de 40 cajas
+        Assert.Equal(48m, after.Sales.SalesTotal - before.Sales.SalesTotal);
+        Assert.Equal(1, after.Sales.InvoicesCount - before.Sales.InvoicesCount);
+        var truckKpi = after.Fleet.Trucks.Single(t => t.TruckId == truck.Id);
+        Assert.Equal((20.0m, 48m, 1), (truckKpi.OccupancyPercent, truckKpi.SalesTotal, truckKpi.Invoices));
+        Assert.Contains(after.TopProducts, p => p.ProductId == product.Id && p.UnitsSold == 48 && p.StockUnits == 432);
+        Assert.All(after.SalesByCategory, c => Assert.Equal(ApiFixture.BeveragesCategoryId, c.CategoryId));
+        Assert.Equal(HttpStatusCode.Forbidden, employee.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+    }
+
+    [Fact]
     public async Task Cancellation_RevertsInventoryMoneyAndEmpties_AndIsExcludedFromReports()
     {
         var admin = await api.AdminAsync();

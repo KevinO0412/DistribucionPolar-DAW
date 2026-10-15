@@ -9,12 +9,14 @@ public sealed class TruckConfiguration : IEntityTypeConfiguration<Truck>
 {
     public void Configure(EntityTypeBuilder<Truck> builder)
     {
-        builder.ToTable("Trucks");
+        builder.ToTable("Trucks", table =>
+            table.HasCheckConstraint("CK_Trucks_CapacityBoxes_Range", $"\"CapacityBoxes\" BETWEEN 1 AND {Truck.MaxCapacityBoxes}"));
         builder.ConfigureBaseEntity();
         builder.UseOptimisticConcurrency();
         builder.Property(t => t.Name).IsRequired().HasMaxLength(Truck.NameMaxLength);
         builder.Property(t => t.Plate).IsRequired().HasMaxLength(Truck.PlateMaxLength);
         builder.Property(t => t.Status).IsRequired().HasMaxLength(Truck.StatusMaxLength);
+        builder.Property(t => t.CapacityBoxes).IsRequired().HasDefaultValue(Truck.DefaultCapacityBoxes);
         builder.HasIndex(t => t.Plate).IsUnique().HasFilter("\"IsDeleted\" = false");
 
         builder.HasMany(t => t.Stock).WithOne().HasForeignKey(s => s.TruckId).OnDelete(DeleteBehavior.Cascade);

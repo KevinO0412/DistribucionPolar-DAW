@@ -57,6 +57,7 @@ public sealed class TruckRequestValidator : AbstractValidator<TruckRequest>
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(Truck.NameMaxLength);
         RuleFor(x => x.Plate).NotEmpty().MaximumLength(Truck.PlateMaxLength);
+        RuleFor(x => x.CapacityBoxes).InclusiveBetween(1, Truck.MaxCapacityBoxes);
     }
 }
 

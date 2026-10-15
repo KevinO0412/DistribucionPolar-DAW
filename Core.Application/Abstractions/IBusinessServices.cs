@@ -131,6 +131,8 @@ public interface IReportService
 
     Task<BalanceResponse> GetBalanceAsync(CancellationToken cancellationToken = default);
 
+    Task<DashboardResponse> GetDashboardAsync(DateOnly? from, DateOnly? to, Guid? categoryId, CancellationToken cancellationToken = default);
+
     Task<PagedResponse<AuditLogResponse>> GetAuditLogAsync(
         DateOnly? from, DateOnly? to, string? module, string? username, int page, int pageSize, CancellationToken cancellationToken = default);
 }

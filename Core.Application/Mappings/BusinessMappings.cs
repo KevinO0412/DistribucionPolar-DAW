@@ -50,7 +50,9 @@ internal static class BusinessMappings
             .OrderBy(l => l.ProductName)
             .ToList();
 
-        return new TruckResponse(truck.Id, truck.Name, truck.Plate, truck.Status, truck.TotalUnits, lines.Sum(l => l.Value), lines);
+        return new TruckResponse(
+            truck.Id, truck.Name, truck.Plate, truck.Status, truck.TotalUnits, lines.Sum(l => l.Value), lines,
+            truck.CapacityBoxes, Math.Round(truck.LoadedBoxes, 1), truck.OccupancyPercent);
     }
 
     public static TruckLoadResponse ToResponse(this TruckLoad load) => new(

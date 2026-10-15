@@ -1,3 +1,4 @@
+using Core.Domain.Entities;
 using Core.Domain.Enums;
 
 namespace Core.Application.DTOs;
@@ -24,14 +25,18 @@ public sealed record TruckStockLineResponse(
 /// <param name="TotalUnits">Unidades totales en el camión.</param>
 /// <param name="InventoryValue">Valor del inventario del camión.</param>
 /// <param name="Stock">Líneas de inventario.</param>
+/// <param name="CapacityBoxes">Capacidad de carga en cajas.</param>
+/// <param name="LoadedBoxes">Carga actual en cajas equivalentes (unidades / unidades por caja).</param>
+/// <param name="OccupancyPercent">Ocupación: carga / capacidad × 100.</param>
 public sealed record TruckResponse(
     Guid Id, string Name, string Plate, string Status, int TotalUnits, decimal InventoryValue,
-    IReadOnlyList<TruckStockLineResponse> Stock);
+    IReadOnlyList<TruckStockLineResponse> Stock, int CapacityBoxes, decimal LoadedBoxes, decimal OccupancyPercent);
 
 /// <summary>Alta o edición de camión (solo Admin).</summary>
 /// <param name="Name" example="NPR">Nombre o modelo.</param>
 /// <param name="Plate" example="AB123CD">Placa única.</param>
-public sealed record TruckRequest(string Name, string Plate);
+/// <param name="CapacityBoxes" example="500">Capacidad de carga en cajas (1–5000, por defecto 500).</param>
+public sealed record TruckRequest(string Name, string Plate, int CapacityBoxes = Truck.DefaultCapacityBoxes);
 
 /// <summary>Modo de carga de un camión.</summary>
 public enum TruckLoadMode

@@ -6719,6 +6719,11 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("CapacityBoxes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(500);
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamptz");
 
@@ -6757,12 +6762,16 @@ namespace Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
 
-                    b.ToTable("Trucks", (string)null);
+                    b.ToTable("Trucks", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Trucks_CapacityBoxes_Range", "\"CapacityBoxes\" BETWEEN 1 AND 5000");
+                        });
 
                     b.HasData(
                         new
                         {
                             Id = new Guid("00000200-0000-4000-8000-000000000001"),
+                            CapacityBoxes = 600,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Name = "Cargo 815",
@@ -6772,6 +6781,7 @@ namespace Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("00000200-0000-4000-8000-000000000002"),
+                            CapacityBoxes = 500,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Name = "FVR",
@@ -6781,6 +6791,7 @@ namespace Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("00000200-0000-4000-8000-000000000003"),
+                            CapacityBoxes = 900,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Name = "Mack",
@@ -6790,6 +6801,7 @@ namespace Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("00000200-0000-4000-8000-000000000004"),
+                            CapacityBoxes = 700,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Name = "Kodiak",
@@ -6799,6 +6811,7 @@ namespace Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("00000200-0000-4000-8000-000000000005"),
+                            CapacityBoxes = 150,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Name = "F-350",
@@ -6808,6 +6821,7 @@ namespace Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("00000200-0000-4000-8000-000000000006"),
+                            CapacityBoxes = 60,
                             CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
                             Name = "Montana",

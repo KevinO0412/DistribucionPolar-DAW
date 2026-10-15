@@ -32,6 +32,23 @@ public sealed class ReportsController(IReportService reports, IBackupExporter ba
     public async Task<ActionResult<BalanceResponse>> Balance(CancellationToken cancellationToken) =>
         Ok(await reports.GetBalanceAsync(cancellationToken));
 
+    /// <summary>
+    /// Dashboard KPI: valorización costo/venta, alertas MinStock/MaxStock, ventas por día y categoría,
+    /// rotación por producto y ocupación de la flota.
+    /// </summary>
+    /// <param name="from">Desde (fecha local, inclusive). Por defecto, 29 días antes de <paramref name="to"/>.</param>
+    /// <param name="to">Hasta (fecha local, inclusive). Por defecto, hoy.</param>
+    /// <param name="categoryId">Filtra productos y ventas por categoría.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Indicadores del rango.</response>
+    /// <response code="400">Rango de fechas inválido (inicio posterior al fin o más de 366 días).</response>
+    [HttpGet("dashboard")]
+    [ProducesResponseType<DashboardResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    public async Task<ActionResult<DashboardResponse>> Dashboard(
+        [FromQuery] DateOnly? from, [FromQuery] DateOnly? to, [FromQuery] Guid? categoryId, CancellationToken cancellationToken) =>
+        Ok(await reports.GetDashboardAsync(from, to, categoryId, cancellationToken));
+
     /// <summary>Bitácora de auditoría (más reciente primero).</summary>
     /// <param name="from">Desde (fecha local, inclusive).</param>
     /// <param name="to">Hasta (fecha local, inclusive).</param>

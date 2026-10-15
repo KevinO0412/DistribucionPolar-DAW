@@ -113,6 +113,50 @@ public sealed class ReportQueries(ApplicationDbContext context) : IReportQueries
         return (money, boxes, units, receivable);
     }
 
+    public async Task<DashboardData> GetDashboardDataAsync(
+        DateTime startUtc, DateTime endUtc, Guid? categoryId, CancellationToken cancellationToken = default)
+    {
+        var products = await context.Products
+            .AsNoTracking()
+            .Where(p => p.IsActive && (categoryId == null || p.CategoryId == categoryId))
+            .Select(p => new DashboardProductRow(
+                p.Id, p.SKU, p.Name, p.CategoryId, p.Category!.Name, p.PriceUnit, p.CostPrice, p.UnitsPerBox, p.StockUnits,
+                context.TruckStocks.Where(s => s.ProductId == p.Id).Sum(s => (int?)s.StockUnits) ?? 0,
+                p.MinStock, p.MaxStock))
+            .ToListAsync(cancellationToken);
+
+        // Los renglones guardan la copia del producto; la categoría se toma del producto aunque esté eliminado.
+        var saleLines = await (
+                from i in context.Invoices.AsNoTracking()
+                where !i.IsCancelled && i.IssuedAt >= startUtc && i.IssuedAt < endUtc
+                from it in i.Items
+                join p in context.Products.IgnoreQueryFilters() on it.ProductId equals p.Id
+                where categoryId == null || p.CategoryId == categoryId
+                select new DashboardSaleLine(
+                    i.Id, i.IssuedAt, i.Type == InvoiceType.Gift, i.TruckId, it.ProductId, it.SKU, it.ProductName,
+                    p.CategoryId, p.Category!.Name, it.TotalUnits, it.Subtotal))
+            .ToListAsync(cancellationToken);
+
+        var collections = await context.Invoices
+            .AsNoTracking()
+            .Where(i => !i.IsCancelled && i.Type == InvoiceType.Sale && i.IssuedAt >= startUtc && i.IssuedAt < endUtc)
+            .GroupBy(_ => 1)
+            .Select(g => new DashboardCollections(g.Sum(i => i.Payment), g.Sum(i => i.Pending)))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var trucks = await context.Trucks
+            .AsNoTracking()
+            .OrderBy(t => t.Name)
+            .Select(t => new DashboardTruckRow(
+                t.Id, t.Name, t.Plate, t.CapacityBoxes,
+                context.TruckStocks.Where(s => s.TruckId == t.Id).Sum(s => (decimal?)s.StockUnits / s.Product!.UnitsPerBox) ?? 0,
+                context.TruckStocks.Where(s => s.TruckId == t.Id).Sum(s => (int?)s.StockUnits) ?? 0,
+                context.TruckStocks.Where(s => s.TruckId == t.Id).Sum(s => (decimal?)(s.StockUnits * s.Product!.PriceUnit)) ?? 0))
+            .ToListAsync(cancellationToken);
+
+        return new DashboardData(products, saleLines, collections ?? new DashboardCollections(0, 0), trucks);
+    }
+
     public async Task<ProductLocationResponse?> GetProductLocationAsync(Guid productId, CancellationToken cancellationToken = default)
     {
         var product = await context.Products

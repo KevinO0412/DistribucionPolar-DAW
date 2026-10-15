@@ -23,12 +23,12 @@ internal static class OperationsSeedData
 
     public static object[] Trucks { get; } =
     [
-        Truck(1, "Cargo 815", "AA100AA"),
-        Truck(2, "FVR", "AA200AA"),
-        Truck(3, "Mack", "AA300AA"),
-        Truck(4, "Kodiak", "AA400AA"),
-        Truck(5, "F-350", "AA500AA"),
-        Truck(6, "Montana", "AA600AA")
+        Truck(1, "Cargo 815", "AA100AA", 600),
+        Truck(2, "FVR", "AA200AA", 500),
+        Truck(3, "Mack", "AA300AA", 900),
+        Truck(4, "Kodiak", "AA400AA", 700),
+        Truck(5, "F-350", "AA500AA", 150),
+        Truck(6, "Montana", "AA600AA", 60)
     ];
 
     public static object[] Clients { get; } =
@@ -56,11 +56,12 @@ internal static class OperationsSeedData
         IsDeleted = false
     };
 
-    private static object Truck(int n, string name, string plate) => new
+    private static object Truck(int n, string name, string plate, int capacityBoxes) => new
     {
         Id = TruckId(n),
         Name = name,
         Plate = plate,
+        CapacityBoxes = capacityBoxes,
         Status = Core.Domain.Entities.Truck.DefaultStatus,
         CreatedAt = SeedDate,
         IsDeleted = false

@@ -134,6 +134,33 @@ public sealed class TruckTests
         Assert.Empty(truck.Stock);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    [InlineData(5001)]
+    public void Capacity_OutOfRange_IsRejected(int capacity)
+    {
+        Assert.Throws<DomainException>(() => new Truck("FVR", "AA200AA", capacity));
+    }
+
+    [Fact]
+    public void Update_ChangesCapacity()
+    {
+        var truck = TestData.Truck();
+
+        truck.Update("FVR", "aa200aa", 650);
+
+        Assert.Equal((650, "AA200AA"), (truck.CapacityBoxes, truck.Plate));
+    }
+
+    [Fact]
+    public void NewTruck_WithoutStock_HasZeroOccupancy()
+    {
+        var truck = new Truck("F-350", "AA500AA", 150);
+
+        Assert.Equal((0m, 0m), (truck.LoadedBoxes, truck.OccupancyPercent));
+    }
+
     [Fact]
     public void Unload_ReturnsEverythingAndEmptiesTruck()
     {
