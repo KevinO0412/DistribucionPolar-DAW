@@ -64,6 +64,7 @@ Estos usuarios solo existen en Development. Los de Staging y Production salen de
 | [Requisitos por fase](docs/05-REQUISITOS-POR-FASE.md) | Requisitos de las Fases 1 a 5, su implementación y cómo verificarlos |
 | [Fundamentos](docs/06-FUNDAMENTOS.md) | Conceptos teóricos de cada fase y cómo se aplican en el código |
 | [Modelo de datos](docs/07-MODELO-DATOS.md) | Las cuatro dimensiones del dominio y el diccionario de datos de Categories, Products y Users |
+| [Guía de defensa](docs/08-GUIA-DEFENSA.md) | Guion de la demostración de 15 minutos, qué mostrar por criterio, preguntas probables y qué hacer si algo falla |
 | [Observaciones del profesor](docs/09-OBSERVACIONES-PROFESOR.md) | Cada observación de la evaluación del 9 de octubre, su fuente y dónde quedó implementada |
 | [Evidencias](docs/evidencias/README.md) | Capturas y reportes para la sustentación: pruebas, cobertura, imágenes, `docker ps`, sesión JWT |
 | [Contrato OpenAPI](docs/openapi/openapi.yaml) | Especificación OpenAPI 3.1 de los 83 endpoints (también en JSON) |
