@@ -94,4 +94,21 @@ public sealed class ObservationTests(ApiFixture api)
         Assert.Equal((100m, 50m, 100m), (credit.Debt, credit.Available, credit.Days0To30));
         Assert.False(credit.IsBlocked);
     }
+
+    [Fact]
+    public async Task Dashboard_IncludesTheDebtAgingOfTheClients()
+    {
+        var admin = await api.AdminAsync();
+        var product = await NewProductAsync(admin, 100m, 12m, 10, 10);
+        var client = await NewClientAsync(admin);
+        await admin.PostAsync<InvoiceResponse>("/api/invoices/sales", Sale(client.Id, product.Id, 1, 30m), HttpStatusCode.Created);
+
+        var dashboard = await admin.GetAsync<DashboardResponse>("/api/reports/dashboard");
+
+        var receivables = dashboard.Receivables;
+        Assert.True(receivables.TotalDebt >= 70m && receivables.Debtors >= 1);
+        Assert.Equal(receivables.TotalDebt, receivables.Days0To30 + receivables.Days31To60 + receivables.Days61To90 + receivables.Over90);
+        Assert.True(receivables.TopDebtors.Count <= 10);
+        Assert.Equal(receivables.TopDebtors.OrderByDescending(r => r.Debt).Select(r => r.ClientId), receivables.TopDebtors.Select(r => r.ClientId));
+    }
 }

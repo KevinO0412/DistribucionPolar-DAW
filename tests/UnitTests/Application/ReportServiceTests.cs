@@ -14,6 +14,9 @@ public sealed class ReportServiceTests
 
     private readonly Mock<IReportQueries> mockReports = new();
     private readonly Mock<IClock> mockClock = new();
+    private readonly Mock<IClientRepository> mockClients = new();
+    private readonly List<Core.Domain.Entities.Client> debtors = [];
+    private readonly Dictionary<Guid, IReadOnlyList<OpenSaleRow>> openSales = [];
     private readonly ReportService service;
 
     public ReportServiceTests()
@@ -24,7 +27,10 @@ public sealed class ReportServiceTests
             (d.ToDateTime(new TimeOnly(4, 0), DateTimeKind.Utc), d.AddDays(1).ToDateTime(new TimeOnly(4, 0), DateTimeKind.Utc)));
         mockClock.Setup(c => c.ToLocal(It.IsAny<DateTime>())).Returns<DateTime>(utc => utc.AddHours(-4));
 
-        service = new ReportService(mockReports.Object, Mock.Of<IConsignmentService>(), Mock.Of<IAuditLogRepository>(), mockClock.Object);
+        mockClients.Setup(r => r.SearchAsync(null, true, It.IsAny<CancellationToken>())).ReturnsAsync(() => debtors);
+        mockClients.Setup(r => r.GetOpenSalesAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => openSales);
+
+        service = new ReportService(mockReports.Object, Mock.Of<IConsignmentService>(), Mock.Of<IAuditLogRepository>(), mockClients.Object, mockClock.Object);
     }
 
     private static DashboardProductRow Harina(int warehouse, int truck = 0) =>
@@ -170,5 +176,34 @@ public sealed class ReportServiceTests
     public async Task GetDashboardAsync_RangeLongerThanAYear_IsRejected()
     {
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetDashboardAsync(Today.AddDays(-400), Today, null));
+    }
+
+    [Fact]
+    public async Task Dashboard_AgesTheReceivables_ByBucket_AndFlagsBlockedClients()
+    {
+        // Arrange: el mayorista debe 300 (facturas de hace 5, 50 y 95 días); la bodega debe 40 de hace 10 días.
+        mockReports.Setup(r => r.GetDashboardDataAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DashboardData([], [], new DashboardCollections(0m, 0m), []));
+        var wholesaler = new Core.Domain.Entities.Client(1, "J-1", "Mayorista Los Andes", null, null, "MAYORISTA");
+        wholesaler.AdjustBalances(-300m, 0, 0);
+        var bodega = new Core.Domain.Entities.Client(2, "V-2", "Bodega", null, null, null);
+        bodega.AdjustBalances(-40m, 0, 0);
+        var onlyEmpties = new Core.Domain.Entities.Client(3, "V-3", "Debe vacíos", null, null, null);
+        onlyEmpties.AdjustBalances(0m, -2, 0);
+        debtors.AddRange([wholesaler, bodega, onlyEmpties]);
+        var noon = Today.ToDateTime(new TimeOnly(16, 0), DateTimeKind.Utc);
+        openSales[wholesaler.Id] = [new(wholesaler.Id, noon.AddDays(-5), 100m), new(wholesaler.Id, noon.AddDays(-50), 100m), new(wholesaler.Id, noon.AddDays(-95), 100m)];
+        openSales[bodega.Id] = [new(bodega.Id, noon.AddDays(-10), 40m)];
+
+        // Act
+        var receivables = (await service.GetDashboardAsync(null, null, null)).Receivables;
+
+        // Assert
+        Assert.Equal((340m, 2), (receivables.TotalDebt, receivables.Debtors));
+        Assert.Equal((140m, 100m, 0m, 100m), (receivables.Days0To30, receivables.Days31To60, receivables.Days61To90, receivables.Over90));
+        Assert.Equal((200m, 1), (receivables.Overdue, receivables.BlockedClients));
+        var top = receivables.TopDebtors[0];
+        Assert.Equal(("Mayorista Los Andes", "MAYORISTA", 95), (top.Name, top.Type, top.OldestDays));
+        Assert.True(top.IsBlocked);
     }
 }

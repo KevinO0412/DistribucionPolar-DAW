@@ -1,5 +1,6 @@
 using Core.Application.Abstractions;
 using Core.Application.DTOs;
+using Core.Application.Mappings;
 using Core.Domain.Services;
 using Core.Domain.ValueObjects;
 
@@ -9,6 +10,7 @@ public sealed class ReportService(
     IReportQueries reports,
     IConsignmentService consignments,
     IAuditLogRepository auditLogs,
+    IClientRepository clients,
     IClock clock) : IReportService
 {
     /// <summary>Reporte diario del día local indicado (hoy por defecto). Excluye documentos anulados.</summary>
@@ -68,7 +70,36 @@ public sealed class ReportService(
                 .OrderByDescending(c => c.Total)
                 .ToList(),
             BuildTopProducts(data),
-            BuildFleet(data));
+            BuildFleet(data),
+            await BuildReceivablesAsync(cancellationToken));
+    }
+
+    /// <summary>
+    /// Envejecimiento de la deuda de todos los clientes que deben dinero (observación 10). Es una foto al día de hoy:
+    /// no depende del rango de fechas ni de la categoría del dashboard.
+    /// </summary>
+    private async Task<DashboardReceivablesKpi> BuildReceivablesAsync(CancellationToken cancellationToken)
+    {
+        var debtors = (await clients.SearchAsync(null, receivableOnly: true, cancellationToken)).Where(c => c.MoneyBalance < 0).ToList();
+        var openSales = await clients.GetOpenSalesAsync(debtors.Select(c => c.Id), cancellationToken);
+        var today = clock.Today;
+
+        var rows = debtors
+            .Select(client =>
+            {
+                var sales = openSales.TryGetValue(client.Id, out var list) ? list : [];
+                var status = CreditPolicy.Evaluate(client, sales.Select(s => s.ToOpenSale(clock)), today);
+                return new ClientDebtAging(client.Id, client.FormattedCode, client.Name, client.Type, status.Debt,
+                    status.Aging.Days0To30, status.Aging.Days31To60, status.Aging.Days61To90, status.Aging.Over90,
+                    status.OldestDebtDays, status.OverdueAmount, status.IsBlocked);
+            })
+            .OrderByDescending(r => r.Debt)
+            .ToList();
+
+        return new DashboardReceivablesKpi(
+            rows.Sum(r => r.Debt), rows.Count, rows.Sum(r => r.Overdue), rows.Count(r => r.IsBlocked),
+            rows.Sum(r => r.Days0To30), rows.Sum(r => r.Days31To60), rows.Sum(r => r.Days61To90), rows.Sum(r => r.Over90),
+            rows.Take(10).ToList());
     }
 
     private static DashboardInventoryKpi BuildInventory(IReadOnlyList<DashboardProductRow> products)

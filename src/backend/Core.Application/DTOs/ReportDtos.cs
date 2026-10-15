@@ -45,6 +45,7 @@ public sealed record BalanceResponse(
 /// <param name="SalesByCategory">Ventas y unidades por categoría.</param>
 /// <param name="TopProducts">Productos con más unidades vendidas y su índice de rotación (máximo 10).</param>
 /// <param name="Fleet">Ocupación y ventas por camión.</param>
+/// <param name="Receivables">Cuentas por cobrar con el envejecimiento de la deuda al día de hoy (no depende del rango ni de la categoría).</param>
 public sealed record DashboardResponse(
     DateOnly From,
     DateOnly To,
@@ -56,7 +57,40 @@ public sealed record DashboardResponse(
     IReadOnlyList<SalesPoint> SalesByDay,
     IReadOnlyList<CategorySales> SalesByCategory,
     IReadOnlyList<ProductRotation> TopProducts,
-    DashboardFleetKpi Fleet);
+    DashboardFleetKpi Fleet,
+    DashboardReceivablesKpi Receivables);
+
+/// <summary>Cuentas por cobrar y envejecimiento de la deuda (criterio FIFO), en tramos de 0-30, 31-60, 61-90 y más de 90 días.</summary>
+/// <param name="TotalDebt">Deuda total de los clientes en USD.</param>
+/// <param name="Debtors">Clientes que deben dinero.</param>
+/// <param name="Overdue">Deuda vencida según los días de crédito de cada cliente.</param>
+/// <param name="BlockedClients">Clientes que hoy solo pueden comprar de contado.</param>
+/// <param name="Days0To30">Deuda de 0 a 30 días.</param>
+/// <param name="Days31To60">Deuda de 31 a 60 días.</param>
+/// <param name="Days61To90">Deuda de 61 a 90 días.</param>
+/// <param name="Over90">Deuda de más de 90 días.</param>
+/// <param name="TopDebtors">Clientes con más deuda (máximo 10) y su deuda por tramo.</param>
+public sealed record DashboardReceivablesKpi(
+    decimal TotalDebt, int Debtors, decimal Overdue, int BlockedClients,
+    decimal Days0To30, decimal Days31To60, decimal Days61To90, decimal Over90,
+    IReadOnlyList<ClientDebtAging> TopDebtors);
+
+/// <summary>Deuda de un cliente por antigüedad.</summary>
+/// <param name="ClientId">Cliente.</param>
+/// <param name="Code">Código.</param>
+/// <param name="Name">Nombre.</param>
+/// <param name="Type">Tipo de cliente.</param>
+/// <param name="Debt">Deuda total.</param>
+/// <param name="Days0To30">De 0 a 30 días.</param>
+/// <param name="Days31To60">De 31 a 60 días.</param>
+/// <param name="Days61To90">De 61 a 90 días.</param>
+/// <param name="Over90">Más de 90 días.</param>
+/// <param name="OldestDays">Días de la deuda más vieja (null si parte no tiene factura).</param>
+/// <param name="Overdue">Vencido según sus días de crédito.</param>
+/// <param name="IsBlocked">Solo puede comprar de contado.</param>
+public sealed record ClientDebtAging(
+    Guid ClientId, string Code, string Name, string Type, decimal Debt,
+    decimal Days0To30, decimal Days31To60, decimal Days61To90, decimal Over90, int? OldestDays, decimal Overdue, bool IsBlocked);
 
 /// <summary>Valorización del inventario (galpón + camiones).</summary>
 /// <param name="ActiveProducts">Productos activos considerados.</param>

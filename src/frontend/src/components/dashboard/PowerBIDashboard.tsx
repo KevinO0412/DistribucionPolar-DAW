@@ -4,6 +4,7 @@ import { formatDate, formatDecimal, formatInt, formatMoney, formatMoneyShort, fo
 import { EmptyState } from '../ui/States';
 import { StatusBadge } from '../ui/StatusBadge';
 import { TruckCard } from '../trucks/TruckCard';
+import { DebtAgingBar } from '../clients/DebtAgingBar';
 import { CategorySalesChart } from './CategorySalesChart';
 import { DashboardFilters, type DashboardFilterValue } from './DashboardFilters';
 import { DataTable } from './DataTable';
@@ -26,7 +27,7 @@ interface Props {
  * valorización costo frente a venta, rotación, alertas MinStock/MaxStock, ventas por día y categoría y ocupación de la flota.
  */
 export function PowerBIDashboard({ data, categories, filters, onFiltersChange, isRefreshing }: Props) {
-  const { sales, inventory, fleet } = data;
+  const { sales, inventory, fleet, receivables } = data;
   const criticalCount = useMemo(
     () => data.stockAlerts.filter((a) => a.status === 'OutOfStock' || a.status === 'CriticalRisk').reduce((s, a) => s + a.count, 0),
     [data.stockAlerts],
@@ -113,6 +114,51 @@ export function PowerBIDashboard({ data, categories, filters, onFiltersChange, i
             </TruckCard>
           ))}
         </div>
+      </Section>
+
+      <Section
+        title="Envejecimiento de la deuda"
+        description={`Cuentas por cobrar al día de hoy (no dependen del rango ni de la categoría): ${formatMoney(receivables.totalDebt)} de ${formatInt(receivables.debtors)} clientes.`}
+      >
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <KpiTile label="Por cobrar" value={formatMoneyShort(receivables.totalDebt)} detail={`${formatInt(receivables.debtors)} clientes con deuda`} />
+          <KpiTile
+            label="Vencido"
+            value={formatMoneyShort(receivables.overdue)}
+            detail="Más días que su crédito"
+            tone={receivables.overdue > 0 ? 'alert' : 'default'}
+          />
+          <KpiTile label="Solo contado" value={formatInt(receivables.blockedClients)} detail="Clientes con el crédito bloqueado" />
+        </div>
+        <DebtAgingBar aging={receivables} />
+        {receivables.topDebtors.length > 0 ? (
+          <div className="mt-4">
+            <DataTable
+              caption="Clientes con más deuda por antigüedad"
+              rows={receivables.topDebtors}
+              rowKey={(c) => c.clientId}
+              columns={[
+                {
+                  header: 'Cliente',
+                  cell: (c) => (
+                    <>
+                      <p className="font-medium">{c.name}</p>
+                      <p className="text-muted">{c.code} · {c.type}{c.isBlocked ? ' · solo contado' : ''}</p>
+                    </>
+                  ),
+                },
+                { header: 'Deuda', align: 'right', cell: (c) => <span className="font-semibold">{formatMoney(c.debt)}</span> },
+                { header: '0-30', align: 'right', cell: (c) => formatMoney(c.days0To30) },
+                { header: '31-60', align: 'right', cell: (c) => formatMoney(c.days31To60) },
+                { header: '61-90', align: 'right', cell: (c) => formatMoney(c.days61To90) },
+                { header: '+90', align: 'right', cell: (c) => <span className={c.over90 > 0 ? 'font-semibold text-status-out' : undefined}>{formatMoney(c.over90)}</span> },
+                { header: 'Más vieja', align: 'right', cell: (c) => (c.oldestDays === null ? 'Sin factura' : `${formatInt(c.oldestDays)} d`) },
+              ]}
+            />
+          </div>
+        ) : (
+          <EmptyState title="Ningún cliente debe dinero" />
+        )}
       </Section>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">

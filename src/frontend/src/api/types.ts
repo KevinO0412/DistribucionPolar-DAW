@@ -157,6 +157,32 @@ export interface DashboardResponse {
     occupancyPercent: number;
     trucks: TruckOccupancy[];
   };
+  receivables: {
+    totalDebt: number;
+    debtors: number;
+    overdue: number;
+    blockedClients: number;
+    days0To30: number;
+    days31To60: number;
+    days61To90: number;
+    over90: number;
+    topDebtors: ClientDebtAging[];
+  };
+}
+
+export interface ClientDebtAging {
+  clientId: string;
+  code: string;
+  name: string;
+  type: string;
+  debt: number;
+  days0To30: number;
+  days31To60: number;
+  days61To90: number;
+  over90: number;
+  oldestDays: number | null;
+  overdue: number;
+  isBlocked: boolean;
 }
 
 export interface TruckOccupancy {

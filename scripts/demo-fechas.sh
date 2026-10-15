@@ -3,7 +3,8 @@
 # Así el dashboard muestra ventas por día. Solo para la base de Development: modifica la base directamente.
 #
 #   scripts/demo-operacion.sh        # primero: genera las ventas a través de la API
-#   scripts/demo-fechas.sh [DÍAS]    # luego: las reparte entre hoy y los DÍAS-1 anteriores (por defecto 14)
+#   scripts/demo-fechas.sh [DÍAS]    # luego: las reparte entre hoy y los DÍAS-1 anteriores (por defecto 14, máximo 180)
+#   scripts/demo-fechas.sh 150       # deuda con más de 90 días: llena todos los tramos del envejecimiento
 #
 # Las facturas se ordenan por fecha y número: las más antiguas quedan en los días más lejanos y las últimas hoy,
 # entre las 8:00 y las 18:00 de Caracas. Los movimientos de saldo de cada factura se mueven con ella.
@@ -17,8 +18,8 @@ cd "$(dirname "$0")/.."
 DB_USER="${POSTGRES_USER:-polar}"
 DB_NAME="${POSTGRES_DB:-distribucion_polar}"
 
-if ! [[ "$DAYS" =~ ^[0-9]+$ ]] || (( DAYS < 1 || DAYS > 90 )); then
-  echo "DÍAS debe ser un número entre 1 y 90." >&2
+if ! [[ "$DAYS" =~ ^[0-9]+$ ]] || (( DAYS < 1 || DAYS > 180 )); then
+  echo "DÍAS debe ser un número entre 1 y 180." >&2
   exit 1
 fi
 
