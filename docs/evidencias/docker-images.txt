@@ -3,7 +3,11 @@ REPOSITORY:TAG                             SIZE
 distribucion-polar-spa:latest              85MB
 distribucion-polar-api:latest              93.8MB
 
-# Tamaño real sin comprimir (du del sistema de archivos de cada imagen)
+# Sin comprimir, sumando las capas (lo que mide el CI con docker image inspect)
+distribucion-polar-api:latest: 59.4 MB (41 + 9.27 + 9.08 MB + 49 kB)
+distribucion-polar-spa:latest: 59.4 MB (6.78 + 38.7 + 5.36 + 8.5 MB + 82 kB)
+
+# Sin comprimir, du del sistema de archivos dentro del contenedor (las capas que reemplazan archivos no cuentan dos veces)
 distribucion-polar-api:latest: sin comprimir 51 MB
 distribucion-polar-spa:latest: sin comprimir 57 MB
 
