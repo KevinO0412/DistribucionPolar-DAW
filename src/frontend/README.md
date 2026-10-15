@@ -28,12 +28,15 @@ src/
 ├── hooks/          useAuth, useTheme, useApiQuery, useChartColors, useDebounced
 ├── components/
 │   ├── ui/         Button, Field, Modal, ProductThumb, States, StatusBadge, Toast (átomos)
+│   ├── clients/    DebtAgingBar (tramos de antigüedad), PaymentReceipt (recibo de cobro)
 │   ├── layout/     AppLayout (menú colapsable), PageHeader, navigation (menú por rol)
 │   ├── dashboard/  PowerBIDashboard y sus gráficos, tarjetas KPI, filtros y tablas
-│   ├── trucks/     TruckCard (ocupación del camión), Ticket (80 mm)
+│   ├── trucks/     TruckCard y TruckStatusBadge, Ticket y SettlementSheet (80 o 58 mm), PaperWidthSelector
 │   └── ProtectedRoute.tsx
 ├── data/           productImages.json (legacyId del catálogo → foto)
-└── pages/          Login, Dashboard, Productos, Categorías, Camiones, Facturas
+├── lib/            cn, format, productImage, print (impresión térmica de 80 y 58 mm)
+├── offline/        store (IndexedDB), sync (cola idempotente), presale (armado del pedido)
+└── pages/          Login, Dashboard, Productos, Categorías, Camiones, Liquidación, Facturas, Clientes, Preventa
 ```
 
 ## Fotos de los productos
@@ -43,6 +46,11 @@ No van en `public/productos/` porque esa carpeta taparía la ruta `/productos` d
 
 `src/data/productImages.json` asocia cada producto del catálogo sembrado (por su `legacyId`, que forma el `Id` en `CatalogSeedData.cs`) con su foto.
 `ProductThumb` la muestra en la tabla y en el formulario de edición; los productos creados desde la aplicación, o cuya foto no carga, muestran un ícono genérico.
+
+## Preventa sin conexión (PWA)
+
+- `public/sw.js` (service worker) y `public/manifest.webmanifest`: la aplicación abre sin conexión. El service worker se registra solo en el build de producción.
+- La página Preventa guarda cada pedido primero en IndexedDB y lo envía con su id como `Idempotency-Key`; sin señal queda en cola y se envía al reconectarse sin duplicar la factura. Detalle en [Observaciones del profesor](../../docs/09-OBSERVACIONES-PROFESOR.md).
 
 ## Sesión y roles
 

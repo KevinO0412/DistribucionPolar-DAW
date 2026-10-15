@@ -18,7 +18,7 @@ Cuando un concepto todavía no aplica, se explica por qué.
 
 | Concepto | Aplicación |
 | --- | --- |
-| **Problema del monolito acoplado**: la lógica mezclada con la base de datos y la interfaz dificulta mantener y probar | La lógica está aislada en `Core.Domain`. Las 80 pruebas de dominio corren sin base de datos ni servidor |
+| **Problema del monolito acoplado**: la lógica mezclada con la base de datos y la interfaz dificulta mantener y probar | La lógica está aislada en `Core.Domain`. Las 96 pruebas de dominio corren sin base de datos ni servidor |
 | **Origen de Onion**: DDD (Evans, 2003) → Arquitectura Hexagonal / *Ports and Adapters* (Cockburn, 2005) → Onion (Palermo, 2008) → Clean Architecture (Martin) | Puertos = interfaces en `src/backend/Core.Application/Abstractions`; adaptadores = implementaciones en `Infrastructure` (EF Core, HttpClient, QuestPDF) y en `Presentation.API` (HTTP) |
 | **Regla de dependencia**: las capas externas dependen de las internas, nunca al revés | La impone el compilador: `Core.Domain` no tiene referencias ([Arquitectura §1](02-ARQUITECTURA.md#1-visión-general)) |
 | **DDD**: entidades con identidad y comportamiento, value objects, agregados, invariantes | Entidades ricas (`Product`, `Client`, `Invoice`), value objects (`BoxQuantity`, `ProductLine`) y agregados que controlan sus colecciones (`Invoice` → líneas y vacíos; `Truck` → inventario; `ConsignmentEvent` → productos) |

@@ -61,9 +61,10 @@ Estos usuarios solo existen en Development. Los de Staging y Production salen de
 | [Decisiones de arquitectura](docs/04-DECISIONES.md) | 48 decisiones (ADR) con su justificación y la alternativa descartada |
 | [Requisitos por fase](docs/05-REQUISITOS-POR-FASE.md) | Requisitos de las Fases 1 a 5, su implementación y cómo verificarlos |
 | [Fundamentos](docs/06-FUNDAMENTOS.md) | Conceptos teóricos de cada fase y cómo se aplican en el código |
+| [Observaciones del profesor](docs/09-OBSERVACIONES-PROFESOR.md) | Las 10 recomendaciones del 15/10/2026: qué existía, qué se implementó y cómo verificarlo |
 | [Modelo de datos](docs/07-MODELO-DATOS.md) | Las cuatro dimensiones del dominio y el diccionario de datos de Categories, Products y Users |
 | [Evidencias](docs/evidencias/README.md) | Capturas y reportes para la sustentación: pruebas, cobertura, imágenes, `docker ps`, sesión JWT |
-| [Contrato OpenAPI](docs/openapi/openapi.yaml) | Especificación OpenAPI 3.1 de los 79 endpoints (también en JSON) |
+| [Contrato OpenAPI](docs/openapi/openapi.yaml) | Especificación OpenAPI 3.1 de los 86 endpoints (también en JSON) |
 | [Script SQL](docs/fase2/schema.sql) | Esquema completo y datos iniciales (idempotente) |
 
 ## Estructura
@@ -150,15 +151,15 @@ cd src/frontend && npm ci && npm run dev                   # http://localhost:51
 
 ## API
 
-79 endpoints, todos documentados en Swagger. Por módulo:
+86 endpoints, todos documentados en Swagger. Por módulo:
 
 | Módulo | Ruta base | Acceso |
 | --- | --- | --- |
 | Autenticación | `/api/auth` (login, me, change-password) | Público / autenticado |
 | Catálogo | `/api/categories`, `/api/products` | Consulta: ambos roles; registrar producto: ambos; editar y eliminar: Admin |
-| Inventario y camiones | `/api/inventory`, `/api/trucks` | Consulta, carga y transferencia: ambos; ajustes, vaciado y alta de camiones: Admin |
-| Clientes | `/api/clients` | Ambos; eliminar y ajustar saldos: Admin |
-| Facturación | `/api/invoices` (sales, gifts, cancel, ticket) | Emitir y consultar: ambos; anular: Admin |
+| Inventario y camiones | `/api/inventory`, `/api/trucks` (dispatch, settlement-form, settlements) | Consulta, carga, transferencia, despacho a ruta y liquidación ciega: ambos; ajustes, vaciado y alta de camiones: Admin |
+| Clientes | `/api/clients` (credit) | Ambos; eliminar, ajustar saldos y fijar el crédito: Admin |
+| Facturación | `/api/invoices` (sales con `Idempotency-Key`, gifts, cancel, ticket) | Emitir y consultar: ambos; anular: Admin |
 | Consignación | `/api/consignments` | Ambos |
 | Compras, averías, consumos | `/api/purchases`, `/api/damages`, `/api/internal-consumptions` | Admin |
 | Empleados y usuarios | `/api/employees`, `/api/users` | Consulta de empleados: ambos; gestión: Admin |
@@ -167,23 +168,23 @@ cd src/frontend && npm ci && npm run dev                   # http://localhost:51
 | Fase 1 (demostración) | `/api/demo` | Público |
 | Sistema | `/health`, `/api/info` | Público |
 
-Todos los errores responden `application/problem+json` (RFC 7807) con los códigos 400, 401, 403, 404, 409, 429, 500 y 503.
+Todos los errores responden `application/problem+json` (RFC 7807) con los códigos 400, 401, 403, 404, 409, 422, 429, 500 y 503.
 
 ## Pruebas
 
 ```bash
-dotnet test DistribucionPolar.slnx                                            # 184 pruebas (las de integración requieren Docker)
+dotnet test DistribucionPolar.slnx                                            # 225 pruebas (las de integración requieren Docker)
 scripts/cobertura.sh                                                          # reporte HTML en docs/evidencias/cobertura
-(cd src/frontend && npm test)                                                 # 31 pruebas del frontend
+(cd src/frontend && npm test)                                                 # 54 pruebas del frontend
 npx newman run postman/collections/DistribucionPolar.postman_collection.json  # 50 peticiones, 97 aserciones
 ```
 
 | Suite | Pruebas | Qué cubre |
 | --- | ---: | --- |
-| `tests/UnitTests/Domain` | 80 | Reglas del dominio |
-| `tests/UnitTests/Application` | 88 | Validadores y servicios con Moq: `ProductServiceTests` (mock de `IProductRepository`), facturación, camiones, clientes, dashboard y operaciones |
-| `tests/IntegrationTests` | 16 | Procesos completos contra PostgreSQL real: casos de referencia, dashboard, concurrencia, permisos, auditoría, CORS y rate limiting |
-| `src/frontend` (Vitest) | 31 | Sesión JWT, rutas por rol, tema, errores de la API y validaciones del formulario |
+| `tests/UnitTests/Domain` | 96 | Reglas del dominio |
+| `tests/UnitTests/Application` | 108 | Validadores y servicios con Moq: `ProductServiceTests` (mock de `IProductRepository`), facturación, camiones, clientes, dashboard y operaciones |
+| `tests/IntegrationTests` | 21 | Procesos completos contra PostgreSQL real: casos de referencia, dashboard, concurrencia, permisos, auditoría, CORS y rate limiting |
+| `src/frontend` (Vitest) | 54 | Sesión JWT, rutas por rol, tema, errores de la API, validaciones del formulario, preventa sin conexión, crédito, camiones, liquidación e impresión térmica |
 | Postman | 50 / 97 | Escenarios obligatorios de la Fase 3 y operación completa |
 
 Detalle de las pruebas y de la cobertura: [tests/README.md](tests/README.md).

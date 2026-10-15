@@ -3,39 +3,41 @@
 
 |||
 |:---|:---|
-| Generated on: | 10/15/2026 - 15:46:35 |
-| Coverage date: | 10/15/2026 - 15:46:34 |
+| Generated on: | 10/15/2026 - 21:40:28 |
+| Coverage date: | 10/15/2026 - 21:40:27 |
 | Parser: | MultiReport (2x Cobertura) |
 | Assemblies: | 2 |
-| Classes: | 124 |
-| Files: | 65 |
-| **Line coverage:** | 85.8% (1419 of 1653) |
-| Covered lines: | 1419 |
-| Uncovered lines: | 234 |
-| Coverable lines: | 1653 |
-| Total lines: | 5560 |
-| **Branch coverage:** | 78.5% (209 of 266) |
-| Covered branches: | 209 |
-| Total branches: | 266 |
+| Classes: | 141 |
+| Files: | 71 |
+| **Line coverage:** | 87.1% (1621 of 1861) |
+| Covered lines: | 1621 |
+| Uncovered lines: | 240 |
+| Coverable lines: | 1861 |
+| Total lines: | 6444 |
+| **Branch coverage:** | 81.7% (278 of 340) |
+| Covered branches: | 278 |
+| Total branches: | 340 |
 | **Method coverage:** | [Feature is only available for sponsors](https://reportgenerator.io/pro) |
 
 </details>
 
 ## Coverage
-<details><summary>Core.Application - 85.7%</summary>
+<details><summary>Core.Application - 86.6%</summary>
 
 |**Name**|**Line**|**Branch**|
 |:---|---:|---:|
-|**Core.Application**|**85.7%**|**62.1%**|
+|**Core.Application**|**86.6%**|**63.1%**|
 |Core.Application.Abstractions.AuditEntry|100%||
 |Core.Application.Abstractions.DashboardData|100%||
 |Core.Application.Abstractions.DashboardProductRow|100%||
 |Core.Application.Abstractions.DashboardSaleLine|100%||
+|Core.Application.Abstractions.TruckTripSales|100%||
 |Core.Application.DependencyInjection|0%||
 |Core.Application.DTOs.AuditLogResponse|0%||
 |Core.Application.DTOs.AuthResponse|100%||
 |Core.Application.DTOs.BalanceResponse|0%||
 |Core.Application.DTOs.CategoryResponse|100%||
+|Core.Application.DTOs.ClientDebtAging|100%||
 |Core.Application.DTOs.ClientResponse|100%||
 |Core.Application.DTOs.ClientStatementResponse|0%||
 |Core.Application.DTOs.ConsignmentIndicatorsResponse|100%||
@@ -46,10 +48,12 @@
 |Core.Application.DTOs.CreateProductRequest|100%||
 |Core.Application.DTOs.CreateSaleRequest|100%||
 |Core.Application.DTOs.CreateUserRequest|100%||
+|Core.Application.DTOs.CreditStatusResponse|100%||
 |Core.Application.DTOs.CriticalProductResponse|100%||
 |Core.Application.DTOs.DailyReportResponse|0%||
 |Core.Application.DTOs.DamageResponse|100%||
 |Core.Application.DTOs.DashboardInventoryKpi|100%||
+|Core.Application.DTOs.DashboardReceivablesKpi|100%||
 |Core.Application.DTOs.DashboardResponse|100%||
 |Core.Application.DTOs.DashboardSalesKpi|100%||
 |Core.Application.DTOs.InternalConsumptionResponse|100%||
@@ -61,15 +65,19 @@
 |Core.Application.DTOs.ProductResponse|100%||
 |Core.Application.DTOs.ProductRotation|100%||
 |Core.Application.DTOs.PurchaseResponse|100%||
+|Core.Application.DTOs.SettlementFormResponse|100%||
+|Core.Application.DTOs.SettlementLineResponse|100%||
 |Core.Application.DTOs.TransferFromTruckRequest|0%||
 |Core.Application.DTOs.TruckLoadResponse|100%||
 |Core.Application.DTOs.TruckOccupancy|100%||
 |Core.Application.DTOs.TruckResponse|100%||
+|Core.Application.DTOs.TruckSettlementResponse|100%||
 |Core.Application.DTOs.TruckStockLineResponse|100%||
 |Core.Application.DTOs.UpdateProductRequest|100%||
 |Core.Application.DTOs.UserResponse|100%||
 |Core.Application.Exceptions.ExternalServiceUnavailableException|0%||
-|Core.Application.Mappings.BusinessMappings|96%|58.3%|
+|Core.Application.Exceptions.IdempotencyKeyReusedException|100%||
+|Core.Application.Mappings.BusinessMappings|96.5%|64.2%|
 |Core.Application.Mappings.Mappings|100%|87.5%|
 |Core.Application.Services.AuditExtensions|100%||
 |Core.Application.Services.AuthService|100%||
@@ -78,14 +86,15 @@
 |Core.Application.Services.ConsignmentService|100%||
 |Core.Application.Services.EmployeeService|100%||
 |Core.Application.Services.InventoryService|85.7%||
-|Core.Application.Services.InvoiceService|89.7%|70%|
+|Core.Application.Services.InvoiceService|90.1%|70%|
 |Core.Application.Services.ProductService|100%||
 |Core.Application.Services.PurchaseService|100%||
-|Core.Application.Services.ReportService|93.3%|57.1%|
+|Core.Application.Services.ReportService|93.4%|57.1%|
 |Core.Application.Services.SpanishText|100%|100%|
 |Core.Application.Services.StockOperations|88.8%|80%|
 |Core.Application.Services.StockWithdrawalService|91.6%|0%|
 |Core.Application.Services.TruckService|100%||
+|Core.Application.Services.TruckSettlementService|100%||
 |Core.Application.Services.UserService|100%||
 |Core.Application.Validators.AdjustStockRequestValidator|100%||
 |Core.Application.Validators.AdjustWarehouseStockRequestValidator|100%||
@@ -106,6 +115,7 @@
 |Core.Application.Validators.CreatePurchaseRequestValidator|100%||
 |Core.Application.Validators.CreateSaleRequestValidator|100%||
 |Core.Application.Validators.CreateUserRequestValidator|100%||
+|Core.Application.Validators.CreditTermsRequestValidator|100%||
 |Core.Application.Validators.EmptyGroupQuantityValidator|100%||
 |Core.Application.Validators.HealthCalculatorRequestValidator|0%||
 |Core.Application.Validators.LineRequestValidator|100%||
@@ -116,6 +126,7 @@
 |Core.Application.Validators.SpanishDisplayNames|0%|0%|
 |Core.Application.Validators.TransferFromTruckRequestValidator|100%||
 |Core.Application.Validators.TruckRequestValidator|100%||
+|Core.Application.Validators.TruckSettlementRequestValidator|100%||
 |Core.Application.Validators.UpdateCategoryRequestValidator|100%||
 |Core.Application.Validators.UpdateClientRequestValidator|100%||
 |Core.Application.Validators.UpdateEmployeeRequestValidator|100%||
@@ -123,17 +134,17 @@
 |Core.Application.Validators.UpdateUserRequestValidator|100%||
 
 </details>
-<details><summary>Core.Domain - 86%</summary>
+<details><summary>Core.Domain - 87.6%</summary>
 
 |**Name**|**Line**|**Branch**|
 |:---|---:|---:|
-|**Core.Domain**|**86%**|**84.8%**|
+|**Core.Domain**|**87.6%**|**87.1%**|
 |Core.Domain.Common.BaseEntity|100%||
 |Core.Domain.Common.EmptyReturnGroups|100%|50%|
 |Core.Domain.Common.Guard|100%|75%|
 |Core.Domain.Entities.AuditLog|0%||
 |Core.Domain.Entities.Category|78.5%||
-|Core.Domain.Entities.Client|87.5%|94.4%|
+|Core.Domain.Entities.Client|89.2%|93.3%|
 |Core.Domain.Entities.ClientEmptyBalance|77.7%||
 |Core.Domain.Entities.ClientMovement|80%||
 |Core.Domain.Entities.ConsignmentEvent|94.7%|87.5%|
@@ -148,12 +159,18 @@
 |Core.Domain.Entities.Purchase|85.1%|62.5%|
 |Core.Domain.Entities.PurchaseItem|86.6%||
 |Core.Domain.Entities.StockWithdrawal|85%|75%|
-|Core.Domain.Entities.Truck|94.3%|87.5%|
+|Core.Domain.Entities.Truck|95.8%|90.6%|
 |Core.Domain.Entities.TruckLoad|92.3%||
+|Core.Domain.Entities.TruckSettlement|94.1%|87.5%|
+|Core.Domain.Entities.TruckSettlementLine|87.5%||
 |Core.Domain.Entities.TruckStock|70%||
 |Core.Domain.Entities.User|78.3%|66.6%|
 |Core.Domain.Exceptions.DomainException|100%||
 |Core.Domain.Services.CorporateSkuGenerator|100%|100%|
+|Core.Domain.Services.CreditPolicy|100%|100%|
+|Core.Domain.Services.CreditStatus|100%||
+|Core.Domain.Services.DebtAging|94.7%|87.5%|
+|Core.Domain.Services.DebtAgingResult|100%|100%|
 |Core.Domain.Services.ProductHealthEvaluator|97.3%|93.7%|
 |Core.Domain.Services.SkuGenerationResult|100%||
 |Core.Domain.Services.StockHealthReport|100%||

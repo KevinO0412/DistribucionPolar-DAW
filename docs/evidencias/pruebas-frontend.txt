@@ -1,25 +1,55 @@
-# npx vitest run --reporter=verbose
+# npx vitest run --reporter=verbose --coverage
 
- RUN  v2.1.8 /home/kevin-orduz/Desktop/projects/DistribucionPolar/src/frontend
 
- ✓ src/lib/cn.test.ts > cn > resuelve conflictos de Tailwind
- ✓ src/lib/cn.test.ts > cn > conserva el tamaño propio junto a un color de texto
- ✓ src/lib/productImage.test.ts > productImageUrl > devuelve la foto de un producto sembrado
- ✓ src/lib/productImage.test.ts > productImageUrl > devuelve null para un producto creado desde la aplicación
- ✓ src/context/ThemeContext.test.tsx > ThemeProvider > alterna el modo oscuro con la clase "dark" en <html> y lo guarda en localStorage
- ✓ src/context/ThemeContext.test.tsx > ThemeProvider > respeta el tema guardado al recargar
- ✓ src/api/client.test.ts > toApiError (RFC 7807) > lee title y detail del Problem Details
- ✓ src/api/client.test.ts > toApiError (RFC 7807) > expone los errores por campo de un 400 de validación
- ✓ src/api/client.test.ts > toApiError (RFC 7807) > explica el 403 aunque la API no envíe cuerpo
- ✓ src/api/client.test.ts > toApiError (RFC 7807) > distingue la falta de conexión
+ RUN  v2.1.8 /home/user/DistribucionPolar-DAW/src/frontend
+      Coverage enabled with v8
+
  ✓ src/context/AuthContext.test.tsx > decodeSession > lee los claims del JWT emitido por la API
  ✓ src/context/AuthContext.test.tsx > decodeSession > rechaza un token sin un rol conocido
  ✓ src/context/AuthContext.test.tsx > AuthProvider > guarda el token en localStorage al iniciar sesión y lo limpia al cerrarla
  ✓ src/context/AuthContext.test.tsx > AuthProvider > recupera la sesión guardada al recargar la página
  ✓ src/context/AuthContext.test.tsx > AuthProvider > descarta un token vencido al recargar
+ ✓ src/offline/sync.test.ts > syncOrders > envía cada pedido con su id como Idempotency-Key y lo marca facturado
+ ✓ src/offline/sync.test.ts > syncOrders > sin conexión deja todo pendiente y no sigue intentando
+ ✓ src/offline/sync.test.ts > syncOrders > un faltante de stock (400 RFC 7807) rechaza ese pedido con el detalle y sigue con el resto
+ ✓ src/offline/sync.test.ts > syncOrders > un error del servidor (500) deja el pedido pendiente para reintentarlo
+ ✓ src/offline/sync.test.ts > syncOrders > no reenvía pedidos ya facturados
  ✓ src/context/AuthContext.test.tsx > AuthProvider > cierra la sesión sola cuando vence el token
- ✓ src/components/ui/ProductThumb.test.tsx > ProductThumb > muestra la foto con el nombre como texto alternativo
- ✓ src/components/ui/ProductThumb.test.tsx > ProductThumb > cambia al ícono si la foto no carga
+ ✓ src/pages/ClientsPage.test.tsx > ClientsPage > describe las condiciones de crédito
+ ✓ src/pages/ClientsPage.test.tsx > ClientsPage > muestra el bloqueo y los tramos de antigüedad, y el Admin guarda nuevas condiciones 378ms
+ ✓ src/pages/ClientsPage.test.tsx > ClientsPage > el Employee ve el crédito pero no lo puede cambiar
+ ✓ src/pages/ClientsPage.test.tsx > ClientsPage > registra un cobro y muestra el recibo con el saldo anterior y el nuevo
+stderr | src/pages/TrucksPage.test.tsx > TrucksPage > muestra el estado, lo facturado y solo deja despachar al camión que está cargando
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/SettlementPage.test.tsx > SettlementPage > pide el conteo sin mostrar lo esperado y, al confirmar, muestra la planilla con las diferencias
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/TrucksPage.test.tsx > TrucksPage > muestra el estado, lo facturado y solo deja despachar al camión que está cargando
+ ✓ src/pages/TrucksPage.test.tsx > TrucksPage > cuenta las ventas desde la salida solo si el camión salió a ruta
+ ✓ src/pages/TrucksPage.test.tsx > TrucksPage > en ruta, el Employee no ve lo cobrado ni la carga (liquidación ciega) y puede liquidar
+ ✓ src/pages/SettlementPage.test.tsx > SettlementPage > pide el conteo sin mostrar lo esperado y, al confirmar, muestra la planilla con las diferencias 400ms
+ ✓ src/pages/PresalePage.test.tsx > PresalePage > sin conexión guarda el pedido en el dispositivo como pendiente 490ms
+ ✓ src/offline/presale.test.ts > preventa > estima el total con precio por caja y por unidad
+ ✓ src/offline/presale.test.ts > preventa > une líneas repetidas y descarta las vacías
+ ✓ src/offline/presale.test.ts > preventa > arma la venta desde camión o desde galpón
+ ✓ src/pages/PresalePage.test.tsx > PresalePage > en línea avisa si el cliente solo puede comprar de contado
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > envía al login cuando no hay sesión
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja pasar al Admin al dashboard
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > bloquea el dashboard al Employee
+ ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja al Employee consultar el catálogo
+ ✓ src/components/ProtectedRoute.test.tsx > menú por rol > oculta el dashboard al Employee y lo muestra al Admin
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > lee title y detail del Problem Details
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > expone los errores por campo de un 400 de validación
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > explica el 403 aunque la API no envíe cuerpo
+ ✓ src/api/client.test.ts > toApiError (RFC 7807) > distingue la falta de conexión
+ ✓ src/components/trucks/Ticket.test.tsx > Ticket > se arma en 80 mm por defecto y en 58 mm para impresoras portátiles
+ ✓ src/lib/print.test.ts > printThermal > imprime una copia del ticket fuera del diálogo, con @page del ancho elegido, y la quita al terminar
+ ✓ src/lib/print.test.ts > printThermal > sin ticket en pantalla no imprime
+ ✓ src/context/ThemeContext.test.tsx > ThemeProvider > alterna el modo oscuro con la clase "dark" en <html> y lo guarda en localStorage
+ ✓ src/context/ThemeContext.test.tsx > ThemeProvider > respeta el tema guardado al recargar
  ✓ src/pages/ProductForm.test.ts > validateProduct > acepta un producto válido (con coma decimal)
  ✓ src/pages/ProductForm.test.ts > validateProduct > aplica las mismas reglas que FluentValidation
  ✓ src/pages/ProductForm.test.ts > stockStatus > 0 und con mínimo 100 y máximo 800 → OutOfStock
@@ -28,14 +58,113 @@
  ✓ src/pages/ProductForm.test.ts > stockStatus > 600 und con mínimo 100 y máximo 800 → Optimal
  ✓ src/pages/ProductForm.test.ts > stockStatus > 800 und con mínimo 100 y máximo 800 → Overstocked
  ✓ src/pages/ProductForm.test.ts > stockStatus > 900 und con mínimo 100 y máximo 800 → Excessive
- ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > envía al login cuando no hay sesión
- ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja pasar al Admin al dashboard
- ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > bloquea el dashboard al Employee
- ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja al Employee consultar el catálogo
- ✓ src/components/ProtectedRoute.test.tsx > menú por rol > oculta el dashboard al Employee y lo muestra al Admin
+ ✓ src/components/clients/DebtAgingBar.test.tsx > DebtAgingBar > muestra cada tramo con su texto y su monto, y la barra proporcional
+ ✓ src/components/clients/DebtAgingBar.test.tsx > DebtAgingBar > sin deuda deja la barra vacía
+ ✓ src/lib/cn.test.ts > cn > resuelve conflictos de Tailwind
+ ✓ src/lib/cn.test.ts > cn > conserva el tamaño propio junto a un color de texto
+ ✓ src/lib/productImage.test.ts > productImageUrl > devuelve la foto de un producto sembrado
+ ✓ src/lib/productImage.test.ts > productImageUrl > devuelve null para un producto creado desde la aplicación
+ ✓ src/components/ui/ProductThumb.test.tsx > ProductThumb > muestra la foto con el nombre como texto alternativo
+ ✓ src/components/ui/ProductThumb.test.tsx > ProductThumb > cambia al ícono si la foto no carga
 
- Test Files  8 passed (8)
-      Tests  31 passed (31)
-   Start at  14:36:11
-   Duration  1.91s (transform 419ms, setup 2.26s, collect 1.19s, tests 368ms, environment 5.30s, prepare 860ms)
+ Test Files  17 passed (17)
+      Tests  54 passed (54)
+   Start at  21:40:39
+   Duration  8.56s (transform 809ms, setup 3.20s, collect 2.55s, tests 2.59s, environment 8.86s, prepare 1.65s)
 
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   59.77 |    76.06 |    58.6 |   59.77 |                   
+ src               |       0 |       50 |      50 |       0 |                   
+  App.tsx          |       0 |        0 |       0 |       0 | 1-60              
+  vite-env.d.ts    |       0 |        0 |       0 |       0 |                   
+ src/api           |    87.5 |    85.29 |   22.58 |    87.5 |                   
+  client.test.ts   |     100 |      100 |     100 |     100 |                   
+  client.ts        |   84.48 |       80 |   71.42 |   84.48 | 64-67,73-77       
+  endpoints.ts     |   84.09 |      100 |       0 |   84.09 | 25,37,45-47,60,64 
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ src/components    |     100 |      100 |     100 |     100 |                   
+  ...oute.test.tsx |     100 |      100 |     100 |     100 |                   
+  ...ctedRoute.tsx |     100 |      100 |     100 |     100 |                   
+ ...onents/clients |     100 |    93.75 |     100 |     100 |                   
+  ...gBar.test.tsx |     100 |      100 |     100 |     100 |                   
+  DebtAgingBar.tsx |     100 |      100 |     100 |     100 |                   
+  ...ntReceipt.tsx |     100 |       80 |     100 |     100 | 17                
+ ...ents/dashboard |    7.35 |    42.85 |   11.11 |    7.35 |                   
+  ...alesChart.tsx |       0 |        0 |       0 |       0 | 1-44              
+  ...rdFilters.tsx |       0 |        0 |       0 |       0 | 1-110             
+  DataTable.tsx    |     100 |      100 |     100 |     100 |                   
+  KpiTile.tsx      |       0 |        0 |       0 |       0 | 1-20              
+  ...Dashboard.tsx |       0 |        0 |       0 |       0 | 1-202             
+  ...rendChart.tsx |       0 |        0 |       0 |       0 | 1-37              
+  Section.tsx      |       0 |        0 |       0 |       0 | 1-23              
+  ...HealthBar.tsx |       0 |        0 |       0 |       0 | 1-36              
+  ValuationBar.tsx |       0 |        0 |       0 |       0 | 1-37              
+ ...ponents/layout |   13.14 |    83.33 |      50 |   13.14 |                   
+  AppLayout.tsx    |       0 |        0 |       0 |       0 | 1-189             
+  PageHeader.tsx   |     100 |      100 |     100 |     100 |                   
+  navigation.ts    |     100 |      100 |      50 |     100 |                   
+ ...ponents/trucks |   91.92 |     52.5 |    90.9 |   91.92 |                   
+  ...hSelector.tsx |     100 |      100 |     100 |     100 |                   
+  ...entDialog.tsx |     100 |      100 |      50 |     100 |                   
+  ...mentSheet.tsx |   91.37 |    41.66 |     100 |   91.37 | 55-59             
+  Ticket.test.tsx  |     100 |      100 |     100 |     100 |                   
+  Ticket.tsx       |   80.28 |    36.36 |     100 |   80.28 | 60-64,67-75       
+  TruckCard.tsx    |   96.36 |    42.85 |     100 |   96.36 | 22-23             
+  ...atusBadge.tsx |     100 |       50 |     100 |     100 | 12                
+ src/components/ui |   82.42 |    80.76 |   73.68 |   82.42 |                   
+  Button.tsx       |     100 |      100 |     100 |     100 |                   
+  Field.tsx        |   76.78 |    81.81 |   83.33 |   76.78 | 27-29,82-92       
+  Modal.tsx        |   93.47 |       50 |   66.66 |   93.47 | 30-32             
+  ...humb.test.tsx |     100 |      100 |     100 |     100 |                   
+  ProductThumb.tsx |     100 |      100 |     100 |     100 |                   
+  States.tsx       |   32.25 |      100 |   33.33 |   32.25 | 16-32,35-42       
+  StatusBadge.tsx  |   73.07 |      100 |      50 |   73.07 | 15-22             
+  Toast.tsx        |   97.14 |    66.66 |     100 |   97.14 | 41                
+ src/context       |   96.17 |    86.58 |   92.85 |   96.17 |                   
+  ...text.test.tsx |     100 |      100 |     100 |     100 |                   
+  AuthContext.tsx  |   93.67 |    86.04 |      75 |   93.67 | 71,85,98,120-121  
+  ...text.test.tsx |     100 |      100 |     100 |     100 |                   
+  ThemeContext.tsx |      92 |    58.33 |     100 |      92 | 22,39             
+ src/hooks         |   72.41 |    80.95 |    62.5 |   72.41 |                   
+  useApiQuery.ts   |   96.42 |      100 |     100 |   96.42 | 33                
+  useAuth.ts       |     100 |       50 |     100 |     100 | 6                 
+  ...hartColors.ts |       0 |        0 |       0 |       0 | 1-28              
+  useDebounced.ts  |     100 |      100 |     100 |     100 |                   
+  useOnline.ts     |     100 |       80 |   33.33 |     100 | 5                 
+  useTheme.ts      |     100 |       50 |     100 |     100 | 6                 
+ src/lib           |   93.16 |    79.41 |   71.42 |   93.16 |                   
+  cn.test.ts       |     100 |      100 |     100 |     100 |                   
+  cn.ts            |     100 |      100 |     100 |     100 |                   
+  format.ts        |   65.21 |       75 |   66.66 |   65.21 | 12,23-25,28-31    
+  print.test.ts    |     100 |    66.66 |     100 |     100 | 11-13             
+  print.ts         |     100 |     62.5 |   66.66 |     100 | 21,35             
+  ...Image.test.ts |     100 |      100 |     100 |     100 |                   
+  productImage.ts  |     100 |      100 |     100 |     100 |                   
+ src/offline       |   84.42 |    90.32 |      68 |   84.42 |                   
+  presale.test.ts  |     100 |      100 |     100 |     100 |                   
+  presale.ts       |   86.36 |    88.88 |     100 |   86.36 | 59-64             
+  store.ts         |   51.31 |    76.92 |   46.66 |   51.31 | ...98-104,109-114 
+  sync.test.ts     |     100 |      100 |     100 |     100 |                   
+  sync.ts          |     100 |    93.75 |     100 |     100 | 19                
+ src/pages         |   53.07 |    69.14 |   56.16 |   53.07 |                   
+  ...oriesPage.tsx |       0 |        0 |       0 |       0 | 1-151             
+  ...Page.test.tsx |     100 |      100 |     100 |     100 |                   
+  ClientsPage.tsx  |   96.58 |    64.17 |      75 |   96.58 | ...38,183,219,223 
+  ...irmDialog.tsx |       0 |        0 |       0 |       0 | 1-56              
+  ...boardPage.tsx |       0 |        0 |       0 |       0 | 1-51              
+  InvoicesPage.tsx |       0 |        0 |       0 |       0 | 1-133             
+  LoginPage.tsx    |       0 |        0 |       0 |       0 | 1-103             
+  ...Page.test.tsx |     100 |      100 |     100 |     100 |                   
+  PresalePage.tsx  |    90.8 |    71.95 |   41.17 |    90.8 | ...26-328,331-333 
+  ...tForm.test.ts |     100 |      100 |     100 |     100 |                   
+  ProductForm.tsx  |   19.14 |    35.71 |      40 |   19.14 | ...0,64-67,78-180 
+  ProductsPage.tsx |       0 |        0 |       0 |       0 | 1-180             
+  ...Page.test.tsx |     100 |      100 |     100 |     100 |                   
+  ...ementPage.tsx |   95.87 |    72.97 |   72.72 |   95.87 | 44-45,75,113      
+  StatusPages.tsx  |       0 |        0 |       0 |       0 | 1-22              
+  ...Page.test.tsx |     100 |      100 |     100 |     100 |                   
+  TrucksPage.tsx   |    73.4 |    77.77 |   57.14 |    73.4 | ...01-104,107-117 
+-------------------|---------|----------|---------|---------|-------------------

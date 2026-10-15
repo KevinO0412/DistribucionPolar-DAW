@@ -2,9 +2,9 @@
 
 | Proyecto | Tipo | Pruebas | Necesita |
 | --- | --- | ---: | --- |
-| `UnitTests/` | Unitarias del núcleo con xUnit + Moq | 168 | Solo el SDK de .NET 10 |
-| `IntegrationTests/` | API real (`WebApplicationFactory`) contra PostgreSQL 15 desechable (Testcontainers) | 16 | Docker |
-| `../src/frontend` | SPA con Vitest + Testing Library | 31 | Node.js 20 |
+| `UnitTests/` | Unitarias del núcleo con xUnit + Moq | 204 | Solo el SDK de .NET 10 |
+| `IntegrationTests/` | API real (`WebApplicationFactory`) contra PostgreSQL 15 desechable (Testcontainers) | 21 | Docker |
+| `../src/frontend` | SPA con Vitest + Testing Library | 54 | Node.js 20 |
 
 ```bash
 dotnet test tests/UnitTests                      # unitarias, sin base de datos
@@ -20,8 +20,8 @@ Un solo proyecto, como en la estructura del curso, con dos carpetas:
 
 | Carpeta | Pruebas | Qué cubre |
 | --- | ---: | --- |
-| `Domain/` | 80 | Reglas puras del dominio: cajas ↔ unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones (incluida la capacidad), facturas, regalías, anulación, consignación, compras y averías |
-| `Application/` | 88 | Servicios y validadores con **todas** las dependencias simuladas con Moq. Ninguna toca PostgreSQL ni EF Core |
+| `Domain/` | 96 | Reglas puras del dominio: cajas ↔ unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones (incluida la capacidad), facturas, regalías, anulación, consignación, compras y averías |
+| `Application/` | 108 | Servicios y validadores con **todas** las dependencias simuladas con Moq. Ninguna toca PostgreSQL ni EF Core |
 
 ### Prueba de `ProductService` con mock de `IProductRepository`
 
@@ -70,12 +70,15 @@ Dos diferencias con el ejemplo del curso, ambas por el diseño de la Fase 2:
 | `OperationServicesTests` | Consignación (entrega 2 cajas, devuelve 30 und, cobra 18 und), averías y consumos con stock insuficiente, compras numeradas, ajuste de galpón |
 | `CategoryServiceTests`, `AuthServiceTests`, `UserAndEmployeeServiceTests` | Unicidad, login por username o email, usuario inactivo, hash de claves, autoprotección del admin, desactivar en lugar de borrar |
 | `ValidatorTests` | Reglas FluentValidation: precios > 0, stock ≥ 0, máximo > mínimo, textos obligatorios |
+| `TruckSettlementServiceTests` | Liquidación ciega: compara lo contado con lo cobrado en la ruta y el inventario del camión; el formulario no trae cantidades |
+
+Las pruebas de las [observaciones del profesor](../docs/09-OBSERVACIONES-PROFESOR.md) también están en `InvoiceServiceTests` (idempotencia y crédito), `ClientServiceTests` (crédito), `ReportServiceTests` (envejecimiento de la deuda), `TruckServiceTests` (estados de ruta) y en `Domain/` (`DebtAgingTests`, `TruckStatusTests`, `TruckSettlementTests`).
 
 `TestDoubles.cs` arma la unidad de trabajo simulada: `ExecuteInTransactionAsync` ejecuta la operación recibida para que el servicio corra su lógica completa.
 
 ## Pruebas de integración (`IntegrationTests/`)
 
-Cada ejecución levanta un PostgreSQL 15 nuevo y la API real con una clave JWT aleatoria. Cubren:
+Cada ejecución levanta un PostgreSQL 15 nuevo y la API real con una clave JWT aleatoria. `ObservationTests` cubre las observaciones del profesor (venta idempotente, crédito, envejecimiento, estados del camión y liquidación ciega). Cubren:
 - los casos de referencia de la lógica de negocio de punta a punta;
 - el dashboard (ventas desde un camión, ocupación, rotación, solo Admin, rango inválido);
 - la concurrencia optimista, los permisos, la auditoría, CORS y el rate limiting.
@@ -84,4 +87,4 @@ Cada ejecución levanta un PostgreSQL 15 nuevo y la API real con una clave JWT a
 
 `scripts/cobertura.sh` corre las pruebas unitarias con coverlet (`coverlet.runsettings` mide solo `Core.Domain` y `Core.Application`) y genera el reporte con ReportGenerator. El CI lo publica como artefacto y lo resume en cada ejecución.
 
-Resultado actual: 85,8 % de líneas y 78,5 % de ramas del núcleo, con todos los servicios de aplicación entre el 85,7 % y el 100 % ([reporte](../docs/evidencias/cobertura/index.html)).
+Resultado actual: 87,1 % de líneas y 81,7 % de ramas del núcleo, con todos los servicios de aplicación entre el 85,7 % y el 100 % ([reporte](../docs/evidencias/cobertura/index.html)).

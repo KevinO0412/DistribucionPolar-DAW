@@ -1654,6 +1654,155 @@
                 }
             }
         },
+        "/api/clients/{id}/credit": {
+            "get": {
+                "tags": [
+                    "Clientes"
+                ],
+                "summary": "Situación de crédito del cliente: deuda, vencido, disponible y envejecimiento (0-30, 31-60, 61-90, +90 días).",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Identificador.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "200": {
+                        "description": "Situación de crédito; `isBlocked` indica que solo puede comprar de contado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "El cliente no existe.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Clientes"
+                ],
+                "summary": "Fija el límite y los días de crédito del cliente (solo Admin).",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Identificador.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Token de cancelación.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditTermsRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditTermsRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditTermsRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "200": {
+                        "description": "Situación de crédito con las condiciones nuevas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "403": {
+                        "description": "El usuario no es Admin.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "404": {
+                        "description": "El cliente no existe.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
         "/api/clients/{id}/payments": {
             "post": {
                 "tags": [
@@ -2775,7 +2924,16 @@
                     "Facturación"
                 ],
                 "summary": "Emite una factura de venta.",
-                "description": "En una sola transacción: verifica el stock de todas las líneas en el origen, descuenta el inventario,\nasigna el número mensual (\"Factura Octubre 2026 #3\"), carga el pendiente (total − abono) al cliente\n—un abono mayor al total deja saldo a favor—, registra el abono y los vacíos generados y devueltos por grupo.",
+                "description": "En una sola transacción: verifica el stock de todas las líneas en el origen, descuenta el inventario,\nasigna el número mensual (\"Factura Octubre 2026 #3\"), carga el pendiente (total − abono) al cliente\n—un abono mayor al total deja saldo a favor—, registra el abono y los vacíos generados y devueltos por grupo.\nCon el encabezado `Idempotency-Key` (la preventa sin conexión lo envía con el id del pedido), un reintento\ncon la misma clave y el mismo cuerpo devuelve la factura ya emitida (200 y `Idempotency-Replayed: true`)\nsin descontar stock otra vez.",
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Token de cancelación.",
                     "content": {
@@ -2809,6 +2967,16 @@
                             "application/json": {}
                         }
                     },
+                    "200": {
+                        "description": "La clave ya se había usado con este mismo pedido: se devuelve la factura emitida.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceResponse"
+                                }
+                            }
+                        }
+                    },
                     "201": {
                         "description": "Factura emitida.",
                         "content": {
@@ -2820,7 +2988,7 @@
                         }
                     },
                     "400": {
-                        "description": "Datos inválidos, stock insuficiente o vendedor no permitido.",
+                        "description": "Datos inválidos, stock insuficiente, crédito bloqueado o vendedor no permitido.",
                         "content": {
                             "application/problem+json": {
                                 "schema": {
@@ -2832,6 +3000,17 @@
                     },
                     "409": {
                         "description": "Conflicto de concurrencia; reintentar.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "422": {
+                        "description": "La clave Idempotency-Key ya se usó con otro pedido.",
                         "content": {
                             "application/problem+json": {
                                 "schema": {
@@ -4933,6 +5112,321 @@
                 }
             }
         },
+        "/api/trucks/{id}/dispatch": {
+            "post": {
+                "tags": [
+                    "Camiones"
+                ],
+                "summary": "Despacha el camión a ruta: pasa de \"Cargando\" a \"En ruta\" y desde ese momento se cuentan sus ventas de la ruta.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Camión.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "200": {
+                        "description": "Camión en ruta.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TruckResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "El camión no tiene carga o ya está en ruta.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "404": {
+                        "description": "No existe el camión.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api/trucks/{id}/settlement-form": {
+            "get": {
+                "tags": [
+                    "Camiones"
+                ],
+                "summary": "Formulario de la liquidación ciega: los productos que llevó el camión, sin cantidades ni cobros esperados.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Camión en ruta.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "200": {
+                        "description": "Productos a contar.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SettlementFormResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "El camión no está en ruta.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "404": {
+                        "description": "No existe el camión.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api/trucks/{id}/settlements": {
+            "post": {
+                "tags": [
+                    "Camiones"
+                ],
+                "summary": "Liquidación ciega de la ruta: registra lo contado, calcula las diferencias y deja el camión \"Liquidado\".",
+                "description": "El efectivo esperado es lo cobrado en las facturas del camión desde su salida; la mercancía esperada es el inventario\nque el sistema tiene registrado en el camión. La respuesta es la planilla de cuadre con las diferencias.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Camión en ruta.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Token de cancelación.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TruckSettlementRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TruckSettlementRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TruckSettlementRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "201": {
+                        "description": "Planilla de cuadre.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TruckSettlementResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos o el camión no está en ruta.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "404": {
+                        "description": "No existe el camión o un producto.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Camiones"
+                ],
+                "summary": "Liquidaciones del camión, de la más reciente a la más antigua (máximo 100).",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Camión.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "200": {
+                        "description": "Planillas de cuadre.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TruckSettlementResponse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/trucks/settlements/{settlementId}": {
+            "get": {
+                "tags": [
+                    "Camiones"
+                ],
+                "summary": "Planilla de cuadre de una liquidación.",
+                "parameters": [
+                    {
+                        "name": "settlementId",
+                        "in": "path",
+                        "description": "Liquidación.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    },
+                    "200": {
+                        "description": "Planilla de cuadre.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TruckSettlementResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No existe la liquidación.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            },
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
         "/api/trucks/loads": {
             "get": {
                 "tags": [
@@ -5555,6 +6049,111 @@
                 },
                 "description": "Ajuste manual de saldos (solo Admin): fija valores absolutos con signo."
             },
+            "ClientDebtAging": {
+                "required": [
+                    "clientId",
+                    "code",
+                    "name",
+                    "type",
+                    "debt",
+                    "days0To30",
+                    "days31To60",
+                    "days61To90",
+                    "over90",
+                    "oldestDays",
+                    "overdue",
+                    "isBlocked"
+                ],
+                "type": "object",
+                "properties": {
+                    "clientId": {
+                        "type": "string",
+                        "description": "Cliente.",
+                        "format": "uuid"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Código."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Nombre."
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Tipo de cliente."
+                    },
+                    "debt": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda total.",
+                        "format": "double"
+                    },
+                    "days0To30": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "De 0 a 30 días.",
+                        "format": "double"
+                    },
+                    "days31To60": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "De 31 a 60 días.",
+                        "format": "double"
+                    },
+                    "days61To90": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "De 61 a 90 días.",
+                        "format": "double"
+                    },
+                    "over90": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Más de 90 días.",
+                        "format": "double"
+                    },
+                    "oldestDays": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "null",
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Días de la deuda más vieja (null si parte no tiene factura).",
+                        "format": "int32"
+                    },
+                    "overdue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Vencido según sus días de crédito.",
+                        "format": "double"
+                    },
+                    "isBlocked": {
+                        "type": "boolean",
+                        "description": "Solo puede comprar de contado."
+                    }
+                },
+                "description": "Deuda de un cliente por antigüedad."
+            },
             "ClientEmptiesReturnRequest": {
                 "required": [
                     "groups",
@@ -5680,7 +6279,9 @@
                     "emptyBalances",
                     "isReceivable",
                     "lastPurchaseAt",
-                    "createdAt"
+                    "createdAt",
+                    "creditLimit",
+                    "creditDays"
                 ],
                 "type": "object",
                 "properties": {
@@ -5774,6 +6375,25 @@
                         "type": "string",
                         "description": "Fecha de alta (UTC).",
                         "format": "date-time"
+                    },
+                    "creditLimit": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "null",
+                            "number",
+                            "string"
+                        ],
+                        "description": "Límite de crédito en USD; null = sin límite.",
+                        "format": "double"
+                    },
+                    "creditDays": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Días de crédito.",
+                        "format": "int32"
                     }
                 },
                 "description": "Cliente con sus saldos. Convención de signo: negativo = debe; positivo = a favor."
@@ -6666,6 +7286,159 @@
                 },
                 "description": "Alta de usuario (solo Admin)."
             },
+            "CreditStatusResponse": {
+                "required": [
+                    "debt",
+                    "creditLimit",
+                    "creditDays",
+                    "overdueAmount",
+                    "oldestDebtDays",
+                    "available",
+                    "isBlocked",
+                    "blockReason",
+                    "days0To30",
+                    "days31To60",
+                    "days61To90",
+                    "over90"
+                ],
+                "type": "object",
+                "properties": {
+                    "debt": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda actual en USD.",
+                        "format": "double"
+                    },
+                    "creditLimit": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "null",
+                            "number",
+                            "string"
+                        ],
+                        "description": "Límite de crédito; null = sin límite.",
+                        "format": "double"
+                    },
+                    "creditDays": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Días de crédito.",
+                        "format": "int32"
+                    },
+                    "overdueAmount": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda con más días que los de crédito.",
+                        "format": "double"
+                    },
+                    "oldestDebtDays": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "null",
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Días de la deuda más vieja.",
+                        "format": "int32"
+                    },
+                    "available": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "null",
+                            "number",
+                            "string"
+                        ],
+                        "description": "Crédito disponible; null si no hay límite.",
+                        "format": "double"
+                    },
+                    "isBlocked": {
+                        "type": "boolean",
+                        "description": "true si solo puede comprar de contado."
+                    },
+                    "blockReason": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Motivo del bloqueo."
+                    },
+                    "days0To30": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de 0 a 30 días.",
+                        "format": "double"
+                    },
+                    "days31To60": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de 31 a 60 días.",
+                        "format": "double"
+                    },
+                    "days61To90": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de 61 a 90 días.",
+                        "format": "double"
+                    },
+                    "over90": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de más de 90 días.",
+                        "format": "double"
+                    }
+                },
+                "description": "Situación de crédito y envejecimiento de la deuda del cliente (criterio FIFO)."
+            },
+            "CreditTermsRequest": {
+                "required": [
+                    "creditLimit",
+                    "creditDays"
+                ],
+                "type": "object",
+                "properties": {
+                    "creditLimit": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "null",
+                            "number",
+                            "string"
+                        ],
+                        "description": "Límite en USD; null = sin límite de monto; 0 = solo contado.",
+                        "format": "double"
+                    },
+                    "creditDays": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Días de crédito (1 a 365): la deuda más vieja que esto está vencida.",
+                        "format": "int32"
+                    }
+                },
+                "description": "Condiciones de crédito del cliente (solo Admin)."
+            },
             "CriticalProductResponse": {
                 "required": [
                     "id",
@@ -7153,6 +7926,102 @@
                 },
                 "description": "Valorización del inventario (galpón + camiones)."
             },
+            "DashboardReceivablesKpi": {
+                "required": [
+                    "totalDebt",
+                    "debtors",
+                    "overdue",
+                    "blockedClients",
+                    "days0To30",
+                    "days31To60",
+                    "days61To90",
+                    "over90",
+                    "topDebtors"
+                ],
+                "type": "object",
+                "properties": {
+                    "totalDebt": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda total de los clientes en USD.",
+                        "format": "double"
+                    },
+                    "debtors": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Clientes que deben dinero.",
+                        "format": "int32"
+                    },
+                    "overdue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda vencida según los días de crédito de cada cliente.",
+                        "format": "double"
+                    },
+                    "blockedClients": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Clientes que hoy solo pueden comprar de contado.",
+                        "format": "int32"
+                    },
+                    "days0To30": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de 0 a 30 días.",
+                        "format": "double"
+                    },
+                    "days31To60": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de 31 a 60 días.",
+                        "format": "double"
+                    },
+                    "days61To90": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de 61 a 90 días.",
+                        "format": "double"
+                    },
+                    "over90": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Deuda de más de 90 días.",
+                        "format": "double"
+                    },
+                    "topDebtors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ClientDebtAging"
+                        },
+                        "description": "Clientes con más deuda (máximo 10) y su deuda por tramo."
+                    }
+                },
+                "description": "Cuentas por cobrar y envejecimiento de la deuda (criterio FIFO), en tramos de 0-30, 31-60, 61-90 y más de 90 días."
+            },
             "DashboardResponse": {
                 "required": [
                     "from",
@@ -7165,7 +8034,8 @@
                     "salesByDay",
                     "salesByCategory",
                     "topProducts",
-                    "fleet"
+                    "fleet",
+                    "receivables"
                 ],
                 "type": "object",
                 "properties": {
@@ -7233,6 +8103,10 @@
                     "fleet": {
                         "description": "Ocupación y ventas por camión.",
                         "$ref": "#/components/schemas/DashboardFleetKpi"
+                    },
+                    "receivables": {
+                        "description": "Cuentas por cobrar con el envejecimiento de la deuda al día de hoy (no depende del rango ni de la categoría).",
+                        "$ref": "#/components/schemas/DashboardReceivablesKpi"
                     }
                 },
                 "description": "Dashboard KPI del rango indicado. Las ventas excluyen documentos anulados; con categoría,\nlas ventas son la suma de los renglones de esa categoría."
@@ -8954,6 +9828,204 @@
                 },
                 "description": "Ventas de un día local."
             },
+            "SettlementCountLine": {
+                "required": [
+                    "productId",
+                    "boxes",
+                    "looseUnits"
+                ],
+                "type": "object",
+                "properties": {
+                    "productId": {
+                        "type": "string",
+                        "description": "Producto.",
+                        "format": "uuid"
+                    },
+                    "boxes": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Cajas contadas.",
+                        "format": "int32"
+                    },
+                    "looseUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Unidades sueltas contadas.",
+                        "format": "int32"
+                    }
+                },
+                "description": "Conteo de un producto en la liquidación ciega."
+            },
+            "SettlementFormProduct": {
+                "required": [
+                    "productId",
+                    "sku",
+                    "name",
+                    "unitsPerBox"
+                ],
+                "type": "object",
+                "properties": {
+                    "productId": {
+                        "type": "string",
+                        "description": "Producto.",
+                        "format": "uuid"
+                    },
+                    "sku": {
+                        "type": "string",
+                        "description": "SKU."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Nombre."
+                    },
+                    "unitsPerBox": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Unidades por caja.",
+                        "format": "int32"
+                    }
+                },
+                "description": "Producto que el camión llevó, para el conteo ciego (sin cantidades)."
+            },
+            "SettlementFormResponse": {
+                "required": [
+                    "truckId",
+                    "truckName",
+                    "truckPlate",
+                    "status",
+                    "dispatchedAt",
+                    "products"
+                ],
+                "type": "object",
+                "properties": {
+                    "truckId": {
+                        "type": "string",
+                        "description": "Camión.",
+                        "format": "uuid"
+                    },
+                    "truckName": {
+                        "type": "string",
+                        "description": "Nombre."
+                    },
+                    "truckPlate": {
+                        "type": "string",
+                        "description": "Placa."
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Estado del camión."
+                    },
+                    "dispatchedAt": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Salida a ruta.",
+                        "format": "date-time"
+                    },
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SettlementFormProduct"
+                        },
+                        "description": "Productos a contar."
+                    }
+                },
+                "description": "Formulario de la liquidación ciega: solo los productos, sin cantidades esperadas ni cobros."
+            },
+            "SettlementLineResponse": {
+                "required": [
+                    "productId",
+                    "sku",
+                    "productName",
+                    "unitsPerBox",
+                    "expectedUnits",
+                    "expectedDisplay",
+                    "countedUnits",
+                    "countedDisplay",
+                    "differenceUnits",
+                    "differenceValue"
+                ],
+                "type": "object",
+                "properties": {
+                    "productId": {
+                        "type": "string",
+                        "description": "Producto.",
+                        "format": "uuid"
+                    },
+                    "sku": {
+                        "type": "string",
+                        "description": "SKU."
+                    },
+                    "productName": {
+                        "type": "string",
+                        "description": "Nombre."
+                    },
+                    "unitsPerBox": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Unidades por caja.",
+                        "format": "int32"
+                    },
+                    "expectedUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Unidades que el sistema esperaba de vuelta.",
+                        "format": "int32"
+                    },
+                    "expectedDisplay": {
+                        "type": "string",
+                        "description": "Lo esperado en cajas y unidades."
+                    },
+                    "countedUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Unidades contadas.",
+                        "format": "int32"
+                    },
+                    "countedDisplay": {
+                        "type": "string",
+                        "description": "Lo contado en cajas y unidades."
+                    },
+                    "differenceUnits": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Contado − esperado (negativo = faltante).",
+                        "format": "int32"
+                    },
+                    "differenceValue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Diferencia valorizada a precio por unidad.",
+                        "format": "double"
+                    }
+                },
+                "description": "Producto en la planilla de cuadre."
+            },
             "SkuGenerationResult": {
                 "required": [
                     "rawInput",
@@ -9488,7 +10560,7 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "Estado."
+                        "description": "Estado: En galpón, Cargando, En ruta o Liquidado."
                     },
                     "totalUnits": {
                         "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -9541,9 +10613,220 @@
                         ],
                         "description": "Ocupación: carga / capacidad × 100.",
                         "format": "double"
+                    },
+                    "dispatchedAt": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Salida a la ruta actual o la última (UTC).",
+                        "format": "date-time"
+                    },
+                    "tripFrom": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Desde cuándo se cuentan las ventas: la salida a ruta, o el inicio de hoy si está en galpón o cargando.",
+                        "format": "date-time"
+                    },
+                    "tripInvoices": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)$",
+                        "type": [
+                            "integer",
+                            "string"
+                        ],
+                        "description": "Facturas de venta del camión desde `TripFrom`.",
+                        "format": "int32",
+                        "default": 0
+                    },
+                    "tripSales": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Monto facturado desde `TripFrom`.",
+                        "format": "double",
+                        "default": 0
+                    },
+                    "tripCollected": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Cobrado al facturar desde `TripFrom`.",
+                        "format": "double",
+                        "default": 0
                     }
                 },
                 "description": "Camión de reparto con su inventario."
+            },
+            "TruckSettlementRequest": {
+                "required": [
+                    "cashCounted",
+                    "items",
+                    "observation"
+                ],
+                "type": "object",
+                "properties": {
+                    "cashCounted": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Efectivo recaudado que entrega, en USD.",
+                        "format": "double"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SettlementCountLine"
+                        },
+                        "description": "Mercancía que devuelve, por producto (lo que no se cuente se toma como 0)."
+                    },
+                    "observation": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Observación opcional."
+                    }
+                },
+                "description": "Liquidación ciega: lo que el chofer cuenta al volver, sin ver lo esperado."
+            },
+            "TruckSettlementResponse": {
+                "required": [
+                    "id",
+                    "truckId",
+                    "truckName",
+                    "truckPlate",
+                    "tripStartedAt",
+                    "settledAt",
+                    "settledBy",
+                    "observation",
+                    "expectedCash",
+                    "countedCash",
+                    "cashDifference",
+                    "expectedMerchandiseValue",
+                    "countedMerchandiseValue",
+                    "merchandiseDifferenceValue",
+                    "isBalanced",
+                    "lines"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Liquidación.",
+                        "format": "uuid"
+                    },
+                    "truckId": {
+                        "type": "string",
+                        "description": "Camión.",
+                        "format": "uuid"
+                    },
+                    "truckName": {
+                        "type": "string",
+                        "description": "Nombre."
+                    },
+                    "truckPlate": {
+                        "type": "string",
+                        "description": "Placa."
+                    },
+                    "tripStartedAt": {
+                        "type": "string",
+                        "description": "Salida a ruta.",
+                        "format": "date-time"
+                    },
+                    "settledAt": {
+                        "type": "string",
+                        "description": "Liquidación.",
+                        "format": "date-time"
+                    },
+                    "settledBy": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Usuario que liquidó."
+                    },
+                    "observation": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "description": "Observación."
+                    },
+                    "expectedCash": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Cobrado en las facturas de la ruta según el sistema.",
+                        "format": "double"
+                    },
+                    "countedCash": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Efectivo declarado.",
+                        "format": "double"
+                    },
+                    "cashDifference": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Contado − esperado (negativo = falta dinero).",
+                        "format": "double"
+                    },
+                    "expectedMerchandiseValue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Valor de la mercancía esperada de vuelta.",
+                        "format": "double"
+                    },
+                    "countedMerchandiseValue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Valor de la mercancía contada.",
+                        "format": "double"
+                    },
+                    "merchandiseDifferenceValue": {
+                        "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Diferencia valorizada (negativo = falta mercancía).",
+                        "format": "double"
+                    },
+                    "isBalanced": {
+                        "type": "boolean",
+                        "description": "La ruta cuadra sin diferencias."
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SettlementLineResponse"
+                        },
+                        "description": "Productos con diferencias primero."
+                    }
+                },
+                "description": "Planilla de cuadre de la ruta: esperado frente a contado, en efectivo y en mercancía."
             },
             "TruckStockLineResponse": {
                 "required": [

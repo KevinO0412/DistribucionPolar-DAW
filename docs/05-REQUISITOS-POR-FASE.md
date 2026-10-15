@@ -14,7 +14,7 @@ Todas las verificaciones se pueden repetir con el entorno de Development en marc
 | Reto 1: evaluador de salud con *switch* sobre tuplas | `src/backend/Core.Domain/Services/ProductHealthEvaluator.cs` | `ProductHealthEvaluatorTests`; `POST /api/demo/csharp/health-calculator` |
 | Reto 2: generador de SKU con expresiones regulares y rangos | `src/backend/Core.Domain/Services/CorporateSkuGenerator.cs` | `CorporateSkuGeneratorTests`; `POST /api/demo/csharp/sku-generator` → `HER-TAL-0007` |
 | Inyección de dependencias con Transient, Scoped y Singleton | `DependencyInjection.cs` de Application e Infrastructure ([Arquitectura §11](02-ARQUITECTURA.md#11-inyección-de-dependencias)) | Revisión de código |
-| Pruebas unitarias xUnit pasando al 100% | `tests/UnitTests` (80 de dominio y 88 de aplicación), además de `tests/IntegrationTests` (16) | `dotnet test DistribucionPolar.slnx` → 184/184 |
+| Pruebas unitarias xUnit pasando al 100% | `tests/UnitTests` (96 de dominio y 108 de aplicación), además de `tests/IntegrationTests` (21) | `dotnet test DistribucionPolar.slnx` → 225/225 |
 
 **Adaptaciones al dominio respecto de la guía de laboratorio:**
 - `Product` usa `PriceBox`/`PriceUnit` en lugar de `Price`, por la venta por caja y por unidad ([ADR 05](04-DECISIONES.md#05-precio-por-caja-y-precio-por-unidad-independientes)).
@@ -81,7 +81,7 @@ Complementos de la teoría de la fase también aplicados:
 | CRUD de productos y categorías según el rol | `ProductsPage`, `CategoriesPage` | Employee no ve los botones de editar ni eliminar |
 | Dashboard solo para Admin | Oculto del menú para Employee (`navigation.ts`) y protegido con `ProtectedRoute role="Admin"`; la API responde 403 | `ProtectedRoute.test.tsx`; prueba de integración del dashboard |
 | Pruebas xUnit + Moq de `ProductService` con mock de `IProductRepository` | `tests/UnitTests/Application/ProductServiceTests.cs`: `GetByIdAsync_ExistingId_ReturnsProductDto`, `GetProductByIdAsync_WhenNotFound_ThrowsKeyNotFoundException` y 13 casos más | `dotnet test` |
-| Casos exitosos y de excepción, aislados de la base de datos | 88 pruebas de aplicación con Moq (`Setup`/`Verify`) en todos los servicios | Reporte de cobertura (coverlet + ReportGenerator): 85,8 % de líneas del núcleo |
+| Casos exitosos y de excepción, aislados de la base de datos | 108 pruebas de aplicación con Moq (`Setup`/`Verify`) en todos los servicios | Reporte de cobertura (coverlet + ReportGenerator): 87,1 % de líneas del núcleo |
 
 **Ideas del profesor incorporadas:** tarjetas por camión con ocupación ([ADR 42](04-DECISIONES.md#42-capacidad-del-camión-en-cajas)), KPI de ocupación de flota y ventas por camión, ticket de 80 mm imprimible desde el navegador (`Ticket.tsx`, `@media print`) y menú lateral colapsable.
 
@@ -113,6 +113,10 @@ Complementos de la teoría de la fase también aplicados:
 | Dashboard KPI específico de la propuesta | Ocupación de la flota por camión y ventas por camión ([ADR 42](04-DECISIONES.md#42-capacidad-del-camión-en-cajas)) | Dashboard en http://localhost:8080 |
 | Sustentación: demostración en vivo | `docker compose down -v`, `docker compose up --build -d`, `docker ps`, `scripts/demo-operacion.sh`, `scripts/demo-fechas.sh`, login Admin y Employee en la SPA | [Evidencias](evidencias/README.md) |
 
+## Observaciones del profesor (15/10/2026)
+
+Las 10 recomendaciones entregadas para la defensa, con lo que ya existía, lo que se implementó (preventa sin conexión con ventas idempotentes, control de crédito, envejecimiento de la deuda, estados del camión, impresión de 58 mm y recibo de cobro, liquidación ciega) y cómo verificar cada una, están en [Observaciones del profesor](09-OBSERVACIONES-PROFESOR.md).
+
 ## Teoría de las fases implementada
 
 Conceptos del material de lectura que no estaban en las tareas evaluadas y también están implementados.
@@ -135,7 +139,7 @@ El detalle de cada uno está en [Fundamentos](06-FUNDAMENTOS.md).
 | Operación completa del negocio: camiones, clientes y saldos, facturación, regalías, anulación, vacíos, compras, averías, consumos, consignación, reportes, usuarios | [Lógica de negocio](03-LOGICA-NEGOCIO.md) |
 | Ticket PDF, liquidación PDF y respaldo JSON/CSV | `QuestPdfGenerator`, `BackupExporter` |
 | Entornos Development, Staging y Production, cada uno con su SPA, API y base | `docker-compose*.yml`, `appsettings.{Entorno}.json`, `.env*.example` |
-| Documentación OpenAPI 3.1 de los 79 endpoints + Swagger UI | `/swagger`, `docs/openapi/` |
+| Documentación OpenAPI 3.1 de los 86 endpoints + Swagger UI | `/swagger`, `docs/openapi/` |
 | Pruebas de integración contra PostgreSQL real | `tests/IntegrationTests` (Testcontainers) |
 | Sondas de salud y de entorno | `/health`, `/api/info` |
 | pgAdmin preconfigurado en Development | `docker-compose.override.yml`, `docker/pgadmin/` |

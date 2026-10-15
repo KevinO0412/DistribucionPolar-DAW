@@ -385,11 +385,11 @@ Ningún Singleton depende de un servicio Scoped, así que no hay dependencias ca
 
 | Tipo | Proyecto o herramienta | Cantidad | Qué cubre |
 | --- | --- | ---: | --- |
-| Unitarias de dominio | `tests/UnitTests/Domain` | 80 | Cajas y unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones, facturas, regalías, anulación, consignación, compras y averías |
-| Unitarias de aplicación | `tests/UnitTests/Application` | 88 | Validadores y servicios con repositorios simulados con Moq (`Setup`/`Verify`) |
-| Integración | `tests/IntegrationTests` | 16 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
+| Unitarias de dominio | `tests/UnitTests/Domain` | 96 | Cajas y unidades, precios, SKU, salud del stock, saldos y vacíos del cliente, camiones, facturas, regalías, anulación, consignación, compras y averías |
+| Unitarias de aplicación | `tests/UnitTests/Application` | 108 | Validadores y servicios con repositorios simulados con Moq (`Setup`/`Verify`) |
+| Integración | `tests/IntegrationTests` | 21 | API real (`WebApplicationFactory`) sobre PostgreSQL 15 desechable (Testcontainers): casos de referencia del negocio, concurrencia, permisos, auditoría, CORS y rate limiting |
 | API de punta a punta | Colección de Postman | 50 peticiones, 97 aserciones | Fases 1–3 y la operación completa del negocio |
 
-| Frontend | Vitest + Testing Library | 31 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807 y validaciones del formulario |
+| Frontend | Vitest + Testing Library | 54 | Sesión JWT, rutas protegidas por rol, tema, errores RFC 7807, validaciones del formulario, preventa sin conexión, crédito, camiones, liquidación e impresión térmica |
 
 Las pruebas de integración requieren Docker. La cobertura de las unitarias se genera con `scripts/cobertura.sh` (coverlet + ReportGenerator).
