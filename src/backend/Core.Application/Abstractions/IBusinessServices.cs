@@ -32,6 +32,9 @@ public interface ITruckService
 
     Task<TruckResponse> UnloadAsync(Guid truckId, CancellationToken cancellationToken = default);
 
+    /// <summary>Despacha el camión a ruta (Cargando → En ruta).</summary>
+    Task<TruckResponse> DispatchAsync(Guid truckId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<TruckLoadResponse>> GetLoadsAsync(Guid? truckId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 }
 

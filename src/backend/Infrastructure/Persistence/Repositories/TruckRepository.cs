@@ -1,5 +1,6 @@
 using Core.Application.Abstractions;
 using Core.Domain.Entities;
+using Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
@@ -37,6 +38,28 @@ public sealed class TruckRepository(ApplicationDbContext context) : ITruckReposi
     public void AddLoad(TruckLoad load)
     {
         context.TruckLoads.Add(load);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, TruckTripSales>> GetTripSalesAsync(
+        IReadOnlyDictionary<Guid, DateTime> fromUtcByTruck, CancellationToken cancellationToken = default)
+    {
+        if (fromUtcByTruck.Count == 0)
+        {
+            return new Dictionary<Guid, TruckTripSales>();
+        }
+
+        var ids = fromUtcByTruck.Keys.ToList();
+        var earliest = fromUtcByTruck.Values.Min();
+        var rows = await context.Invoices
+            .AsNoTracking()
+            .Where(i => i.TruckId != null && ids.Contains(i.TruckId.Value) && i.Type == InvoiceType.Sale && !i.IsCancelled && i.IssuedAt >= earliest)
+            .Select(i => new { TruckId = i.TruckId!.Value, i.IssuedAt, i.Total, i.Payment })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Where(r => r.IssuedAt >= fromUtcByTruck[r.TruckId])
+            .GroupBy(r => r.TruckId)
+            .ToDictionary(g => g.Key, g => new TruckTripSales(g.Count(), g.Sum(r => r.Total), g.Sum(r => Math.Min(r.Payment, r.Total))));
     }
 
     public async Task<IReadOnlyList<TruckLoad>> GetLoadsAsync(Guid? truckId, DateTime? fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)

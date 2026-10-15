@@ -36,7 +36,7 @@ internal static class BusinessMappings
     public static EmployeeResponse ToResponse(this Employee employee) =>
         new(employee.Id, employee.Name, employee.Role, employee.IsActive, employee.CreatedAt);
 
-    public static TruckResponse ToResponse(this Truck truck)
+    public static TruckResponse ToResponse(this Truck truck, DateTime? tripFromUtc = null, TruckTripSales? trip = null)
     {
         var lines = truck.Stock
             .Select(s => new TruckStockLineResponse(
@@ -52,9 +52,11 @@ internal static class BusinessMappings
             .OrderBy(l => l.ProductName)
             .ToList();
 
+        trip ??= TruckTripSales.None;
         return new TruckResponse(
             truck.Id, truck.Name, truck.Plate, truck.Status, truck.TotalUnits, lines.Sum(l => l.Value), lines,
-            truck.CapacityBoxes, Math.Round(truck.LoadedBoxes, 1), truck.OccupancyPercent);
+            truck.CapacityBoxes, Math.Round(truck.LoadedBoxes, 1), truck.OccupancyPercent,
+            truck.DispatchedAt, tripFromUtc, trip.Invoices, trip.Total, trip.Collected);
     }
 
     public static TruckLoadResponse ToResponse(this TruckLoad load) => new(

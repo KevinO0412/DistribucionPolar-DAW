@@ -130,6 +130,19 @@ public sealed class TrucksController(ITruckService trucks) : ControllerBase
     public async Task<ActionResult<TruckResponse>> Unload(Guid id, CancellationToken cancellationToken) =>
         Ok(await trucks.UnloadAsync(id, cancellationToken));
 
+    /// <summary>Despacha el camión a ruta: pasa de "Cargando" a "En ruta" y desde ese momento se cuentan sus ventas de la ruta.</summary>
+    /// <param name="id">Camión.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <response code="200">Camión en ruta.</response>
+    /// <response code="400">El camión no tiene carga o ya está en ruta.</response>
+    /// <response code="404">No existe el camión.</response>
+    [HttpPost("{id:guid}/dispatch")]
+    [ProducesResponseType<TruckResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<ActionResult<TruckResponse>> Dispatch(Guid id, CancellationToken cancellationToken) =>
+        Ok(await trucks.DispatchAsync(id, cancellationToken));
+
     /// <summary>Historial de cargas de camiones (máximo 500, de la más reciente a la más antigua).</summary>
     /// <param name="truckId">Filtra por camión.</param>
     /// <param name="from">Desde (fecha local, inclusive).</param>

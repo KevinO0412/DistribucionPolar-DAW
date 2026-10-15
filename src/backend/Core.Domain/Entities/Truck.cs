@@ -12,7 +12,19 @@ public sealed class Truck : BaseEntity
     public const int NameMaxLength = 50;
     public const int PlateMaxLength = 20;
     public const int StatusMaxLength = 30;
-    public const string DefaultStatus = "En galpón";
+    public const string DefaultStatus = StatusInWarehouse;
+
+    /// <summary>Sin carga, en el galpón.</summary>
+    public const string StatusInWarehouse = "En galpón";
+
+    /// <summary>Se le está cargando mercancía antes de salir.</summary>
+    public const string StatusLoading = "Cargando";
+
+    /// <summary>Salió a ruta: vende desde su inventario.</summary>
+    public const string StatusOnRoute = "En ruta";
+
+    /// <summary>Volvió y se hizo la liquidación ciega de la ruta.</summary>
+    public const string StatusSettled = "Liquidado";
     public const int DefaultCapacityBoxes = 500;
     public const int MaxCapacityBoxes = 5000;
 
@@ -33,7 +45,13 @@ public sealed class Truck : BaseEntity
 
     public string Plate { get; private set; } = default!;
 
+    /// <summary>En galpón → Cargando → En ruta → Liquidado → (descarga) En galpón.</summary>
     public string Status { get; private set; } = default!;
+
+    /// <summary>Salida a la ruta actual (o la última); las ventas de la ruta se cuentan desde aquí.</summary>
+    public DateTime? DispatchedAt { get; private set; }
+
+    public bool IsOnRoute => Status == StatusOnRoute;
 
     /// <summary>Capacidad de carga en cajas: base del KPI de ocupación de flota.</summary>
     public int CapacityBoxes { get; private set; }
@@ -110,13 +128,54 @@ public sealed class Truck : BaseEntity
         Touch();
     }
 
-    /// <summary>Retira todas las líneas del camión y las devuelve para reintegrarlas al galpón.</summary>
+    /// <summary>Retira todas las líneas del camión y las devuelve para reintegrarlas al galpón. Queda "En galpón".</summary>
     public IReadOnlyList<(Guid ProductId, int Units)> Unload()
     {
         var unloaded = stock.Select(s => (s.ProductId, s.StockUnits)).ToList();
         stock.Clear();
+        Status = StatusInWarehouse;
         Touch();
         return unloaded;
+    }
+
+    /// <summary>Una carga desde el galpón lo pone "Cargando"; si ya está en ruta (reabastecimiento) sigue en ruta.</summary>
+    public void MarkLoading()
+    {
+        if (Status != StatusOnRoute)
+        {
+            Status = StatusLoading;
+            Touch();
+        }
+    }
+
+    /// <summary>Sale a ruta: necesita carga y no estar ya en ruta.</summary>
+    public void Dispatch(DateTime dispatchedAtUtc)
+    {
+        if (Status == StatusOnRoute)
+        {
+            throw new DomainException($"El camión {Name} ya está en ruta.");
+        }
+
+        if (stock.Count == 0)
+        {
+            throw new DomainException($"El camión {Name} no tiene carga; cárguelo antes de despacharlo.");
+        }
+
+        Status = StatusOnRoute;
+        DispatchedAt = dispatchedAtUtc;
+        Touch();
+    }
+
+    /// <summary>Cierra la ruta con la liquidación: solo un camión en ruta se liquida.</summary>
+    public void MarkSettled()
+    {
+        if (Status != StatusOnRoute)
+        {
+            throw new DomainException($"El camión {Name} no está en ruta; solo se liquida un camión que salió a ruta.");
+        }
+
+        Status = StatusSettled;
+        Touch();
     }
 
     /// <summary>

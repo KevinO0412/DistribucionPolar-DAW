@@ -24,14 +24,44 @@ public sealed class TruckService(
     public async Task<IReadOnlyList<TruckResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var list = await trucks.GetAllAsync(cancellationToken);
-        return list.Select(t => t.ToResponse()).ToList();
+        return await WithTripSalesAsync(list, cancellationToken);
     }
 
     public async Task<TruckResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var truck = await trucks.GetByIdAsync(id, cancellationToken)
             ?? throw new KeyNotFoundException($"No existe el camión {id}.");
-        return truck.ToResponse();
+        return (await WithTripSalesAsync([truck], cancellationToken))[0];
+    }
+
+    /// <summary>Despacha el camión a ruta (observación 4): pasa a "En ruta" y desde ahora se cuentan sus ventas de la ruta.</summary>
+    public async Task<TruckResponse> DispatchAsync(Guid truckId, CancellationToken cancellationToken = default)
+    {
+        var truck = await unitOfWork.ExecuteInTransactionAsync(async ct =>
+        {
+            var target = await trucks.GetForUpdateAsync(truckId, ct)
+                ?? throw new KeyNotFoundException($"No existe el camión {truckId}.");
+            target.Dispatch(clock.UtcNow);
+            await unitOfWork.SaveChangesAsync(ct);
+            return target;
+        }, cancellationToken);
+
+        await audit.AuditAsync("truck_dispatched", "trucks", $"Camión {truck.Name} ({truck.Plate}) despachado a ruta",
+            nameof(Truck), truck.Id.ToString(), metadata: new { truck.TotalUnits }, cancellationToken: cancellationToken);
+        return await GetByIdAsync(truckId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Ventas de la ruta: desde la salida si el camión está en ruta o liquidado; si está en galpón o cargando, las de hoy.
+    /// </summary>
+    private async Task<IReadOnlyList<TruckResponse>> WithTripSalesAsync(IReadOnlyList<Truck> list, CancellationToken cancellationToken)
+    {
+        var todayStart = clock.GetDayRangeUtc(clock.Today).StartUtc;
+        var from = list.ToDictionary(
+            t => t.Id,
+            t => t.DispatchedAt is { } dispatched && t.Status is Truck.StatusOnRoute or Truck.StatusSettled ? dispatched : todayStart);
+        var sales = await trucks.GetTripSalesAsync(from, cancellationToken);
+        return list.Select(t => t.ToResponse(from[t.Id], sales.GetValueOrDefault(t.Id))).ToList();
     }
 
     public async Task<TruckResponse> CreateAsync(TruckRequest request, CancellationToken cancellationToken = default)
@@ -94,6 +124,7 @@ public sealed class TruckService(
 
             product.RemoveStock(BoxQuantity.FromUnits(toLoad, product.UnitsPerBox));
             truck.AddStock(product.Id, toLoad);
+            truck.MarkLoading();
 
             var record = new TruckLoad(truck, product, toLoad, before, truck.GetUnits(product.Id),
                 TruckLoadSource.Warehouse, null, request.Observation, currentUser.Username);
@@ -139,6 +170,7 @@ public sealed class TruckService(
                     ?? throw new InvalidOperationException($"El camión destino {request.DestinationTruckId} no existe.");
                 int before = destination.GetUnits(product.Id);
                 destination.AddStock(product.Id, units);
+                destination.MarkLoading();
                 trucks.AddLoad(new TruckLoad(destination, product, units, before, destination.GetUnits(product.Id),
                     TruckLoadSource.Truck, truck.Id, request.Observation, currentUser.Username));
                 destinationName = $"el camión {destination.Name}";

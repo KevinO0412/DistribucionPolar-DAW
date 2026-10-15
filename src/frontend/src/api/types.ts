@@ -102,7 +102,14 @@ export interface Truck {
   capacityBoxes: number;
   loadedBoxes: number;
   occupancyPercent: number;
+  dispatchedAt: string | null;
+  tripFrom: string | null;
+  tripInvoices: number;
+  tripSales: number;
+  tripCollected: number;
 }
+
+export type TruckStatus = 'En galpón' | 'Cargando' | 'En ruta' | 'Liquidado';
 
 export interface DashboardResponse {
   from: string;

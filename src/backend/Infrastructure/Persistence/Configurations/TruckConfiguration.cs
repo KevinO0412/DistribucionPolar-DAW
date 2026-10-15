@@ -10,12 +10,17 @@ public sealed class TruckConfiguration : IEntityTypeConfiguration<Truck>
     public void Configure(EntityTypeBuilder<Truck> builder)
     {
         builder.ToTable("Trucks", table =>
-            table.HasCheckConstraint("CK_Trucks_CapacityBoxes_Range", $"\"CapacityBoxes\" BETWEEN 1 AND {Truck.MaxCapacityBoxes}"));
+        {
+            table.HasCheckConstraint("CK_Trucks_CapacityBoxes_Range", $"\"CapacityBoxes\" BETWEEN 1 AND {Truck.MaxCapacityBoxes}");
+            table.HasCheckConstraint("CK_Trucks_Status",
+                $"\"Status\" IN ('{Truck.StatusInWarehouse}', '{Truck.StatusLoading}', '{Truck.StatusOnRoute}', '{Truck.StatusSettled}')");
+        });
         builder.ConfigureBaseEntity();
         builder.UseOptimisticConcurrency();
         builder.Property(t => t.Name).IsRequired().HasMaxLength(Truck.NameMaxLength);
         builder.Property(t => t.Plate).IsRequired().HasMaxLength(Truck.PlateMaxLength);
         builder.Property(t => t.Status).IsRequired().HasMaxLength(Truck.StatusMaxLength);
+        builder.Property(t => t.DispatchedAt).HasColumnType("timestamptz");
         builder.Property(t => t.CapacityBoxes).IsRequired().HasDefaultValue(Truck.DefaultCapacityBoxes);
         builder.HasIndex(t => t.Plate).IsUnique().HasFilter("\"IsDeleted\" = false");
 

@@ -46,6 +46,7 @@ export const reportsApi = {
 
 export const trucksApi = {
   list: () => api.get<Truck[]>('/trucks').then((r) => r.data),
+  dispatch: (id: string) => api.post<Truck>(`/trucks/${id}/dispatch`).then((r) => r.data),
 };
 
 export const invoicesApi = {

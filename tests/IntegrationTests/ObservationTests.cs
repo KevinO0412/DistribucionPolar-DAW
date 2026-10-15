@@ -24,6 +24,13 @@ public sealed class ObservationTests(ApiFixture api)
     private static CreateSaleRequest Sale(Guid clientId, Guid productId, int boxes, decimal payment) =>
         new(clientId, StockOrigin.Warehouse, null, null, [new LineRequest(productId, boxes, 0)], payment, null, null);
 
+    private static async Task<TruckResponse> LoadedTruckAsync(HttpClient admin, Guid productId, int boxes)
+    {
+        string plate = $"T{Random.Shared.Next(100_000, 999_999)}";
+        var truck = await admin.PostAsync<TruckResponse>("/api/trucks", new TruckRequest($"Prueba {plate}", plate, 200), HttpStatusCode.Created);
+        return await admin.PostAsync<TruckResponse>($"/api/trucks/{truck.Id}/load", new LoadTruckRequest(productId, TruckLoadMode.Add, boxes, 0, null));
+    }
+
     private static Task<HttpResponseMessage> PostSaleAsync(HttpClient http, CreateSaleRequest sale, string? idempotencyKey)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/invoices/sales")
@@ -110,5 +117,29 @@ public sealed class ObservationTests(ApiFixture api)
         Assert.Equal(receivables.TotalDebt, receivables.Days0To30 + receivables.Days31To60 + receivables.Days61To90 + receivables.Over90);
         Assert.True(receivables.TopDebtors.Count <= 10);
         Assert.Equal(receivables.TopDebtors.OrderByDescending(r => r.Debt).Select(r => r.ClientId), receivables.TopDebtors.Select(r => r.ClientId));
+    }
+
+    [Fact]
+    public async Task Truck_GoesLoadingThenOnRoute_AndShowsTheTripSales()
+    {
+        var admin = await api.AdminAsync();
+        var employee = await api.EmployeeAsync();
+        var product = await NewProductAsync(admin, 100m, 12m, 10, 10);
+        var client = await NewClientAsync(admin);
+        var loading = await LoadedTruckAsync(admin, product.Id, 5);
+
+        var dispatched = await employee.PostAsync<TruckResponse>($"/api/trucks/{loading.Id}/dispatch", null);
+        var again = await employee.SendRawAsync(HttpMethod.Post, $"/api/trucks/{loading.Id}/dispatch");
+        await employee.PostAsync<InvoiceResponse>("/api/invoices/sales",
+            new CreateSaleRequest(client.Id, StockOrigin.Truck, loading.Id, null, [new LineRequest(product.Id, 2, 0)], 150m, null, null),
+            HttpStatusCode.Created);
+        var onRoute = await employee.GetAsync<TruckResponse>($"/api/trucks/{loading.Id}");
+
+        Assert.Equal("Cargando", loading.Status);
+        Assert.Equal("En ruta", dispatched.Status);
+        Assert.NotNull(dispatched.DispatchedAt);
+        Assert.Equal(HttpStatusCode.BadRequest, again.StatusCode);
+        Assert.Equal((1, 200m, 150m), (onRoute.TripInvoices, onRoute.TripSales, onRoute.TripCollected));
+        Assert.Equal(30, onRoute.TotalUnits);
     }
 }

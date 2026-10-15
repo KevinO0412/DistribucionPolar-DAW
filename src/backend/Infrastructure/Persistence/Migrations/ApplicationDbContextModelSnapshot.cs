@@ -6744,6 +6744,9 @@ namespace Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamptz");
 
+                    b.Property<DateTime?>("DispatchedAt")
+                        .HasColumnType("timestamptz");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -6782,6 +6785,8 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("Trucks", null, t =>
                         {
                             t.HasCheckConstraint("CK_Trucks_CapacityBoxes_Range", "\"CapacityBoxes\" BETWEEN 1 AND 5000");
+
+                            t.HasCheckConstraint("CK_Trucks_Status", "\"Status\" IN ('En galpón', 'Cargando', 'En ruta', 'Liquidado')");
                         });
 
                     b.HasData(

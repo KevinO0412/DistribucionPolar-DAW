@@ -21,16 +21,22 @@ public sealed record TruckStockLineResponse(
 /// <param name="Id">Identificador.</param>
 /// <param name="Name">Nombre o modelo.</param>
 /// <param name="Plate">Placa.</param>
-/// <param name="Status">Estado.</param>
+/// <param name="Status">Estado: En galpón, Cargando, En ruta o Liquidado.</param>
 /// <param name="TotalUnits">Unidades totales en el camión.</param>
 /// <param name="InventoryValue">Valor del inventario del camión.</param>
 /// <param name="Stock">Líneas de inventario.</param>
 /// <param name="CapacityBoxes">Capacidad de carga en cajas.</param>
 /// <param name="LoadedBoxes">Carga actual en cajas equivalentes (unidades / unidades por caja).</param>
 /// <param name="OccupancyPercent">Ocupación: carga / capacidad × 100.</param>
+/// <param name="DispatchedAt">Salida a la ruta actual o la última (UTC).</param>
+/// <param name="TripFrom">Desde cuándo se cuentan las ventas: la salida a ruta, o el inicio de hoy si está en galpón o cargando.</param>
+/// <param name="TripInvoices">Facturas de venta del camión desde <c>TripFrom</c>.</param>
+/// <param name="TripSales">Monto facturado desde <c>TripFrom</c>.</param>
+/// <param name="TripCollected">Cobrado al facturar desde <c>TripFrom</c>.</param>
 public sealed record TruckResponse(
     Guid Id, string Name, string Plate, string Status, int TotalUnits, decimal InventoryValue,
-    IReadOnlyList<TruckStockLineResponse> Stock, int CapacityBoxes, decimal LoadedBoxes, decimal OccupancyPercent);
+    IReadOnlyList<TruckStockLineResponse> Stock, int CapacityBoxes, decimal LoadedBoxes, decimal OccupancyPercent,
+    DateTime? DispatchedAt = null, DateTime? TripFrom = null, int TripInvoices = 0, decimal TripSales = 0m, decimal TripCollected = 0m);
 
 /// <summary>Alta o edición de camión (solo Admin).</summary>
 /// <param name="Name" example="NPR">Nombre o modelo.</param>

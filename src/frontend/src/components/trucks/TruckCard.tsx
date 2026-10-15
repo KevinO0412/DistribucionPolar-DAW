@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 import { formatDecimal, formatInt, formatPercent } from '../../lib/format';
+import { TruckStatusBadge } from './TruckStatusBadge';
 
 interface TruckCardProps {
   name: string;
@@ -8,6 +9,8 @@ interface TruckCardProps {
   capacityBoxes: number;
   loadedBoxes: number;
   occupancyPercent: number;
+  /** Estado de la ruta (Cargando, En ruta, Liquidado…); si no se indica no se muestra. */
+  status?: string;
   children?: ReactNode;
 }
 
@@ -23,7 +26,7 @@ export function occupancyLevel(percent: number) {
  * Camión de perfil: la caja de carga se llena de gaveras según la ocupación (cajas cargadas / capacidad).
  * Es el elemento distintivo del dashboard y de la pantalla de camiones.
  */
-export function TruckCard({ name, plate, capacityBoxes, loadedBoxes, occupancyPercent, children }: TruckCardProps) {
+export function TruckCard({ name, plate, capacityBoxes, loadedBoxes, occupancyPercent, status, children }: TruckCardProps) {
   const fill = Math.min(occupancyPercent, 100);
   const level = occupancyLevel(occupancyPercent);
   const bedWidth = 196;
@@ -36,6 +39,11 @@ export function TruckCard({ name, plate, capacityBoxes, loadedBoxes, occupancyPe
         <div>
           <h3 className="font-display text-xl font-semibold leading-tight">{name}</h3>
           <p className="font-display text-sm tracking-wide text-muted">{plate}</p>
+          {status && (
+            <div className="mt-1">
+              <TruckStatusBadge status={status} />
+            </div>
+          )}
         </div>
         <div className="text-right">
           <p className={cn('font-display text-3xl font-semibold leading-none', level.tone)}>{formatPercent(occupancyPercent)}</p>
