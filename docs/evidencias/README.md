@@ -10,4 +10,4 @@
 | Capturas de la SPA (login, dashboard, RBAC, sesión JWT) | [capturas/](capturas/) |
 
 ## Imágenes Docker
-Ver [docker-images.txt](docker-images.txt): API ≈ 51 MB y SPA ≈ 57 MB sin comprimir. Con el almacén containerd de Docker, la columna SIZE de `docker images` suma además el contenido comprimido, por eso muestra más.
+Ver [docker-images.txt](docker-images.txt): API ≈ 60 MB y SPA ≈ 59 MB sin comprimir, sumando las capas (es lo que mide el CI con `docker image inspect`). Dentro del contenedor, `du` da 51 y 57 MB porque la capa `apk add --upgrade` reemplaza archivos de la base y en la suma de capas cuentan dos veces. Con el almacén containerd de Docker, la columna SIZE de `docker images` suma además el contenido comprimido, por eso muestra más (API 93,8 MB y SPA 85 MB).
