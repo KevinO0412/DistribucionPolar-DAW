@@ -4,6 +4,8 @@
  RUN  v2.1.8 /home/kevin-orduz/Desktop/projects/DistribucionPolar/src/frontend
       Coverage enabled with v8
 
+ ✓ src/lib/productImage.test.ts > productImageUrl > devuelve la foto de un producto sembrado
+ ✓ src/lib/productImage.test.ts > productImageUrl > devuelve null para un producto creado desde la aplicación
  ✓ src/lib/cn.test.ts > cn > resuelve conflictos de Tailwind
  ✓ src/lib/cn.test.ts > cn > conserva el tamaño propio junto a un color de texto
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > lee title y detail del Problem Details
@@ -17,6 +19,8 @@
  ✓ src/context/AuthContext.test.tsx > AuthProvider > guarda el token en localStorage al iniciar sesión y lo limpia al cerrarla
  ✓ src/context/AuthContext.test.tsx > AuthProvider > recupera la sesión guardada al recargar la página
  ✓ src/context/AuthContext.test.tsx > AuthProvider > descarta un token vencido al recargar
+ ✓ src/components/ui/ProductThumb.test.tsx > ProductThumb > muestra la foto con el nombre como texto alternativo
+ ✓ src/components/ui/ProductThumb.test.tsx > ProductThumb > cambia al ícono si la foto no carga
  ✓ src/context/AuthContext.test.tsx > AuthProvider > cierra la sesión sola cuando vence el token
  ✓ src/pages/ProductForm.test.ts > validateProduct > acepta un producto válido (con coma decimal)
  ✓ src/pages/ProductForm.test.ts > validateProduct > aplica las mismas reglas que FluentValidation
@@ -32,16 +36,16 @@
  ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja al Employee consultar el catálogo
  ✓ src/components/ProtectedRoute.test.tsx > menú por rol > oculta el dashboard al Employee y lo muestra al Admin
 
- Test Files  6 passed (6)
-      Tests  27 passed (27)
-   Start at  10:35:58
-   Duration  2.08s (transform 266ms, setup 1.33s, collect 743ms, tests 193ms, environment 3.11s, prepare 808ms)
+ Test Files  8 passed (8)
+      Tests  31 passed (31)
+   Start at  10:48:42
+   Duration  2.19s (transform 413ms, setup 2.22s, collect 1.18s, tests 431ms, environment 5.25s, prepare 1.20s)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   22.06 |     72.5 |   34.52 |   22.06 |                   
+All files          |   23.61 |    74.41 |   36.78 |   23.61 |                   
  src               |       0 |        0 |       0 |       0 |                   
   App.tsx          |       0 |        0 |       0 |       0 | 1-54              
  src/api           |   87.06 |    85.29 |   31.81 |   87.06 |                   
@@ -69,10 +73,12 @@ All files          |   22.06 |     72.5 |   34.52 |   22.06 |
  ...ponents/trucks |       0 |        0 |       0 |       0 |                   
   Ticket.tsx       |       0 |        0 |       0 |       0 | 1-82              
   TruckCard.tsx    |       0 |        0 |       0 |       0 | 1-76              
- src/components/ui |   17.62 |    83.33 |      10 |   17.62 |                   
+ src/components/ui |   26.95 |    89.47 |      25 |   26.95 |                   
   Button.tsx       |   36.36 |      100 |       0 |   36.36 | 27-49             
   Field.tsx        |    12.5 |      100 |       0 |    12.5 | ...57,67-79,82-92 
   Modal.tsx        |    4.34 |      100 |       0 |    4.34 | 17-66             
+  ...humb.test.tsx |     100 |      100 |     100 |     100 |                   
+  ProductThumb.tsx |     100 |      100 |     100 |     100 |                   
   States.tsx       |       0 |        0 |       0 |       0 | 1-42              
   StatusBadge.tsx  |   73.07 |      100 |      50 |   73.07 | 15-22             
   Toast.tsx        |       0 |        0 |       0 |       0 | 1-55              
@@ -87,19 +93,21 @@ All files          |   22.06 |     72.5 |   34.52 |   22.06 |
   ...hartColors.ts |       0 |        0 |       0 |       0 | 1-28              
   useDebounced.ts  |       0 |        0 |       0 |       0 | 1-10              
   useTheme.ts      |     100 |       50 |     100 |     100 | 6                 
- src/lib           |   41.02 |       80 |      50 |   41.02 |                   
+ src/lib           |   58.92 |     92.3 |   66.66 |   58.92 |                   
   cn.test.ts       |     100 |      100 |     100 |     100 |                   
   cn.ts            |     100 |      100 |     100 |     100 |                   
   format.ts        |       0 |        0 |       0 |       0 | 1-31              
- src/pages         |    7.66 |    37.03 |   15.38 |    7.66 |                   
+  ...Image.test.ts |     100 |      100 |     100 |     100 |                   
+  productImage.ts  |     100 |      100 |     100 |     100 |                   
+ src/pages         |    7.54 |    37.03 |   15.38 |    7.54 |                   
   ...oriesPage.tsx |       0 |        0 |       0 |       0 | 1-151             
   ...irmDialog.tsx |       0 |        0 |       0 |       0 | 1-56              
   ...boardPage.tsx |       0 |        0 |       0 |       0 | 1-51              
   InvoicesPage.tsx |       0 |        0 |       0 |       0 | 1-127             
   LoginPage.tsx    |       0 |        0 |       0 |       0 | 1-103             
   ...tForm.test.ts |     100 |      100 |     100 |     100 |                   
-  ProductForm.tsx  |   19.28 |    35.71 |      40 |   19.28 | ...9,63-66,77-178 
-  ProductsPage.tsx |       0 |        0 |       0 |       0 | 1-168             
+  ProductForm.tsx  |   19.14 |    35.71 |      40 |   19.14 | ...0,64-67,78-180 
+  ProductsPage.tsx |       0 |        0 |       0 |       0 | 1-180             
   StatusPages.tsx  |       0 |        0 |       0 |       0 | 1-22              
   TrucksPage.tsx   |       0 |        0 |       0 |       0 | 1-49              
 -------------------|---------|----------|---------|---------|-------------------
