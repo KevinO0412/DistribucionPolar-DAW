@@ -84,4 +84,4 @@ Cada ejecución levanta un PostgreSQL 15 nuevo y la API real con una clave JWT a
 
 `scripts/cobertura.sh` corre las pruebas unitarias con coverlet (`coverlet.runsettings` mide solo `Core.Domain` y `Core.Application`) y genera el reporte con ReportGenerator. El CI lo publica como artefacto y lo resume en cada ejecución.
 
-Resultado actual: 85,8 % de líneas y 78,5 % de ramas del núcleo, con todos los servicios de aplicación entre el 86 % y el 100 % ([reporte](../docs/evidencias/cobertura/index.html)).
+Resultado actual: 85,8 % de líneas y 78,5 % de ramas del núcleo, con todos los servicios de aplicación entre el 85,7 % y el 100 % ([reporte](../docs/evidencias/cobertura/index.html)).

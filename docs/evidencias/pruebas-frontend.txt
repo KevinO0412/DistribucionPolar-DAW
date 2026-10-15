@@ -1,8 +1,11 @@
 # npx vitest run --reporter=verbose --coverage
 
+
  RUN  v2.1.8 /home/kevin-orduz/Desktop/projects/DistribucionPolar/src/frontend
       Coverage enabled with v8
 
+ ✓ src/lib/cn.test.ts > cn > resuelve conflictos de Tailwind
+ ✓ src/lib/cn.test.ts > cn > conserva el tamaño propio junto a un color de texto
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > lee title y detail del Problem Details
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > expone los errores por campo de un 400 de validación
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > explica el 403 aunque la API no envíe cuerpo
@@ -29,16 +32,16 @@
  ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja al Employee consultar el catálogo
  ✓ src/components/ProtectedRoute.test.tsx > menú por rol > oculta el dashboard al Employee y lo muestra al Admin
 
- Test Files  5 passed (5)
-      Tests  25 passed (25)
-   Start at  09:47:04
-   Duration  1.94s (transform 224ms, setup 1.05s, collect 634ms, tests 174ms, environment 2.38s, prepare 630ms)
+ Test Files  6 passed (6)
+      Tests  27 passed (27)
+   Start at  10:35:58
+   Duration  2.08s (transform 266ms, setup 1.33s, collect 743ms, tests 193ms, environment 3.11s, prepare 808ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   21.52 |    71.93 |   33.33 |   21.52 |                   
+All files          |   22.06 |     72.5 |   34.52 |   22.06 |                   
  src               |       0 |        0 |       0 |       0 |                   
   App.tsx          |       0 |        0 |       0 |       0 | 1-54              
  src/api           |   87.06 |    85.29 |   31.81 |   87.06 |                   
@@ -84,8 +87,9 @@ All files          |   21.52 |    71.93 |   33.33 |   21.52 |
   ...hartColors.ts |       0 |        0 |       0 |       0 | 1-28              
   useDebounced.ts  |       0 |        0 |       0 |       0 | 1-10              
   useTheme.ts      |     100 |       50 |     100 |     100 | 6                 
- src/lib           |     7.4 |        0 |       0 |     7.4 |                   
-  cn.ts            |      50 |      100 |       0 |      50 | 6-7               
+ src/lib           |   41.02 |       80 |      50 |   41.02 |                   
+  cn.test.ts       |     100 |      100 |     100 |     100 |                   
+  cn.ts            |     100 |      100 |     100 |     100 |                   
   format.ts        |       0 |        0 |       0 |       0 | 1-31              
  src/pages         |    7.66 |    37.03 |   15.38 |    7.66 |                   
   ...oriesPage.tsx |       0 |        0 |       0 |       0 | 1-151             

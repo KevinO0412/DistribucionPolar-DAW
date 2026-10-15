@@ -76,7 +76,7 @@ DistribucionPolar.slnx
 │   │   ├── Core.Application/      Casos de uso, DTOs, validadores, interfaces (puertos)
 │   │   ├── Infrastructure/        EF Core + PostgreSQL, migraciones, repositorios, JWT, Polly, PDF, auditoría
 │   │   └── Presentation.API/      Controladores, middleware RFC 7807, autenticación, CORS, rate limiting, Swagger
-│   │       └── Dockerfile         Multi-stage: SDK Alpine → runtime-deps Alpine (~59 MB)
+│   │       └── Dockerfile         Multi-stage: SDK Alpine → runtime-deps Alpine (~60 MB)
 │   └── frontend/                  SPA React + Vite + TypeScript + Tailwind
 │       ├── src/                   api, context (Auth, Theme), components, pages
 │       ├── nginx.conf             Archivos estáticos, fallback del SPA y proxy de /api
@@ -173,7 +173,7 @@ Todos los errores responden `application/problem+json` (RFC 7807) con los códig
 ```bash
 dotnet test DistribucionPolar.slnx                                            # 184 pruebas (las de integración requieren Docker)
 scripts/cobertura.sh                                                          # reporte HTML en docs/evidencias/cobertura
-(cd src/frontend && npm test)                                                 # 25 pruebas del frontend
+(cd src/frontend && npm test)                                                 # 27 pruebas del frontend
 npx newman run postman/collections/DistribucionPolar.postman_collection.json  # 50 peticiones, 97 aserciones
 ```
 
@@ -182,7 +182,7 @@ npx newman run postman/collections/DistribucionPolar.postman_collection.json  # 
 | `tests/UnitTests/Domain` | 80 | Reglas del dominio |
 | `tests/UnitTests/Application` | 88 | Validadores y servicios con Moq: `ProductServiceTests` (mock de `IProductRepository`), facturación, camiones, clientes, dashboard y operaciones |
 | `tests/IntegrationTests` | 16 | Procesos completos contra PostgreSQL real: casos de referencia, dashboard, concurrencia, permisos, auditoría, CORS y rate limiting |
-| `src/frontend` (Vitest) | 25 | Sesión JWT, rutas por rol, tema y errores de la API |
+| `src/frontend` (Vitest) | 27 | Sesión JWT, rutas por rol, tema, errores de la API y validaciones del formulario |
 | Postman | 50 / 97 | Escenarios obligatorios de la Fase 3 y operación completa |
 
 Detalle de las pruebas y de la cobertura: [tests/README.md](tests/README.md).
