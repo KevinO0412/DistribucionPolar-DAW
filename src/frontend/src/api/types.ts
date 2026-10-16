@@ -288,6 +288,14 @@ export interface CreateSaleRequest {
   returnedEmpties: { groupKey: string; boxes: number; units: number }[] | null;
 }
 
+/** Regalía a cliente (POST /api/invoices/gifts): solo productos autorizados, sin cobro. */
+export interface CreateGiftRequest {
+  clientId: string;
+  dispatchOrigin: StockOrigin;
+  truckId: string | null;
+  items: LineRequest[];
+}
+
 export interface EmptyGroupBalance {
   groupKey: string;
   groupName: string;
@@ -314,6 +322,36 @@ export interface Client {
   lastPurchaseAt: string | null;
   createdAt: string;
   creditLimit: number | null;
+}
+
+/** Tipo de movimiento del estado de cuenta (ClientMovementType en la API). */
+export type ClientMovementType =
+  | 'Invoice'
+  | 'Gift'
+  | 'Payment'
+  | 'EmptiesGenerated'
+  | 'EmptiesReturned'
+  | 'InvoiceCancelled'
+  | 'BalanceAdjustment';
+
+export interface ClientMovement {
+  id: string;
+  type: ClientMovementType;
+  title: string;
+  description: string;
+  amount: number;
+  invoiceId: string | null;
+  date: string;
+}
+
+/** GET /api/clients/{id}/statement: movimientos por pestaña, de más reciente a más antiguo. */
+export interface ClientStatement {
+  client: Client;
+  invoices: ClientMovement[];
+  gifts: ClientMovement[];
+  payments: ClientMovement[];
+  empties: ClientMovement[];
+  adjustments: ClientMovement[];
 }
 
 export interface RouteSettlementLine {
@@ -345,6 +383,51 @@ export interface RouteSettlement {
   isBalanced: boolean;
   observation: string | null;
   lines: RouteSettlementLine[];
+}
+
+export interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export type InternalConsumptionType = 'InternalConsumption' | 'Gift';
+
+/** POST /api/internal-consumptions (solo Admin): salida de inventario sin cliente ni cobro. */
+export interface CreateInternalConsumptionRequest {
+  productId: string;
+  boxes: number;
+  looseUnits: number;
+  origin: StockOrigin;
+  truckId: string | null;
+  employeeId: string;
+  type: InternalConsumptionType;
+  observation: string | null;
+}
+
+export interface InternalConsumption {
+  id: string;
+  occurredAt: string;
+  type: InternalConsumptionType;
+  employeeName: string;
+  origin: StockOrigin;
+  truckName: string | null;
+  productId: string;
+  productName: string;
+  boxes: number;
+  looseUnits: number;
+  totalUnits: number;
+  /** Valor de referencia a precio de venta (no es un cobro). */
+  estimatedValue: number;
+  observation: string | null;
+}
+
+export interface WithdrawalList<T> {
+  items: T[];
+  count: number;
+  totalValue: number;
 }
 
 /** Ancho del papel de la impresora térmica. */

@@ -4,6 +4,12 @@ import type {
   Category,
   CategoryRequest,
   Client,
+  ClientStatement,
+  CreateGiftRequest,
+  CreateInternalConsumptionRequest,
+  Employee,
+  InternalConsumption,
+  WithdrawalList,
   CreateSaleRequest,
   LineRequest,
   RouteSettlement,
@@ -56,6 +62,8 @@ export const trucksApi = {
 
 export const clientsApi = {
   list: (search?: string) => api.get<Client[]>('/clients', { params: { search: search || undefined } }).then((r) => r.data),
+  /** Estado de cuenta completo (Admin y Employee); la API no filtra por fecha. */
+  statement: (id: string, signal?: AbortSignal) => api.get<ClientStatement>(`/clients/${id}/statement`, { signal }).then((r) => r.data),
   registerPayment: (id: string, amount: number, observation: string | null) =>
     api.post<Client>(`/clients/${id}/payments`, { amount, observation }).then((r) => r.data),
   returnEmpties: (id: string, groups: { groupKey: string; boxes: number; units: number }[], observation: string | null) =>
@@ -66,11 +74,27 @@ export const clientsApi = {
 
 export const invoicesApi = {
   list: (params: { from?: string; to?: string; type?: string; includeCancelled?: boolean; page?: number; pageSize?: number }) =>
-    api.get<PagedResponse<InvoiceSummary>>('/invoices', { params }).then((r) => r.data),
+    api.get<PagedResponse<InvoiceSummary>>('/invoices', { params: { ...params, type: params.type || undefined } }).then((r) => r.data),
   get: (id: string) => api.get<Invoice>(`/invoices/${id}`).then((r) => r.data),
   /** Venta idempotente: reenviar con la misma clave devuelve la factura ya emitida en lugar de duplicarla. */
   createSale: (body: CreateSaleRequest, idempotencyKey: string) =>
     api.post<Invoice>('/invoices/sales', body, { headers: { 'Idempotency-Key': idempotencyKey } }).then((r) => r.data),
+  /** Productos activos marcados como autorizados para regalía (IsGiftEligible). */
+  giftProducts: () => api.get<Product[]>('/invoices/gift-products').then((r) => r.data),
+  /** Regalía: descuenta stock y genera vacíos, total 0 y sin efecto en el saldo de dinero. */
+  createGift: (body: CreateGiftRequest) => api.post<Invoice>('/invoices/gifts', body).then((r) => r.data),
+};
+
+export const employeesApi = {
+  /** Empleados activos (Admin y Employee). */
+  list: () => api.get<Employee[]>('/employees').then((r) => r.data),
+};
+
+/** Consumos internos y regalías a empleados (solo Admin en la API). */
+export const internalConsumptionsApi = {
+  list: (params: { from?: string; to?: string }, signal?: AbortSignal) =>
+    api.get<WithdrawalList<InternalConsumption>>('/internal-consumptions', { params, signal }).then((r) => r.data),
+  create: (body: CreateInternalConsumptionRequest) => api.post<InternalConsumption>('/internal-consumptions', body).then((r) => r.data),
 };
 
 /** Respaldo (solo Admin): descarga el archivo que genera la API. */

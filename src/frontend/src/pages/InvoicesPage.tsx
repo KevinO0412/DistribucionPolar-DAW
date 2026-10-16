@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Printer } from 'lucide-react';
+import { Gift, Printer } from 'lucide-react';
 import { invoicesApi } from '../api/endpoints';
+import type { InvoiceType } from '../api/types';
 import { DataTable } from '../components/dashboard/DataTable';
+import { GiftDialog } from '../components/invoices/GiftDialog';
 import { presetRange } from '../components/dashboard/DashboardFilters';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Ticket } from '../components/trucks/Ticket';
@@ -9,6 +11,7 @@ import { PaperWidthToggle, usePaperWidth } from '../components/print/ThermalPape
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States';
+import { useToast } from '../components/ui/Toast';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { cn } from '../lib/cn';
 import { formatDateTime, formatInt, formatMoney } from '../lib/format';
@@ -18,6 +21,15 @@ const RANGES = [
   { days: 7, label: '7 días' },
   { days: 30, label: '30 días' },
 ];
+
+/** Tipo de documento con texto, no solo color. */
+function InvoiceTypeBadge({ type }: { type: InvoiceType }) {
+  return (
+    <span className={cn('inline-flex whitespace-nowrap rounded px-2 py-0.5 text-sm font-medium', type === 'Gift' ? 'bg-status-full/10 text-status-full' : 'bg-sunken text-ink')}>
+      {type === 'Gift' ? 'Regalía' : 'Factura'}
+    </span>
+  );
+}
 
 function TicketDialog({ invoiceId, onClose }: { invoiceId: string; onClose: () => void }) {
   const invoice = useApiQuery(() => invoicesApi.get(invoiceId), [invoiceId]);
@@ -53,16 +65,28 @@ function TicketDialog({ invoiceId, onClose }: { invoiceId: string; onClose: () =
 export function InvoicesPage() {
   const [days, setDays] = useState(7);
   const [includeCancelled, setIncludeCancelled] = useState(false);
+  const [type, setType] = useState<'' | InvoiceType>('');
   const [ticketId, setTicketId] = useState<string | null>(null);
+  const [isGiftOpen, setIsGiftOpen] = useState(false);
+  const notify = useToast();
   const range = presetRange(days);
   const invoices = useApiQuery(
-    () => invoicesApi.list({ ...range, includeCancelled, pageSize: 200 }),
-    [range.from, range.to, includeCancelled],
+    () => invoicesApi.list({ ...range, type, includeCancelled, pageSize: 200 }),
+    [range.from, range.to, type, includeCancelled],
   );
 
   return (
     <>
-      <PageHeader title="Facturas" description="Facturas y regalías emitidas, con su ticket listo para imprimir." />
+      <PageHeader
+        title="Facturas"
+        description="Facturas y regalías emitidas, con su ticket listo para imprimir."
+        actions={
+          <Button onClick={() => setIsGiftOpen(true)}>
+            <Gift className="h-4 w-4" aria-hidden />
+            Nueva regalía
+          </Button>
+        }
+      />
       <div className="panel mb-4 flex flex-wrap items-center gap-4 p-4">
         <div className="flex rounded-md border border-line bg-sunken p-0.5" role="group" aria-label="Período">
           {RANGES.map((r) => (
@@ -80,6 +104,14 @@ export function InvoicesPage() {
             </button>
           ))}
         </div>
+        <label className="flex items-center gap-2 text-sm">
+          Tipo
+          <select value={type} onChange={(e) => setType(e.target.value as '' | InvoiceType)} className="h-9 rounded-md border border-line bg-surface px-2 text-sm">
+            <option value="">Facturas y regalías</option>
+            <option value="Sale">Solo facturas</option>
+            <option value="Gift">Solo regalías</option>
+          </select>
+        </label>
         <label className="flex cursor-pointer items-center gap-2 text-sm">
           <input type="checkbox" checked={includeCancelled} onChange={(e) => setIncludeCancelled(e.target.checked)} className="h-4 w-4 accent-[rgb(var(--brand))]" />
           Incluir anuladas
@@ -109,9 +141,10 @@ export function InvoicesPage() {
                   </>
                 ),
               },
+              { header: 'Tipo', cell: (i) => <InvoiceTypeBadge type={i.type} /> },
               { header: 'Cliente', cell: (i) => <><p>{i.clientName}</p><p className="text-muted">{i.dispatchOrigin === 'Truck' ? 'Camión' : 'Galpón'}, {i.attendantName}</p></> },
               { header: 'Total', align: 'right', cell: (i) => formatMoney(i.total) },
-              { header: 'Pendiente', align: 'right', cell: (i) => (i.type === 'Gift' ? 'Regalía' : formatMoney(i.pending)) },
+              { header: 'Pendiente', align: 'right', cell: (i) => (i.type === 'Gift' ? 'Sin cobro' : formatMoney(i.pending)) },
               {
                 header: 'Ticket',
                 align: 'right',
@@ -127,6 +160,17 @@ export function InvoicesPage() {
         </div>
       )}
       {ticketId && <TicketDialog invoiceId={ticketId} onClose={() => setTicketId(null)} />}
+      {isGiftOpen && (
+        <GiftDialog
+          onClose={() => setIsGiftOpen(false)}
+          onCreated={(gift) => {
+            notify(`${gift.number} registrada para ${gift.clientName}.`);
+            setIsGiftOpen(false);
+            invoices.reload();
+            setTicketId(gift.id);
+          }}
+        />
+      )}
     </>
   );
 }

@@ -12,6 +12,7 @@ import { ForbiddenPage, NotFoundPage } from './pages/StatusPages';
 import { TrucksPage } from './pages/TrucksPage';
 import { ClientsPage } from './pages/ClientsPage';
 import { PreventaPage } from './pages/PreventaPage';
+import { InternalConsumptionsPage } from './pages/InternalConsumptionsPage';
 import { LoadingState } from './components/ui/States';
 
 // Recharts solo se descarga al entrar al dashboard (solo Admin).
@@ -50,6 +51,14 @@ export function App() {
         <Route path="clientes" element={<ClientsPage />} />
         <Route path="camiones" element={<TrucksPage />} />
         <Route path="facturas" element={<InvoicesPage />} />
+        <Route
+          path="consumos"
+          element={
+            <ProtectedRoute role="Admin">
+              <InternalConsumptionsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="sin-permiso" element={<ForbiddenPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
