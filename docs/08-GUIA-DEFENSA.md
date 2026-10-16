@@ -2,7 +2,24 @@
 
 Guion para la sustentación individual: demostración de 15 minutos de las Fases 4 y 5 y de las observaciones del profesor. Todos los comandos se verificaron el 15 de octubre de 2026 sobre `main`.
 
-## 1. Antes de entrar (preparación, 10 minutos antes)
+## 1. Observaciones del profesor: demo de cada mejora
+
+Las 10 mejoras de la evaluación del 9 de octubre (fuente y estado en [09-OBSERVACIONES-PROFESOR.md](09-OBSERVACIONES-PROFESOR.md)). Requisito previo: la pila arriba y los scripts de demostración ejecutados (§2). SPA en http://localhost:8080.
+
+| # | Mejora | Pasos exactos de la demo | Dónde está |
+| --- | --- | --- | --- |
+| 1 | Liquidación ciega de ruta | Entrar como `empleado`. Ir a **Camiones**, elegir un camión con carga y pulsar **Salir a ruta** (pasa a "En ruta"). Pulsar **Liquidar ruta**: el formulario solo muestra los nombres de los productos, nunca lo esperado. Escribir el dinero (por ejemplo `0`) y algunas cajas, y pulsar **Confirmar liquidación**. Se abre la **Planilla de cuadre** con esperado, declarado y diferencias; elegir **58 mm** e **Imprimir planilla** | `Core.Domain/Entities/RouteSettlement.cs`, `TruckService.SettleAsync`, `src/frontend/src/pages/TrucksPage.tsx` |
+| 2 | Control estricto de crédito | Entrar como `admin`. En **Clientes**, pulsar el escudo (límite de crédito) de un cliente y guardar `0` (solo de contado). En **Preventa**, registrar un pedido para ese cliente con abono `0`: aparece en "Pedidos por enviar" como **Rechazado: Crédito bloqueado…**. Con el abono igual al total sí se factura. La deuda de más de 30 días también bloquea (`Credit:MaxOverdueDays`) | `Client.EnsureCreditAvailable`, `Core.Domain/Services/DebtAging.cs`, `PUT /api/clients/{id}/credit-limit` |
+| 3 | Envases retornables (Empty Groups) | En **Clientes**, ver la columna **Vacíos** (debe o a favor, por grupo). Pulsar el ícono de caja de un cliente, poner `1` caja en "222ML RET x36" y **Registrar devolución**: el saldo de ese grupo cambia | `src/frontend/src/pages/ClientsPage.tsx`, `ClientEmptyBalances` |
+| 4 | Truck Cards con estados | En **Camiones**, cada tarjeta muestra el estado (**En galpón**, **Cargando**, **En ruta**, **Liquidado**), la caja de carga llena según la ocupación y el valor. En el **Dashboard**, "Ocupación de la flota" muestra además lo vendido por cada camión | `src/frontend/src/components/trucks/TruckCard.tsx`, `Truck.MarkLoading/Dispatch/Settle` |
+| 5 | Impresión térmica de 80 y 58 mm, tickets y recibos | **Facturas**: botón **Ticket** de cualquier factura, alternar **80 mm / 58 mm**, **Imprimir ticket**. **Clientes**: **Abono**, monto `10`, **Registrar abono**: se abre el **Recibo de cobro**; elegir **58 mm** e **Imprimir recibo** | `src/frontend/src/components/print/ThermalPaper.tsx`, `PaymentReceipt.tsx`, `trucks/Ticket.tsx` |
+| 6 | Preventa offline-first (PWA / IndexedDB) | Con conexión, abrir **Preventa** una vez (guarda el catálogo). En la terminal: `docker stop distribucion-polar-spa`. Recargar la página: abre igual (service worker). Elegir cliente y producto y pulsar **Registrar pedido**: la cabecera muestra **"Sin conexión: 1 pedido pendiente"** | `src/frontend/src/offline/`, `src/frontend/vite.config.ts` (`vite-plugin-pwa`) |
+| 7 | Sincronización idempotente | `docker start distribucion-polar-spa`, esperar `(healthy)` y pulsar **Enviar ahora** en la cabecera (o esperar 30 s): el pedido se factura y la cola queda vacía. En **Facturas** aparece **una sola** factura nueva, aunque el envío se reintente. En Swagger: `POST /api/invoices/sales` con el encabezado `Idempotency-Key` dos veces devuelve 201 y luego 200 con la misma factura | `InvoiceService.CreateSaleAsync`, `IX_Invoices_IdempotencyKey`, `src/frontend/src/offline/queue.ts` |
+| 8 | Respaldos JSON / CSV | Como `admin`, en el **Dashboard** pulsar **Descargar respaldo** y elegir "Respaldo completo (JSON)" o un CSV: el navegador descarga el archivo | `src/frontend/src/pages/DashboardPage.tsx`, `GET /api/reports/backup/*` |
+| 9 | Errores RFC 7807 por stock del camión | En **Preventa**, elegir **Camión …** como despacho y pedir más cajas de las que lleva (por ejemplo `99`). Al enviarse, el pedido queda **Rechazado: Inventario insuficiente en el camión…**, que es el `detail` del Problem Details que intercepta Axios | `src/frontend/src/api/client.ts`, `offline/queue.ts` |
+| 10 | KPIs de ocupación, rotación y envejecimiento de deuda | Como `admin`, en el **Dashboard**: "Ocupación de la flota" (% por camión), "Rotación por producto" (vendidas / existencia) y "Antigüedad de la deuda" (0–7, 8–15, 16–30 y más de 30 días, y clientes con deuda vencida) | `Core.Application/Services/ReportService.cs`, `components/dashboard/DebtAgingPanel.tsx` |
+
+## 2. Antes de entrar (preparación, 10 minutos antes)
 
 ```bash
 cd ~/Desktop/projects/DistribucionPolar
@@ -24,7 +41,7 @@ scripts/demo-fechas.sh                    # reparte esas facturas en los último
 | `admin` | `Admin2026!` | Dashboard, límite de crédito, respaldos, historial de liquidaciones |
 | `empleado` | `Empleado2026!` | Control por rol (sin dashboard ni botones de eliminar), preventa, liquidación |
 
-## 2. Guion de 15 minutos
+## 3. Guion de 15 minutos
 
 | Min. | Qué hacer | Qué decir |
 | --- | --- | --- |
@@ -37,12 +54,13 @@ scripts/demo-fechas.sh                    # reparte esas facturas en los último
 | 9–11 | Preventa **sin conexión** | `docker stop distribucion-polar-spa`, recargar (abre desde el service worker), registrar un pedido: "Sin conexión: 1 pedido pendiente". `docker start distribucion-polar-spa` y pulsar "Enviar ahora" (o esperar 30 s): se factura una sola vez (Idempotency-Key) |
 | 11–12 | Camiones: "Salir a ruta" y "Liquidar ruta" | Liquidación ciega: el chofer declara sin ver lo esperado; la planilla muestra las diferencias. Imprimir en 58 mm |
 | 12–13 | Clientes: "Abono" y recibo de 58 mm | Saldos con signo, vacíos por grupo, recibo de cobro. Como admin, el límite de crédito (bloquea la venta a crédito) |
-| 13–14 | GitHub Actions y [cobertura](evidencias/cobertura/index.html) | CI en push y PR a `main` y `develop`: pruebas unitarias e integración, build de la SPA, artefactos solo si todo pasa, imágenes y prueba de humo con Compose. Cobertura del núcleo alrededor del 86 % |
-| 14–15 | Preguntas | Ver §5 |
+| 13–14 | Persistencia: `docker compose down` (sin `-v`) y `docker compose up -d` (§5) | Los datos siguen en la SPA y en pgAdmin porque viven en el volumen `postgres-data` |
+| 14–15 | GitHub Actions y [cobertura](evidencias/cobertura/index.html) | CI en push y PR a `main` y `develop`: pruebas unitarias e integración, build de la SPA, artefactos solo si todo pasa, imágenes y prueba de humo con Compose. Cobertura del núcleo del 86,8 % |
+| 15+ | Preguntas | Ver §7 |
 
 Si el tiempo se acorta, priorizar: `docker ps`, el dashboard, el control por rol, la preventa sin conexión y el CI.
 
-## 3. Qué mostrar para cada criterio
+## 4. Qué mostrar para cada criterio
 
 ### Fase 4 (80 pts)
 
@@ -54,6 +72,17 @@ Si el tiempo se acorta, priorizar: `docker ps`, el dashboard, el control por rol
 | 4.4 xUnit y Moq | 15 | `ProductServiceTests` con mock de `IProductRepository` (éxito y excepción) | `tests/UnitTests/Application/ProductServiceTests.cs`; `evidencias/pruebas-backend.txt` |
 | 4.5 Integración y RBAC | 10 | Employee sin dashboard ni eliminar; errores RFC 7807 en los formularios | `components/ProtectedRoute.tsx`, `layout/navigation.ts`; capturas `05` y `06` |
 
+### Matriz REAF-F4 (sustentación de la Fase 4, 80 pts)
+
+| Criterio REAF-F4 | Pts | Qué mostrar |
+| --- | --- | --- |
+| 1. Frontend SPA y componentización: React + Vite, enrutamiento y Tailwind (10); modularidad y estado de componentes (10) | 20 | Navegar entre pantallas sin recargar (React Router); vista a 375 px; carpetas `components/ui`, `components/dashboard`, `pages`, `offline`; menú colapsable |
+| 2. Consumo de APIs y estado: peticiones HTTP asíncronas y errores (10); autenticación JWT y estado local/global (10) | 20 | En Productos → Nuevo producto, un precio negativo muestra el error junto al campo (mismas reglas que FluentValidation en la API); pedido rechazado en Preventa con el mensaje RFC 7807; recargar sin perder la sesión y cerrar sesión (`AuthContext`, `api/client.ts`) |
+| 3. Dashboard KPI: tarjetas e indicadores (10); gráficos interactivos y filtros dinámicos (10) | 20 | Las 4 tarjetas KPI; ventas por día; pulsar una barra de "Ventas por categoría" para filtrar todo; cambiar el período y la categoría (quedan en la URL) |
+| 4. Pruebas unitarias y cobertura: xUnit (10); Moq y cobertura (10) | 20 | `tests/UnitTests/Application/ProductServiceTests.cs` → `GetByIdAsync_ExistingId_ReturnsProductDto` y `GetProductByIdAsync_WhenNotFound_ThrowsKeyNotFoundException`; `evidencias/pruebas-backend.txt` (193 unitarias); `evidencias/cobertura/index.html` (del 86,8 % de líneas del núcleo) |
+
+> **Prueba del enunciado:** el curso muestra `tests/UnitTests/ProductServiceTests.cs`. En este repositorio está en **`tests/UnitTests/Application/ProductServiceTests.cs`** (el proyecto separa `Domain/` y `Application/`), y la prueba **`GetByIdAsync_ExistingId_ReturnsProductDto`** sigue el mismo patrón AAA con `Mock<IProductRepository>`, `Setup` y `Verify(..., Times.Once)`.
+
 ### Fase 5 (80 pts)
 
 | Criterio | Pts | Mostrar | Dónde está |
@@ -64,25 +93,26 @@ Si el tiempo se acorta, priorizar: `docker ps`, el dashboard, el control por rol
 | 5.4 Modelo de datos | 15 | Las 4 dimensiones y el diccionario | [07-MODELO-DATOS.md](07-MODELO-DATOS.md); pgAdmin en http://localhost:5050 |
 | 5.5 Sustentación | 10 | Este guion | — |
 
-## 4. Observaciones del profesor (9 de octubre)
+## 5. Persistencia en PostgreSQL
 
-Detalle con el texto literal y la fuente: [09-OBSERVACIONES-PROFESOR.md](09-OBSERVACIONES-PROFESOR.md).
+Muestra que los datos viven en el volumen `postgres-data` y no en el contenedor.
 
-| # | Observación | Dónde mostrarla |
-| --- | --- | --- |
-| 1 | No presentó la Fase 4; coordinar la recuperación | Esta defensa individual |
-| 2 | Liquidación ciega de ruta | Camiones → Liquidar ruta → planilla (`RouteSettlement.cs`, `TrucksPage.tsx`) |
-| 3 | Control estricto de crédito | Clientes → límite (admin); una venta a crédito sobre el límite responde "Crédito bloqueado…" (`Client.EnsureCreditAvailable`, `DebtAging.cs`) |
-| 4 | Envases retornables bidireccionales | Clientes → columna Vacíos y devolución por grupo |
-| 5 | Tarjetas de flota con estados | Camiones: En galpón, Cargando, En ruta, Liquidado; ocupación y ventas en el dashboard |
-| 6 | Impresión térmica de 80 y 58 mm, tickets y recibos | Facturas → Ticket; Clientes → Abono → recibo; selector 80/58 mm |
-| 7 | Preventa offline-first (PWA, IndexedDB) | Preventa con el contenedor `spa` apagado (`src/frontend/src/offline/`) |
-| 8 | Sincronización idempotente | `Idempotency-Key` en `POST /api/invoices/sales` (`InvoiceService.CreateSaleAsync`) |
-| 9 | Respaldos JSON y CSV | Dashboard → Descargar respaldo |
-| 10 | RFC 7807 con Axios para faltantes de stock | Pedido de preventa rechazado con "Inventario insuficiente en el camión…" (`api/client.ts`) |
-| 11 | KPI de flota, rotación y antigüedad de la deuda | Dashboard → Ocupación de la flota, Rotación por producto, Antigüedad de la deuda |
+1. En la SPA, anotar el número de la última factura (**Facturas**) o un saldo de cliente (**Clientes**).
+2. En la terminal:
+   ```bash
+   docker compose down          # SIN -v: borra los contenedores, no el volumen
+   docker volume ls --filter name=distribucion-polar_postgres-data
+   docker compose up -d
+   docker ps --filter label=com.docker.compose.project=distribucion-polar   # esperar los tres (healthy)
+   ```
+3. Recargar la SPA (la sesión sigue): la misma factura y el mismo saldo están ahí.
+4. En pgAdmin (http://localhost:5050): **Servers → Distribución Polar → Databases → distribucion_polar → Schemas → public → Tables → Invoices → View/Edit Data → First 100 Rows**. O, en el Query Tool:
+   ```sql
+   SELECT "Number", "ClientName", "Total", "IssuedAt" FROM "Invoices" ORDER BY "IssuedAt" DESC LIMIT 5;
+   ```
+5. Contraste: `docker compose down -v` sí borra el volumen, y al volver a levantar se aplican las migraciones y la siembra desde cero.
 
-## 5. Piezas clave, explicadas en una línea
+## 6. Piezas clave, explicadas en una línea
 
 | Pieza | Qué hace | Ruta |
 | --- | --- | --- |
@@ -107,7 +137,7 @@ Detalle con el texto literal y la fuente: [09-OBSERVACIONES-PROFESOR.md](09-OBSE
 | Orquestación | db, api y spa con healthchecks y redes separadas | `docker-compose.yml` |
 | CI | Pruebas, cobertura, build, artefactos e imágenes | `.github/workflows/ci.yml` |
 
-## 6. Preguntas probables
+## 7. Preguntas probables
 
 1. **¿Por qué Arquitectura Cebolla?** El negocio no depende de EF Core, HTTP ni PostgreSQL; se prueba sin base de datos y se puede cambiar la infraestructura sin tocarlo.
 2. **¿Dónde están las interfaces de los repositorios?** En `Core.Application/Abstractions` (los puertos); las implementa `Infrastructure` (ADR 02).
@@ -126,21 +156,22 @@ Detalle con el texto literal y la fuente: [09-OBSERVACIONES-PROFESOR.md](09-OBSE
 15. **¿Qué pruebas usan Moq?** Las 100 de `tests/UnitTests/Application`: `Setup` simula los repositorios y `Verify` comprueba, por ejemplo, que una venta rechazada no guarda ni audita.
 16. **¿Y las de integración?** 20 pruebas con la API real contra un PostgreSQL desechable (Testcontainers): transacciones, permisos, concurrencia, idempotencia.
 17. **¿Qué es un build multi-stage?** Una etapa compila con el SDK y otra ejecuta solo lo publicado; el SDK no llega a la imagen final.
-18. **¿Cómo bajaron la API de 120 MB?** La imagen `aspnet` Alpine ya pesa unos 128 MB. Se publica self-contained con recorte parcial y archivo único comprimido sobre `runtime-deps` Alpine (unos 60 MB), y se verificó con la colección de Postman (ADR 45).
-19. **¿Qué hacen los healthchecks?** `pg_isready`, `/health` (incluye la conexión a PostgreSQL) y `/healthz`; con `depends_on: service_healthy` la API espera a la base y la SPA a la API.
-20. **¿Por qué dos redes?** `backend` (db, api) y `frontend` (api, spa): la SPA no puede llegar a la base.
-21. **¿Por qué Nginx reenvía `/api`?** El navegador ve un solo origen, no hace falta CORS y la API no necesita exponerse en producción.
-22. **¿Qué hace el CI?** En cada push y PR a `main` y `develop`: compila, pruebas unitarias con cobertura, integración, build de la SPA, artefactos solo si todo pasa, imágenes con control de tamaño y prueba de humo.
-23. **¿Cómo funciona la preventa sin conexión?** El service worker abre la app sin red. El catálogo está en caché y en IndexedDB, y los pedidos se guardan en IndexedDB y se envían al volver la conexión.
-24. **¿Y si el pedido se envía dos veces?** Lleva su id como `Idempotency-Key`; la API devuelve la factura existente (200) en lugar de crear otra.
-25. **¿Qué pasa si al sincronizar falta stock en el camión?** El pedido queda "rechazado" con el mensaje RFC 7807; el vendedor lo reintenta o lo descarta.
-26. **¿Qué es la liquidación ciega?** El chofer declara dinero y mercancía sin ver lo esperado; el sistema calcula las diferencias y deja la planilla de cuadre.
-27. **¿Cómo se bloquea el crédito?** Si el cliente tiene deuda con más de 30 días (configurable) o la venta supera su límite, se rechaza; de contado sí puede comprar.
-28. **¿Cómo saben qué deuda está vencida si hay un saldo único?** Los abonos se imputan a lo más antiguo (FIFO), así que la deuda actual corresponde a las facturas más recientes con pendiente.
-29. **¿Por qué los vacíos van por grupo?** Solo ciertos envases son retornables y no son intercambiables (222 ml x36, 330 ml x24, Pepsi 1,25 L x6, 350 ml x24); el saldo se guarda por cliente y grupo.
-30. **¿Qué hace `demo-fechas.sh` y no es "dato simulado"?** Las ventas son reales (salen de la API con todas sus reglas); el script solo reparte sus fechas en varios días para el gráfico diario, y únicamente en Development.
+18. **¿Por qué la imagen de la API no usa `aspnet:10.0-alpine` como el ejemplo?** Esa imagen base ya pesa unos 128 MB sola, así que con ella no se puede bajar de 120 MB. Se usa `runtime-deps:10.0-alpine` (unos 18 MB, solo librerías nativas) y la app se publica self-contained con recorte parcial: el runtime de .NET y de ASP.NET Core va dentro de la propia app, solo con lo que usa. Resultado: unos 60 MB (ADR 45).
+19. **¿Cómo bajaron la API de 120 MB?** La imagen `aspnet` Alpine ya pesa unos 128 MB. Se publica self-contained con recorte parcial y archivo único comprimido sobre `runtime-deps` Alpine (unos 60 MB), y se verificó con la colección de Postman (ADR 45).
+20. **¿Qué hacen los healthchecks?** `pg_isready`, `/health` (incluye la conexión a PostgreSQL) y `/healthz`; con `depends_on: service_healthy` la API espera a la base y la SPA a la API.
+21. **¿Por qué dos redes?** `backend` (db, api) y `frontend` (api, spa): la SPA no puede llegar a la base.
+22. **¿Por qué Nginx reenvía `/api`?** El navegador ve un solo origen, no hace falta CORS y la API no necesita exponerse en producción.
+23. **¿Qué hace el CI?** En cada push y PR a `main` y `develop`: compila, pruebas unitarias con cobertura, integración, build de la SPA, artefactos solo si todo pasa, imágenes con control de tamaño y prueba de humo.
+24. **¿Cómo funciona la preventa sin conexión?** El service worker abre la app sin red. El catálogo está en caché y en IndexedDB, y los pedidos se guardan en IndexedDB y se envían al volver la conexión.
+25. **¿Y si el pedido se envía dos veces?** Lleva su id como `Idempotency-Key`; la API devuelve la factura existente (200) en lugar de crear otra.
+26. **¿Qué pasa si al sincronizar falta stock en el camión?** El pedido queda "rechazado" con el mensaje RFC 7807; el vendedor lo reintenta o lo descarta.
+27. **¿Qué es la liquidación ciega?** El chofer declara dinero y mercancía sin ver lo esperado; el sistema calcula las diferencias y deja la planilla de cuadre.
+28. **¿Cómo se bloquea el crédito?** Si el cliente tiene deuda con más de 30 días (configurable) o la venta supera su límite, se rechaza; de contado sí puede comprar.
+29. **¿Cómo saben qué deuda está vencida si hay un saldo único?** Los abonos se imputan a lo más antiguo (FIFO), así que la deuda actual corresponde a las facturas más recientes con pendiente.
+30. **¿Por qué los vacíos van por grupo?** Solo ciertos envases son retornables y no son intercambiables (222 ml x36, 330 ml x24, Pepsi 1,25 L x6, 350 ml x24); el saldo se guarda por cliente y grupo.
+31. **¿Qué hace `demo-fechas.sh` y no es "dato simulado"?** Las ventas son reales (salen de la API con todas sus reglas); el script solo reparte sus fechas en varios días para el gráfico diario, y únicamente en Development.
 
-## 7. Si algo falla en vivo
+## 8. Si algo falla en vivo
 
 | Problema | Qué hacer |
 | --- | --- |

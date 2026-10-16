@@ -877,7 +877,7 @@ code { font-family: Consolas, monospace; font-size: 0.9em; }
 <table>
 <tr>
 <th>Covered lines:</th>
-<td class="limit-width right" title="5">5</td>
+<td class="limit-width right" title="6">6</td>
 </tr>
 <tr>
 <th>Uncovered lines:</th>
@@ -885,15 +885,15 @@ code { font-family: Consolas, monospace; font-size: 0.9em; }
 </tr>
 <tr>
 <th>Coverable lines:</th>
-<td class="limit-width right" title="5">5</td>
+<td class="limit-width right" title="6">6</td>
 </tr>
 <tr>
 <th>Total lines:</th>
-<td class="limit-width right" title="46">46</td>
+<td class="limit-width right" title="50">50</td>
 </tr>
 <tr>
 <th>Line coverage:</th>
-<td class="limit-width right" title="5 of 5">100%</td>
+<td class="limit-width right" title="6 of 6">100%</td>
 </tr>
 </table>
 </div>
@@ -943,7 +943,7 @@ code { font-family: Consolas, monospace; font-size: 0.9em; }
 </colgroup>
 <thead><tr><th>Method</th><th>Branch coverage <a href="https://en.wikipedia.org/wiki/Code_coverage" target="_blank"><i class="icon-info-circled"></i></a></th><th>Crap Score <a href="https://googletesting.blogspot.de/2011/02/this-code-is-crap.html" target="_blank"><i class="icon-info-circled"></i></a></th><th>Cyclomatic complexity <a href="https://en.wikipedia.org/wiki/Cyclomatic_complexity" target="_blank"><i class="icon-info-circled"></i></a></th><th>Line coverage <a href="https://en.wikipedia.org/wiki/Code_coverage" target="_blank"><i class="icon-info-circled"></i></a></th></tr></thead>
 <tbody>
-<tr><td title=".ctor(System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardProductRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardSaleLine&gt;,Core.Application.Abstractions.DashboardCollections,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardTruckRow&gt;)"><a href="#file0_line42" class="navigatetohash">.ctor(...)</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
+<tr><td title=".ctor(System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardProductRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardSaleLine&gt;,Core.Application.Abstractions.DashboardCollections,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardTruckRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DebtorRow&gt;)"><a href="#file0_line45" class="navigatetohash">.ctor(...)</a></td><td>100%</td><td>1</td><td>1</td><td>100%</td></tr>
 </tbody>
 </table>
 </div>
@@ -994,19 +994,23 @@ code { font-family: Consolas, monospace; font-size: 0.9em; }
 <tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line39"></a><code>39</code></td><td></td><td class="lightgray"><code>///&nbsp;&lt;summary&gt;Cami&#243;n&nbsp;con&nbsp;su&nbsp;capacidad&nbsp;y&nbsp;su&nbsp;carga&nbsp;en&nbsp;cajas&nbsp;equivalentes.&lt;/summary&gt;</code></td></tr>
 <tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line40"></a><code>40</code></td><td></td><td class="lightgray"><code>public&nbsp;sealed&nbsp;record&nbsp;DashboardTruckRow(Guid&nbsp;Id,&nbsp;string&nbsp;Name,&nbsp;string&nbsp;Plate,&nbsp;int&nbsp;CapacityBoxes,&nbsp;decimal&nbsp;LoadedBoxes,&nbsp;int&nbsp;S</code></td></tr>
 <tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line41"></a><code>41</code></td><td></td><td class="lightgray"><code></code></td></tr>
-<tr class="coverableline" title="Covered (16 visits)" data-coverage="{'AllTestMethods': {'VC': '16', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">16</td><td class="rightmargin right"><a id="file0_line42"></a><code>42</code></td><td></td><td class="lightgreen"><code>public&nbsp;sealed&nbsp;record&nbsp;DashboardData(</code></td></tr>
-<tr class="coverableline" title="Covered (16 visits)" data-coverage="{'AllTestMethods': {'VC': '16', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">16</td><td class="rightmargin right"><a id="file0_line43"></a><code>43</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;IReadOnlyList&lt;DashboardProductRow&gt;&nbsp;Products,</code></td></tr>
-<tr class="coverableline" title="Covered (16 visits)" data-coverage="{'AllTestMethods': {'VC': '16', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">16</td><td class="rightmargin right"><a id="file0_line44"></a><code>44</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;IReadOnlyList&lt;DashboardSaleLine&gt;&nbsp;SaleLines,</code></td></tr>
-<tr class="coverableline" title="Covered (16 visits)" data-coverage="{'AllTestMethods': {'VC': '16', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">16</td><td class="rightmargin right"><a id="file0_line45"></a><code>45</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;DashboardCollections&nbsp;Collections,</code></td></tr>
-<tr class="coverableline" title="Covered (16 visits)" data-coverage="{'AllTestMethods': {'VC': '16', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">16</td><td class="rightmargin right"><a id="file0_line46"></a><code>46</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;IReadOnlyList&lt;DashboardTruckRow&gt;&nbsp;Trucks);</code></td></tr>
+<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line42"></a><code>42</code></td><td></td><td class="lightgray"><code>///&nbsp;&lt;summary&gt;Cliente&nbsp;que&nbsp;debe,&nbsp;con&nbsp;las&nbsp;ventas&nbsp;que&nbsp;a&#250;n&nbsp;tienen&nbsp;saldo&nbsp;pendiente&nbsp;(para&nbsp;la&nbsp;antig&#252;edad&nbsp;de&nbsp;la&nbsp;deuda).&lt;/summary&gt;</code></td></tr>
+<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line43"></a><code>43</code></td><td></td><td class="lightgray"><code>public&nbsp;sealed&nbsp;record&nbsp;DebtorRow(Guid&nbsp;Id,&nbsp;int&nbsp;Code,&nbsp;string&nbsp;Name,&nbsp;decimal&nbsp;Debt,&nbsp;decimal?&nbsp;CreditLimit,&nbsp;IReadOnlyList&lt;Core.Do</code></td></tr>
+<tr class="" title="Not coverable" data-coverage="{'AllTestMethods': {'VC': '', 'LVS': 'gray'}}"><td class="gray">&nbsp;</td><td class="leftmargin rightmargin right"></td><td class="rightmargin right"><a id="file0_line44"></a><code>44</code></td><td></td><td class="lightgray"><code></code></td></tr>
+<tr class="coverableline" title="Covered (18 visits)" data-coverage="{'AllTestMethods': {'VC': '18', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">18</td><td class="rightmargin right"><a id="file0_line45"></a><code>45</code></td><td></td><td class="lightgreen"><code>public&nbsp;sealed&nbsp;record&nbsp;DashboardData(</code></td></tr>
+<tr class="coverableline" title="Covered (18 visits)" data-coverage="{'AllTestMethods': {'VC': '18', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">18</td><td class="rightmargin right"><a id="file0_line46"></a><code>46</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;IReadOnlyList&lt;DashboardProductRow&gt;&nbsp;Products,</code></td></tr>
+<tr class="coverableline" title="Covered (18 visits)" data-coverage="{'AllTestMethods': {'VC': '18', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">18</td><td class="rightmargin right"><a id="file0_line47"></a><code>47</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;IReadOnlyList&lt;DashboardSaleLine&gt;&nbsp;SaleLines,</code></td></tr>
+<tr class="coverableline" title="Covered (18 visits)" data-coverage="{'AllTestMethods': {'VC': '18', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">18</td><td class="rightmargin right"><a id="file0_line48"></a><code>48</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;DashboardCollections&nbsp;Collections,</code></td></tr>
+<tr class="coverableline" title="Covered (18 visits)" data-coverage="{'AllTestMethods': {'VC': '18', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">18</td><td class="rightmargin right"><a id="file0_line49"></a><code>49</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;IReadOnlyList&lt;DashboardTruckRow&gt;&nbsp;Trucks,</code></td></tr>
+<tr class="coverableline" title="Covered (18 visits)" data-coverage="{'AllTestMethods': {'VC': '18', 'LVS': 'green'}}"><td class="green">&nbsp;</td><td class="leftmargin rightmargin right">18</td><td class="rightmargin right"><a id="file0_line50"></a><code>50</code></td><td></td><td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;IReadOnlyList&lt;DebtorRow&gt;&nbsp;Debtors);</code></td></tr>
 </tbody>
 </table>
 </div>
-<div class="footer">Generated by: ReportGenerator 5.4.3.0<br />10/15/2026 - 15:46:35<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="https://reportgenerator.io">reportgenerator.io</a></div></div>
+<div class="footer">Generated by: ReportGenerator 5.4.3.0<br />10/16/2026 - 00:47:42<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="https://reportgenerator.io">reportgenerator.io</a></div></div>
 <div class="containerright">
 <div class="containerrightfixed">
 <h1>Methods/Properties</h1>
-<a href="#file0_line42" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - .ctor(System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardProductRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardSaleLine&gt;,Core.Application.Abstractions.DashboardCollections,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardTruckRow&gt;)"><i class="icon-cube"></i>.ctor(System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardProductRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardSaleLine&gt;,Core.Application.Abstractions.DashboardCollections,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardTruckRow&gt;)</a><br />
+<a href="#file0_line45" class="navigatetohash percentagebar percentagebar100" title="Line coverage: 100% - .ctor(System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardProductRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardSaleLine&gt;,Core.Application.Abstractions.DashboardCollections,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardTruckRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DebtorRow&gt;)"><i class="icon-cube"></i>.ctor(System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardProductRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardSaleLine&gt;,Core.Application.Abstractions.DashboardCollections,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DashboardTruckRow&gt;,System.Collections.Generic.IReadOnlyList`1&lt;Core.Application.Abstractions.DebtorRow&gt;)</a><br />
 <br/></div>
 </div></div>
 <script type="text/javascript">/* <![CDATA[ */ /* Chartist.js 0.11.4

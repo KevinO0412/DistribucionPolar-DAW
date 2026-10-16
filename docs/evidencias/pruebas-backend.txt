@@ -1,192 +1,217 @@
 # dotnet test DistribucionPolar.slnx --logger "console;verbosity=normal"
-# Fecha: 2026-10-15T20:35Z  SDK: mcr.microsoft.com/dotnet/sdk:10.0
+# Fecha: 2026-10-16T00:46Z  SDK: mcr.microsoft.com/dotnet/sdk:10.0
   All projects are up-to-date for restore.
 Test run for /src/tests/UnitTests/bin/Debug/net10.0/UnitTests.dll (.NETCoreApp,Version=v10.0)
 A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.13)
-[xUnit.net 00:00:00.16]   Discovering: UnitTests
-[xUnit.net 00:00:00.30]   Discovered:  UnitTests
-[xUnit.net 00:00:00.37]   Starting:    UnitTests
+[xUnit.net 00:00:00.13]   Discovering: UnitTests
+[xUnit.net 00:00:00.24]   Discovered:  UnitTests
+[xUnit.net 00:00:00.31]   Starting:    UnitTests
 Test run for /src/tests/IntegrationTests/bin/Debug/net10.0/IntegrationTests.dll (.NETCoreApp,Version=v10.0)
-  Passed UnitTests.Domain.BoxQuantityTests.ToString_UsesSpanishFormat(boxes: 2, units: 5, expected: "2 cajas + 5 und") [10 ms]
-  Passed UnitTests.Domain.UserTests.Constructor_NormalizesUsernameAndEmail [11 ms]
-  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Employee_DefaultRoleAndDeactivation [11 ms]
-  Passed UnitTests.Domain.BoxQuantityTests.ToString_UsesSpanishFormat(boxes: 0, units: 5, expected: "5 und") [1 ms]
+  Passed UnitTests.Domain.UserTests.Constructor_NormalizesUsernameAndEmail [13 ms]
+  Passed UnitTests.Domain.ClientTests.EmptiesMovement_RejectsUnknownGroup [13 ms]
+  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Employee_DefaultRoleAndDeactivation [14 ms]
+  Passed UnitTests.Domain.UserTests.Deactivate_MarksUserAsInactive [< 1 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_SanitizesAndFormatsSku [22 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithCatalogProducts_ProducesExpectedSku(name: "CAFÉ ANZOATEGUI 50X50UN", category: "Alimentos", sequence: 81, expected: "ALI-CAF-0081") [< 1 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithCatalogProducts_ProducesExpectedSku(name: "MALTIN POLAR RET 222MLx36UN", category: "Bebidas", sequence: 6, expected: "BEB-MAL-0006") [< 1 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithCatalogProducts_ProducesExpectedSku(name: "ARIEL 1KG", category: "Jabones/P&G", sequence: 200, expected: "JAB-ARI-0200") [< 1 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_PadsShortPrefixesAndClampsSequence [< 1 ms]
+  Passed UnitTests.Domain.UserTests.Constructor_RejectsUnknownRole [2 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.IsValid_ChecksCorporateFormat(sku: "BEB-MAL-06", expected: False) [8 ms]
+  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Withdrawal_FromTruck_RequiresTruck [10 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.IsValid_ChecksCorporateFormat(sku: "BEB-MAL-0006", expected: True) [< 1 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.IsValid_ChecksCorporateFormat(sku: "beb-mal-0006", expected: False) [< 1 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithMissingInput_Throws(name: "", category: "Bebidas") [< 1 ms]
+  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithMissingInput_Throws(name: "Maltin", category: " ") [< 1 ms]
+  Passed UnitTests.Domain.ConsignmentTests.RepeatedProduct_Accumulates [6 ms]
+  Passed UnitTests.Domain.ClientTests.EmptiesMovement_UpdatesGroupAndTotals [20 ms]
+  Passed UnitTests.Domain.ConsignmentTests.ChargesOnlySoldUnits [9 ms]
+  Passed UnitTests.Domain.ClientTests.AdjustBalances_SetsAbsoluteValues [6 ms]
+  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Purchase_NumbersAndTotals [16 ms]
+  Passed UnitTests.Domain.ConsignmentTests.Return_CannotExceedPending [2 ms]
+  Passed UnitTests.Domain.ClientTests.Payment_MustBePositive(amount: -5) [2 ms]
+  Passed UnitTests.Domain.ClientTests.Payment_MustBePositive(amount: 0) [< 1 ms]
+  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Damage_EstimatedLossIsSubtotal [2 ms]
+  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.ProductSetStock_IsAbsolute [< 1 ms]
+  Passed UnitTests.Domain.BoxQuantityTests.ToString_UsesSpanishFormat(boxes: 2, units: 5, expected: "2 cajas + 5 und") [< 1 ms]
+  Passed UnitTests.Domain.BoxQuantityTests.ToString_UsesSpanishFormat(boxes: 0, units: 5, expected: "5 und") [< 1 ms]
   Passed UnitTests.Domain.BoxQuantityTests.ToString_UsesSpanishFormat(boxes: 1, units: 4, expected: "1 caja + 4 und") [< 1 ms]
   Passed UnitTests.Domain.BoxQuantityTests.ToString_UsesSpanishFormat(boxes: 3, units: 0, expected: "3 cajas") [< 1 ms]
   Passed UnitTests.Domain.BoxQuantityTests.ToString_UsesSpanishFormat(boxes: 1, units: 0, expected: "1 caja") [< 1 ms]
-  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 0, priceUnit: 0.64, unitsPerBox: 36, minStock: 180, maxStock: 1440, emptyGroupKey: null) [16 ms]
-  Passed UnitTests.Domain.UserTests.Deactivate_MarksUserAsInactive [< 1 ms]
-  Passed UnitTests.Domain.UserTests.Constructor_RejectsUnknownRole [< 1 ms]
-  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0.64, unitsPerBox: 0, minStock: 180, maxStock: 1440, emptyGroupKey: null) [1 ms]
-  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0, unitsPerBox: 36, minStock: 180, maxStock: 1440, emptyGroupKey: null) [< 1 ms]
-  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0.64, unitsPerBox: 36, minStock: 180, maxStock: 180, emptyGroupKey: null) [< 1 ms]
-  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0.64, unitsPerBox: 36, minStock: 180, maxStock: 1440, emptyGroupKey: "GRUPO_INEXISTENTE") [< 1 ms]
-  Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 31, expected: Optimal, expectedPurchase: 0) [19 ms]
-  Passed UnitTests.Domain.ProductTests.Stock_ZeroQuantity_IsRejected [2 ms]
-  Passed UnitTests.Domain.ProductTests.MarkAsDeleted_SetsSoftDeleteFlag [< 1 ms]
-  Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 51, expected: Excessive, expectedPurchase: 0) [2 ms]
+  Passed UnitTests.Domain.ClientTests.InvoicePending_ChargesAccount_NegativeMeansDebt [3 ms]
+  Passed UnitTests.Domain.ConsignmentTests.ClosedEvent_RejectsChanges [4 ms]
+  Passed UnitTests.Domain.ClientTests.PaymentGreaterThanTotal_LeavesCreditInFavor [< 1 ms]
+  Passed UnitTests.Domain.ClientTests.Payment_AddsToBalance [< 1 ms]
+  Passed UnitTests.Domain.ClientTests.NewClient_UsesDefaultsAndZeroBalances [1 ms]
+  Passed UnitTests.Domain.BoxQuantityTests.FromUnits_WithoutUnitsPerBox_KeepsEverythingAsLooseUnits [7 ms]
+  Passed UnitTests.Domain.BoxQuantityTests.Constructor_RejectsNegativeValues [1 ms]
+  Passed UnitTests.Domain.BoxQuantityTests.FromUnits_SplitsIntoBoxesAndLooseUnits [< 1 ms]
+  Passed UnitTests.Domain.BoxQuantityTests.ToUnits_ConvertsBoxesAndLooseUnits [< 1 ms]
+  Passed UnitTests.Domain.DebtAgingTests.Allocate_DebtWithoutInvoices_IsTheOldest [70 ms]
+  Passed UnitTests.Application.ValidatorTests.CreateCategory_RequiresNameAndDeposit(name: "", deposit: "Depósito #4") [73 ms]
+  Passed UnitTests.Application.ValidatorTests.CreateCategory_RequiresNameAndDeposit(name: "Licores", deposit: "") [< 1 ms]
+  Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 31, expected: Optimal, expectedPurchase: 0) [15 ms]
+  Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 51, expected: Excessive, expectedPurchase: 0) [< 1 ms]
   Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 3, expected: CriticalRisk, expectedPurchase: 47) [< 1 ms]
   Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 0, expected: OutOfStock, expectedPurchase: 50) [< 1 ms]
   Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 50, expected: Overstocked, expectedPurchase: 0) [< 1 ms]
   Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 10, expected: CriticalRisk, expectedPurchase: 40) [< 1 ms]
   Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_ClassifiesStockByThresholds(stock: 30, expected: Understocked, expectedPurchase: 20) [< 1 ms]
   Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_WhenMaxIsNotGreaterThanMin_Throws(minStock: 50, maxStock: 10) [< 1 ms]
-  Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_WhenMaxIsNotGreaterThanMin_Throws(minStock: 10, maxStock: 10) [< 1 ms]
+  Passed UnitTests.Domain.DebtAgingTests.Allocate_PaymentsSettleTheOldestFirst [5 ms]
+  Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_WhenMaxIsNotGreaterThanMin_Throws(minStock: 10, maxStock: 10) [1 ms]
   Passed UnitTests.Domain.ProductHealthEvaluatorTests.Evaluate_WithBlankSku_UsesNotAvailable [< 1 ms]
-  Passed UnitTests.Domain.ProductTests.CalculateSubtotal_UsesBoxAndUnitPrices [6 ms]
-  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Withdrawal_FromTruck_RequiresTruck [9 ms]
-  Passed UnitTests.Domain.ProductTests.RemoveStock_WhenInsufficient_ThrowsAndKeepsStock [1 ms]
-  Passed UnitTests.Domain.BoxQuantityTests.FromUnits_WithoutUnitsPerBox_KeepsEverythingAsLooseUnits [10 ms]
+  Passed UnitTests.Domain.DebtAgingTests.Allocate_NoDebt_IsEmpty [1 ms]
+  Passed UnitTests.Domain.CreditControlTests.CreditLimit_Zero_MeansCashOnly [3 ms]
+  Passed UnitTests.Domain.CreditControlTests.OverdueDebt_BlocksCreditSales [11 ms]
+  Passed UnitTests.Domain.CreditControlTests.CashSale_IsAllowedEvenWithOverdueDebt [< 1 ms]
+  Passed UnitTests.Domain.CreditControlTests.CreditLimit_BlocksASaleThatExceedsIt [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 0, priceUnit: 0.64, unitsPerBox: 36, minStock: 180, maxStock: 1440, emptyGroupKey: null) [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0.64, unitsPerBox: 0, minStock: 180, maxStock: 1440, emptyGroupKey: null) [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0, unitsPerBox: 36, minStock: 180, maxStock: 1440, emptyGroupKey: null) [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0.64, unitsPerBox: 36, minStock: 180, maxStock: 180, emptyGroupKey: null) [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidBusinessData(priceBox: 23, priceUnit: 0.64, unitsPerBox: 36, minStock: 180, maxStock: 1440, emptyGroupKey: "GRUPO_INEXISTENTE") [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.Stock_ZeroQuantity_IsRejected [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.MarkAsDeleted_SetsSoftDeleteFlag [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.CalculateSubtotal_UsesBoxAndUnitPrices [< 1 ms]
+  Passed UnitTests.Domain.ProductTests.RemoveStock_WhenInsufficient_ThrowsAndKeepsStock [< 1 ms]
   Passed UnitTests.Domain.ProductTests.AddAndRemoveStock_UpdateUnitsAndAuditDate [< 1 ms]
   Passed UnitTests.Domain.ProductTests.EvaluateHealth_UsesProductThresholds [< 1 ms]
-  Passed UnitTests.Domain.ClientTests.EmptiesMovement_RejectsUnknownGroup [4 ms]
-  Passed UnitTests.Domain.BoxQuantityTests.Constructor_RejectsNegativeValues [2 ms]
-  Passed UnitTests.Domain.BoxQuantityTests.FromUnits_SplitsIntoBoxesAndLooseUnits [< 1 ms]
-  Passed UnitTests.Domain.BoxQuantityTests.ToUnits_ConvertsBoxesAndLooseUnits [< 1 ms]
-  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidSku [3 ms]
+  Passed UnitTests.Domain.ProductTests.Constructor_RejectsInvalidSku [< 1 ms]
   Passed UnitTests.Domain.ProductTests.InventoryValue_IsUnitsTimesUnitPrice [< 1 ms]
-  Passed UnitTests.Domain.TruckTests.Update_ChangesCapacity [12 ms]
-  Passed UnitTests.Domain.TruckTests.Capacity_OutOfRange_IsRejected(capacity: 5001) [< 1 ms]
-  Passed UnitTests.Domain.TruckTests.Capacity_OutOfRange_IsRejected(capacity: -5) [< 1 ms]
-  Passed UnitTests.Domain.ClientTests.EmptiesMovement_UpdatesGroupAndTotals [10 ms]
-  Passed UnitTests.Domain.TruckTests.Capacity_OutOfRange_IsRejected(capacity: 0) [< 1 ms]
-  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Purchase_NumbersAndTotals [14 ms]
-  Passed UnitTests.Domain.ClientTests.AdjustBalances_SetsAbsoluteValues [1 ms]
-  Passed UnitTests.Domain.ClientTests.Payment_MustBePositive(amount: -5) [< 1 ms]
-  Passed UnitTests.Domain.ClientTests.Payment_MustBePositive(amount: 0) [< 1 ms]
-  Passed UnitTests.Domain.ClientTests.InvoicePending_ChargesAccount_NegativeMeansDebt [< 1 ms]
-  Passed UnitTests.Domain.ClientTests.PaymentGreaterThanTotal_LeavesCreditInFavor [< 1 ms]
-  Passed UnitTests.Domain.ClientTests.Payment_AddsToBalance [< 1 ms]
-  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.Damage_EstimatedLossIsSubtotal [3 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_SanitizesAndFormatsSku [11 ms]
-  Passed UnitTests.Domain.WithdrawalAndPurchaseTests.ProductSetStock_IsAbsolute [< 1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithCatalogProducts_ProducesExpectedSku(name: "CAFÉ ANZOATEGUI 50X50UN", category: "Alimentos", sequence: 81, expected: "ALI-CAF-0081") [< 1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithCatalogProducts_ProducesExpectedSku(name: "MALTIN POLAR RET 222MLx36UN", category: "Bebidas", sequence: 6, expected: "BEB-MAL-0006") [< 1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithCatalogProducts_ProducesExpectedSku(name: "ARIEL 1KG", category: "Jabones/P&G", sequence: 200, expected: "JAB-ARI-0200") [< 1 ms]
-  Passed UnitTests.Domain.ClientTests.NewClient_UsesDefaultsAndZeroBalances [1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_PadsShortPrefixesAndClampsSequence [2 ms]
-  Passed UnitTests.Domain.TruckTests.NewTruck_WithoutStock_HasZeroOccupancy [8 ms]
-  Passed UnitTests.Domain.ConsignmentTests.RepeatedProduct_Accumulates [11 ms]
-  Passed UnitTests.Domain.ConsignmentTests.ChargesOnlySoldUnits [2 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.IsValid_ChecksCorporateFormat(sku: "BEB-MAL-06", expected: False) [12 ms]
-  Passed UnitTests.Domain.ConsignmentTests.Return_CannotExceedPending [1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.IsValid_ChecksCorporateFormat(sku: "BEB-MAL-0006", expected: True) [< 1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.IsValid_ChecksCorporateFormat(sku: "beb-mal-0006", expected: False) [< 1 ms]
-  Passed UnitTests.Domain.ConsignmentTests.ClosedEvent_RejectsChanges [1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithMissingInput_Throws(name: "", category: "Bebidas") [1 ms]
-  Passed UnitTests.Domain.CorporateSkuGeneratorTests.Generate_WithMissingInput_Throws(name: "Maltin", category: " ") [< 1 ms]
-  Passed UnitTests.Domain.TruckTests.Unload_ReturnsEverythingAndEmptiesTruck [29 ms]
-  Passed UnitTests.Domain.TruckTests.SetStock_ZeroRemovesLine [3 ms]
-  Passed UnitTests.Domain.TruckTests.AddAndRemoveStock_RemovesLineWhenEmpty [2 ms]
-  Passed UnitTests.Domain.TruckTests.RemoveStock_WhenInsufficient_ThrowsWithoutChanges [< 1 ms]
-  Passed UnitTests.Domain.InvoiceTests.Items_KeepPriceSnapshot [51 ms]
-  Passed UnitTests.Domain.InvoiceTests.Sale_FromTruck_RequiresTruck [1 ms]
-  Passed UnitTests.Domain.InvoiceTests.Cancel_RequiresReason_AndOnlyOnce [3 ms]
-  Passed UnitTests.Domain.InvoiceTests.Gift_RejectsProductsNotAuthorized [6 ms]
-  Passed UnitTests.Domain.InvoiceTests.Gift_HasNoChargeButGeneratesEmpties [7 ms]
-  Passed UnitTests.Application.ValidatorTests.CreateCategory_RequiresNameAndDeposit(name: "", deposit: "Depósito #4") [75 ms]
-  Passed UnitTests.Application.ValidatorTests.CreateCategory_RequiresNameAndDeposit(name: "Licores", deposit: "") [1 ms]
-  Passed UnitTests.Domain.InvoiceTests.Sale_GeneratesEmptiesPerGroup_AndRecordsReturns [11 ms]
+  Passed UnitTests.Domain.InvoiceTests.Items_KeepPriceSnapshot [16 ms]
+  Passed UnitTests.Domain.InvoiceTests.Sale_FromTruck_RequiresTruck [< 1 ms]
+  Passed UnitTests.Domain.InvoiceTests.Cancel_RequiresReason_AndOnlyOnce [1 ms]
+  Passed UnitTests.Application.ValidatorTests.CreateProduct_ValidRequest_Passes [45 ms]
+  Passed UnitTests.Domain.InvoiceTests.Gift_RejectsProductsNotAuthorized [4 ms]
+  Passed UnitTests.Domain.InvoiceTests.Gift_HasNoChargeButGeneratesEmpties [5 ms]
+  Passed UnitTests.Application.ValidatorTests.CreateProduct_InvalidRequest_ReportsEveryRule [11 ms]
+  Passed UnitTests.Application.ValidatorTests.Login_RequiresUsernameAndPasswordOfSixChars(username: "admin", password: "123") [3 ms]
+  Passed UnitTests.Application.ValidatorTests.Login_RequiresUsernameAndPasswordOfSixChars(username: "", password: "Admin2026!") [3 ms]
+  Passed UnitTests.Domain.InvoiceTests.Sale_GeneratesEmptiesPerGroup_AndRecordsReturns [13 ms]
   Passed UnitTests.Domain.InvoiceTests.Sale_RejectsNegativePaymentAndEmptyLines [1 ms]
   Passed UnitTests.Domain.InvoiceTests.Sale_ComputesTotalsAndPending [< 1 ms]
-  Passed UnitTests.Application.ValidatorTests.CreateProduct_ValidRequest_Passes [51 ms]
-  Passed UnitTests.Application.ValidatorTests.CreateProduct_InvalidRequest_ReportsEveryRule [12 ms]
-  Passed UnitTests.Application.ValidatorTests.Login_RequiresUsernameAndPasswordOfSixChars(username: "admin", password: "123") [32 ms]
-  Passed UnitTests.Application.ValidatorTests.Login_RequiresUsernameAndPasswordOfSixChars(username: "", password: "Admin2026!") [1 ms]
-  Passed UnitTests.Application.ValidatorTests.UpdateProduct_RequiresMaxGreaterThanMin [15 ms]
+  Passed UnitTests.Application.ValidatorTests.UpdateProduct_RequiresMaxGreaterThanMin [12 ms]
   Passed UnitTests.Application.ValidatorTests.CreateProduct_RejectsMoreThanTwoDecimals [< 1 ms]
-  Passed UnitTests.Application.ProductServiceTests.GetAllAsync_PassesFiltersToRepository_AndMapsEveryProduct [313 ms]
-  Passed UnitTests.Application.CategoryServiceTests.CreateAsync_WithDuplicatedName_IsRejected [314 ms]
-  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithShortPassword_ThrowsValidation_BeforeQuerying [294 ms]
-  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithWrongPassword_IsUnauthorized_AndIssuesNoToken [15 ms]
-  Passed UnitTests.Application.CategoryServiceTests.CreateAsync_WithNewName_AddsAndSaves [45 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.CreateUser_WithTakenUsername_IsRejected [264 ms]
-  Passed UnitTests.Application.CategoryServiceTests.CreateAsync_WithoutDeposit_ThrowsValidation [6 ms]
-  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithUsername_NormalizesAndReturnsTokenAndRole [14 ms]
-  Passed UnitTests.Application.ProductServiceTests.UpdateAsync_WhenNotFound_ThrowsKeyNotFound_AndDoesNotSave [60 ms]
-  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithEmail_LowercasesBeforeQuerying [9 ms]
-  Passed UnitTests.Application.CategoryServiceTests.UpdateAsync_ExcludesItselfFromTheUniqueNameCheck [17 ms]
+  Passed UnitTests.Domain.TruckRouteTests.Settlement_WithEverythingDeclared_IsBalanced [38 ms]
+  Passed UnitTests.Domain.TruckRouteTests.Settlement_ComparesDeclaredAgainstExpected [6 ms]
+  Passed UnitTests.Application.ProductServiceTests.GetAllAsync_PassesFiltersToRepository_AndMapsEveryProduct [208 ms]
+  Passed UnitTests.Domain.TruckRouteTests.Route_GoesLoadingThenOnRouteThenSettled [16 ms]
+  Passed UnitTests.Domain.TruckRouteTests.Dispatch_EmptyTruckOrAlreadyOnRoute_IsRejected [< 1 ms]
+  Passed UnitTests.Domain.TruckRouteTests.Settle_TruckNotOnRoute_IsRejected [< 1 ms]
+  Passed UnitTests.Domain.TruckRouteTests.LoadingWhileOnRoute_KeepsTheRouteOpen [1 ms]
+  Passed UnitTests.Domain.TruckTests.Update_ChangesCapacity [8 ms]
+  Passed UnitTests.Domain.TruckTests.Capacity_OutOfRange_IsRejected(capacity: 5001) [< 1 ms]
+  Passed UnitTests.Domain.TruckTests.Capacity_OutOfRange_IsRejected(capacity: -5) [1 ms]
+  Passed UnitTests.Domain.TruckTests.Capacity_OutOfRange_IsRejected(capacity: 0) [< 1 ms]
+  Passed UnitTests.Domain.TruckTests.NewTruck_WithoutStock_HasZeroOccupancy [9 ms]
+  Passed UnitTests.Application.CategoryServiceTests.CreateAsync_WithDuplicatedName_IsRejected [205 ms]
+  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithShortPassword_ThrowsValidation_BeforeQuerying [246 ms]
+  Passed UnitTests.Domain.TruckTests.Unload_ReturnsEverythingAndEmptiesTruck [6 ms]
+  Passed UnitTests.Domain.TruckTests.SetStock_ZeroRemovesLine [1 ms]
+  Passed UnitTests.Domain.TruckTests.AddAndRemoveStock_RemovesLineWhenEmpty [4 ms]
+  Passed UnitTests.Application.ProductServiceTests.UpdateAsync_WhenNotFound_ThrowsKeyNotFound_AndDoesNotSave [52 ms]
+  Passed UnitTests.Domain.TruckTests.RemoveStock_WhenInsufficient_ThrowsWithoutChanges [5 ms]
+  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithWrongPassword_IsUnauthorized_AndIssuesNoToken [28 ms]
+  Passed UnitTests.Application.CategoryServiceTests.CreateAsync_WithNewName_AddsAndSaves [30 ms]
+  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithUsername_NormalizesAndReturnsTokenAndRole [10 ms]
+  Passed UnitTests.Application.CategoryServiceTests.CreateAsync_WithoutDeposit_ThrowsValidation [11 ms]
+  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithEmail_LowercasesBeforeQuerying [4 ms]
+  Passed UnitTests.Application.ProductServiceTests.CreateAsync_WithUnknownCategory_ThrowsInvalidOperation [34 ms]
   Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithUnknownUser_GivesTheSameGenericMessage [11 ms]
-  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithInactiveUser_IsUnauthorized [6 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.UpdateUser_AdminCannotDeactivateThemselves [38 ms]
-  Passed UnitTests.Application.ProductServiceTests.CreateAsync_WithUnknownCategory_ThrowsInvalidOperation [35 ms]
-  Passed UnitTests.Application.CategoryServiceTests.DeleteAsync_WithoutProducts_IsSoftDelete [18 ms]
-  Passed UnitTests.Application.CategoryServiceTests.GetByIdAsync_WhenNotFound_ThrowsKeyNotFound [11 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.CreateUser_HashesThePassword_AndNormalizesTheUsername [19 ms]
-  Passed UnitTests.Application.ProductServiceTests.CreateAsync_GeneratesSkuAndStoresStockInUnits [17 ms]
-  Passed UnitTests.Application.CategoryServiceTests.DeleteAsync_WithProducts_IsRejected [7 ms]
-  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_UnknownClient_ThrowsKeyNotFound [265 ms]
-  Passed UnitTests.Application.ProductServiceTests.GetBySkuAsync_WhenNotFound_ThrowsKeyNotFoundException [6 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.ResetPassword_UnknownUser_ThrowsKeyNotFound [13 ms]
-  Passed UnitTests.Application.ProductServiceTests.CreateAsync_WithNegativePrice_ThrowsValidation_AndNeverTouchesRepository [11 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.ChangeOwnPassword_WithWrongCurrentPassword_IsRejected [14 ms]
-  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_GreaterThanDebt_LeavesBalanceInFavor [28 ms]
-  Passed UnitTests.Application.ProductServiceTests.GetBySkuAsync_NormalizesSkuBeforeQuerying [12 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.ChangeOwnPassword_StoresTheNewHash [6 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.CreateUser_WithTakenUsername_IsRejected [303 ms]
 A total of 1 test files matched the specified pattern.
-  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_WithZeroAmount_ThrowsValidation_AndChangesNothing [8 ms]
-  Passed UnitTests.Application.TruckServiceTests.LoadAsync_UnknownTruck_ThrowsKeyNotFound [467 ms]
-  Passed UnitTests.Application.ProductServiceTests.GetHealthAsync_StockUnderMinimum_IsCriticalRisk [11 ms]
-  Passed UnitTests.Application.ProductServiceTests.DeleteAsync_IsSoftDelete [10 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_WithoutDates_UsesTheLast30LocalDays [417 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.UpdateEmployee_Deactivates_InsteadOfDeleting [19 ms]
-  Passed UnitTests.Application.TruckServiceTests.LoadAsync_TargetMode_WhenTruckAlreadyHasIt_IsRejectedWithoutChanges [14 ms]
-  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_ReducesDebt_AndRecordsMovement [16 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_UserWhoCannotChangeAttendant_CannotPickAnotherEmployee [483 ms]
-  Passed UnitTests.Application.ProductServiceTests.GetLowStockAsync_ReturnsProductsFromRepository [21 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_InventoryValuation_ComparesCostWithSalePrice [30 ms]
-  Passed UnitTests.Application.ProductServiceTests.UpdateAsync_ChangesPrices_AndSaves [11 ms]
-  Passed UnitTests.Application.TruckServiceTests.CreateAsync_WithDuplicatedPlate_IsRejected [31 ms]
-  Passed UnitTests.Application.UserAndEmployeeServiceTests.CreateEmployee_UsesTheDefaultRole [32 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_RangeLongerThanAYear_IsRejected [3 ms]
-  Passed UnitTests.Application.TruckServiceTests.LoadAsync_MoreThanWarehouseStock_IsRejected [5 ms]
-  Passed UnitTests.Application.ProductServiceTests.GetProductByIdAsync_WhenNotFound_ThrowsKeyNotFoundException [12 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_PassesTheCategoryFilterToTheQuery [13 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_StartAfterEnd_IsRejectedWithoutQuerying [4 ms]
+  Passed UnitTests.Application.AuthServiceTests.LoginAsync_WithInactiveUser_IsUnauthorized [6 ms]
+  Passed UnitTests.Application.ProductServiceTests.CreateAsync_GeneratesSkuAndStoresStockInUnits [20 ms]
+  Passed UnitTests.Application.CategoryServiceTests.UpdateAsync_ExcludesItselfFromTheUniqueNameCheck [34 ms]
+  Passed UnitTests.Application.ProductServiceTests.GetBySkuAsync_WhenNotFound_ThrowsKeyNotFoundException [5 ms]
+  Passed UnitTests.Application.ProductServiceTests.CreateAsync_WithNegativePrice_ThrowsValidation_AndNeverTouchesRepository [8 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.UpdateUser_AdminCannotDeactivateThemselves [30 ms]
+  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_UnknownClient_ThrowsKeyNotFound [340 ms]
+  Passed UnitTests.Application.CategoryServiceTests.DeleteAsync_WithoutProducts_IsSoftDelete [19 ms]
+  Passed UnitTests.Application.ProductServiceTests.GetBySkuAsync_NormalizesSkuBeforeQuerying [15 ms]
+  Passed UnitTests.Application.CategoryServiceTests.GetByIdAsync_WhenNotFound_ThrowsKeyNotFound [15 ms]
+  Passed UnitTests.Application.ProductServiceTests.GetHealthAsync_StockUnderMinimum_IsCriticalRisk [10 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.CreateUser_HashesThePassword_AndNormalizesTheUsername [28 ms]
+  Passed UnitTests.Application.CategoryServiceTests.DeleteAsync_WithProducts_IsRejected [22 ms]
+  Passed UnitTests.Application.ProductServiceTests.DeleteAsync_IsSoftDelete [25 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.ResetPassword_UnknownUser_ThrowsKeyNotFound [17 ms]
+  Passed UnitTests.Application.ClientServiceTests.SetCreditLimitAsync_Negative_ThrowsValidation [54 ms]
+  Passed UnitTests.Application.ProductServiceTests.GetLowStockAsync_ReturnsProductsFromRepository [12 ms]
+  Passed UnitTests.Application.TruckServiceTests.LoadAsync_UnknownTruck_ThrowsKeyNotFound [318 ms]
+  Passed UnitTests.Application.ProductServiceTests.UpdateAsync_ChangesPrices_AndSaves [5 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_UserWhoCannotChangeAttendant_CannotPickAnotherEmployee [345 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.ChangeOwnPassword_WithWrongCurrentPassword_IsRejected [17 ms]
+  Passed UnitTests.Application.ProductServiceTests.GetProductByIdAsync_WhenNotFound_ThrowsKeyNotFoundException [9 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_WithoutDates_UsesTheLast30LocalDays [269 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.ChangeOwnPassword_StoresTheNewHash [9 ms]
+  Passed UnitTests.Application.OperationServicesTests.Consignment_ReturnMoreThanPending_IsRejected [351 ms]
+  Passed UnitTests.Application.TruckServiceTests.LoadAsync_TargetMode_WhenTruckAlreadyHasIt_IsRejectedWithoutChanges [22 ms]
   Passed UnitTests.Application.ProductServiceTests.CreateAsync_SkipsSkuAlreadyTaken [11 ms]
-  Passed UnitTests.Application.OperationServicesTests.Consignment_ReturnMoreThanPending_IsRejected [541 ms]
-  Passed UnitTests.Application.ProductServiceTests.DeleteAsync_WhenNotFound_ThrowsKeyNotFound [5 ms]
-  Passed UnitTests.Application.TruckServiceTests.LoadAsync_AddMode_MovesStockFromWarehouseToTruck [23 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_WithPayment_LeavesThePendingAsDebt [64 ms]
-  Passed UnitTests.Application.ProductServiceTests.GetByIdAsync_ExistingId_ReturnsProductDto [6 ms]
-  Passed UnitTests.Application.TruckServiceTests.LoadAsync_TargetMode_LoadsOnlyTheDifference [8 ms]
-  Passed UnitTests.Application.OperationServicesTests.ProductLocation_UnknownProduct_ThrowsKeyNotFound [14 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_SellThreeBoxesFiveUnits_ReturnTwoBoxes_LeavesOneBoxFiveUnitsOwed [16 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_SalesExcludeGiftsFromMoney_ButCountTheirUnits [42 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_FromTruck_DiscountsTheTruckNotTheWarehouse [18 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_GroupsSalesByLocalDay [19 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CancelAsync_Twice_IsRejected [19 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_FlagsOutOfStockAndCriticalProducts_MostUrgentFirst [10 ms]
+  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_GreaterThanDebt_LeavesBalanceInFavor [30 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_InventoryValuation_ComparesCostWithSalePrice [12 ms]
+  Passed UnitTests.Application.ProductServiceTests.DeleteAsync_WhenNotFound_ThrowsKeyNotFound [10 ms]
+  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_WithZeroAmount_ThrowsValidation_AndChangesNothing [12 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_RangeLongerThanAYear_IsRejected [10 ms]
+  Passed UnitTests.Application.OperationServicesTests.ProductLocation_UnknownProduct_ThrowsKeyNotFound [26 ms]
+  Passed UnitTests.Application.ProductServiceTests.GetByIdAsync_ExistingId_ReturnsProductDto [14 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_PassesTheCategoryFilterToTheQuery [11 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.UpdateEmployee_Deactivates_InsteadOfDeleting [35 ms]
+  Passed UnitTests.Application.ClientServiceTests.SetCreditLimitAsync_StoresTheLimitAndAudits [22 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_WithPayment_LeavesThePendingAsDebt [72 ms]
+  Passed UnitTests.Application.ClientServiceTests.RegisterPaymentAsync_ReducesDebt_AndRecordsMovement [19 ms]
+  Passed UnitTests.Application.UserAndEmployeeServiceTests.CreateEmployee_UsesTheDefaultRole [25 ms]
+  Passed UnitTests.Application.TruckServiceTests.SettleAsync_BlindSettlement_ReturnsCountedGoodsAndReportsDifferences [64 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_DebtAging_GroupsDebtByAgeAndFlagsOverdueClients [42 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_StartAfterEnd_IsRejectedWithoutQuerying [3 ms]
+  Passed UnitTests.Application.TruckServiceTests.DispatchAsync_PutsTheTruckOnRoute [19 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_SellThreeBoxesFiveUnits_ReturnTwoBoxes_LeavesOneBoxFiveUnitsOwed [32 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_SalesExcludeGiftsFromMoney_ButCountTheirUnits [27 ms]
+  Passed UnitTests.Application.TruckServiceTests.CreateAsync_WithDuplicatedPlate_IsRejected [19 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_FromTruck_DiscountsTheTruckNotTheWarehouse [23 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_GroupsSalesByLocalDay [9 ms]
+  Passed UnitTests.Application.TruckServiceTests.SettleAsync_TruckNotOnRoute_IsRejected [12 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_FlagsOutOfStockAndCriticalProducts_MostUrgentFirst [6 ms]
   Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_TopProducts_ComputesRotationAgainstCurrentStock [3 ms]
-  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_FleetOccupancy_IsLoadedBoxesOverCapacity [9 ms]
-  Passed UnitTests.Application.OperationServicesTests.Damage_WithInsufficientStock_IsNotRegistered [72 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_WithoutStockForEveryLine_FailsWithoutChangesOrNumber [27 ms]
-  Passed UnitTests.Application.OperationServicesTests.InternalConsumption_RequiresAnActiveEmployee [14 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CreateGiftAsync_HasNoMoneyEffect_ButGeneratesEmpties [19 ms]
+  Passed UnitTests.Application.TruckServiceTests.LoadAsync_MoreThanWarehouseStock_IsRejected [6 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_RepeatedIdempotencyKey_ReturnsTheExistingInvoiceWithoutSellingAgain [27 ms]
+  Passed UnitTests.Application.OperationServicesTests.Damage_WithInsufficientStock_IsNotRegistered [118 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_WithIdempotencyKey_StoresTheKey [8 ms]
+  Passed UnitTests.Application.TruckServiceTests.LoadAsync_AddMode_MovesStockFromWarehouseToTruck [21 ms]
+  Passed UnitTests.Application.ReportServiceTests.GetDashboardAsync_FleetOccupancy_IsLoadedBoxesOverCapacity [22 ms]
+  Passed UnitTests.Application.TruckServiceTests.LoadAsync_TargetMode_LoadsOnlyTheDifference [6 ms]
+  Passed UnitTests.Application.TruckServiceTests.LoadAsync_LeavesTheTruckLoading [5 ms]
+  Passed UnitTests.Application.OperationServicesTests.InternalConsumption_RequiresAnActiveEmployee [18 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CancelAsync_Twice_IsRejected [17 ms]
   Passed UnitTests.Application.OperationServicesTests.Damage_FromTruck_DiscountsTheTruckAndEstimatesTheLoss [11 ms]
-  Passed UnitTests.Application.OperationServicesTests.Consignment_WithoutStock_IsNotCreated [8 ms]
-  Passed UnitTests.Application.OperationServicesTests.Consignment_Indicators_SumOpenAndClosedEvents [10 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CancelAsync_TruckSaleWhoseTruckNoLongerExists_FailsWithoutChanges [15 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_ClientWithOverdueDebt_CanStillBuyCash [8 ms]
+  Passed UnitTests.Application.OperationServicesTests.Consignment_WithoutStock_IsNotCreated [6 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_WithoutStockForEveryLine_FailsWithoutChangesOrNumber [10 ms]
+  Passed UnitTests.Application.OperationServicesTests.Consignment_Indicators_SumOpenAndClosedEvents [9 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_OverTheCreditLimit_IsBlocked [6 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateGiftAsync_HasNoMoneyEffect_ButGeneratesEmpties [19 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CancelAsync_TruckSaleWhoseTruckNoLongerExists_FailsWithoutChanges [12 ms]
+  Passed UnitTests.Application.OperationServicesTests.Purchase_AddsStockAndNumbersTheDocument [38 ms]
   Passed UnitTests.Application.InvoiceServiceTests.GetByIdAsync_WhenNotFound_ThrowsKeyNotFound [7 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CancelAsync_RevertsInventoryMoneyAndEmpties [13 ms]
+  Passed UnitTests.Application.OperationServicesTests.InternalConsumption_DiscountsWarehouseAndEstimatesTheValue [12 ms]
+[xUnit.net 00:00:01.07]   Finished:    UnitTests
+  Passed UnitTests.Application.InvoiceServiceTests.CancelAsync_RevertsInventoryMoneyAndEmpties [12 ms]
   Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_PaymentOverTotal_LeavesBalanceInFavor [6 ms]
-  Passed UnitTests.Application.OperationServicesTests.Purchase_AddsStockAndNumbersTheDocument [33 ms]
-[xUnit.net 00:00:01.17]   Finished:    UnitTests
-  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_FromTruckWithoutTruckId_IsRejected [13 ms]
-  Passed UnitTests.Application.InvoiceServiceTests.CreateGiftAsync_WithProductNotAuthorized_IsRejected [5 ms]
-  Passed UnitTests.Application.OperationServicesTests.InternalConsumption_DiscountsWarehouseAndEstimatesTheValue [17 ms]
-  Passed UnitTests.Application.OperationServicesTests.Consignment_DeliverTwoBoxes_ReturnThirtyUnits_ChargesOnlyTheEighteenSold [9 ms]
-  Passed UnitTests.Application.OperationServicesTests.WarehouseAdjustment_SetsTheAbsoluteStock_AndAuditsBeforeAndAfter [7 ms]
+  Passed UnitTests.Application.OperationServicesTests.Consignment_DeliverTwoBoxes_ReturnThirtyUnits_ChargesOnlyTheEighteenSold [14 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_ClientWithDebtOlderThan30Days_IsBlockedOnCredit [9 ms]
+  Passed UnitTests.Application.OperationServicesTests.WarehouseAdjustment_SetsTheAbsoluteStock_AndAuditsBeforeAndAfter [10 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateSaleAsync_FromTruckWithoutTruckId_IsRejected [8 ms]
+  Passed UnitTests.Application.InvoiceServiceTests.CreateGiftAsync_WithProductNotAuthorized_IsRejected [6 ms]
 
 Test Run Successful.
-Total tests: 168
-     Passed: 168
- Total time: 1.7987 Seconds
+Total tests: 193
+     Passed: 193
+ Total time: 1.6658 Seconds
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.13)
-[xUnit.net 00:00:00.11]   Discovering: IntegrationTests
-[xUnit.net 00:00:00.18]   Discovered:  IntegrationTests
-[xUnit.net 00:00:00.23]   Starting:    IntegrationTests
+[xUnit.net 00:00:00.13]   Discovering: IntegrationTests
+[xUnit.net 00:00:00.21]   Discovered:  IntegrationTests
+[xUnit.net 00:00:00.26]   Starting:    IntegrationTests
 [testcontainers.org 00:00:00.21] Connected to Docker:
   Host: unix:///var/run/docker.sock
   Server Version: 29.8.2
@@ -194,17 +219,17 @@ Total tests: 168
   API Version: 1.56
   Operating System: Ubuntu 26.04.1 LTS
   Total Memory: 30.66 GB
-[testcontainers.org 00:00:00.46] Docker container 0e651f1e9537 created
-[testcontainers.org 00:00:00.51] Start Docker container 0e651f1e9537
-[testcontainers.org 00:00:00.71] Wait for Docker container 0e651f1e9537 to complete readiness checks
-[testcontainers.org 00:00:01.75] Docker container 0e651f1e9537 ready
-[testcontainers.org 00:00:01.87] Docker container 07dda0fc28c0 created
-[testcontainers.org 00:00:01.87] Start Docker container 07dda0fc28c0
-[testcontainers.org 00:00:02.05] Wait for Docker container 07dda0fc28c0 to complete readiness checks
-[testcontainers.org 00:00:02.06] Execute "pg_isready --host localhost --dbname postgres --username postgres" at Docker container 07dda0fc28c0
-[testcontainers.org 00:00:03.11] Execute "pg_isready --host localhost --dbname postgres --username postgres" at Docker container 07dda0fc28c0
-[testcontainers.org 00:00:04.15] Execute "pg_isready --host localhost --dbname postgres --username postgres" at Docker container 07dda0fc28c0
-[testcontainers.org 00:00:04.19] Docker container 07dda0fc28c0 ready
+[testcontainers.org 00:00:00.47] Docker container 7dac30d62e58 created
+[testcontainers.org 00:00:00.52] Start Docker container 7dac30d62e58
+[testcontainers.org 00:00:00.72] Wait for Docker container 7dac30d62e58 to complete readiness checks
+[testcontainers.org 00:00:01.74] Docker container 7dac30d62e58 ready
+[testcontainers.org 00:00:01.81] Docker container 48e4a85ac79c created
+[testcontainers.org 00:00:01.81] Start Docker container 48e4a85ac79c
+[testcontainers.org 00:00:01.93] Wait for Docker container 48e4a85ac79c to complete readiness checks
+[testcontainers.org 00:00:01.93] Execute "pg_isready --host localhost --dbname postgres --username postgres" at Docker container 48e4a85ac79c
+[testcontainers.org 00:00:02.98] Execute "pg_isready --host localhost --dbname postgres --username postgres" at Docker container 48e4a85ac79c
+[testcontainers.org 00:00:04.02] Execute "pg_isready --host localhost --dbname postgres --username postgres" at Docker container 48e4a85ac79c
+[testcontainers.org 00:00:04.06] Docker container 48e4a85ac79c ready
 fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
       Failed executing DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
       SELECT "MigrationId", "ProductVersion"
@@ -216,6 +241,8 @@ info: Microsoft.EntityFrameworkCore.Migrations[20402]
       Applying migration '20261002060415_BusinessOperations'.
 info: Microsoft.EntityFrameworkCore.Migrations[20402]
       Applying migration '20261015144424_TruckCapacity'.
+info: Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '20261015205223_ProfessorObservations'.
 info: Infrastructure.Persistence.Seed.DbInitializer[0]
       Migraciones aplicadas.
 info: Infrastructure.Persistence.Seed.DbInitializer[0]
@@ -223,7 +250,7 @@ info: Infrastructure.Persistence.Seed.DbInitializer[0]
 warn: Microsoft.AspNetCore.DataProtection.Repositories.FileSystemXmlRepository[60]
       Storing keys in a directory '/tmp/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
 warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35]
-      No XML encryptor configured. Key {dc272747-738e-4fc7-86a3-f4bc654d736b} may be persisted to storage in unencrypted form.
+      No XML encryptor configured. Key {4af94f30-b09f-4c75-bc2b-9c6076e2d6c7} may be persisted to storage in unencrypted form.
 info: Microsoft.Hosting.Lifetime[14]
       Now listening on: http://*:8080
 info: Microsoft.Hosting.Lifetime[0]
@@ -232,6 +259,15 @@ info: Microsoft.Hosting.Lifetime[0]
       Hosting environment: Development
 info: Microsoft.Hosting.Lifetime[0]
       Content root path: /src/src/backend/Presentation.API
+warn: Microsoft.EntityFrameworkCore.Query[10103]
+      The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+warn: Presentation.API.Middleware.ExceptionMiddleware[0]
+      Regla de negocio violada: Solo se liquida un camión en ruta; Ruta está "Liquidado".
+  Passed IntegrationTests.ProfessorObservationTests.BlindSettlement_ComparesDeclaredCashAndGoods_AndClosesTheRoute [1 s]
+warn: Microsoft.EntityFrameworkCore.Query[10103]
+      The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+warn: Presentation.API.Middleware.ExceptionMiddleware[0]
+      Regla de negocio violada: Crédito bloqueado: la venta dejaría a Cliente de prueba con $80.00 de deuda y su límite es $50.00. Cobre al menos $30.00 en esta factura.
 info: Microsoft.EntityFrameworkCore.Migrations[20405]
       No migrations were applied. The database is already up to date.
 info: Infrastructure.Persistence.Seed.DbInitializer[0]
@@ -254,50 +290,51 @@ info: Microsoft.Hosting.Lifetime[0]
       Application is shutting down...
 warn: Microsoft.EntityFrameworkCore.Query[10103]
       The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
-  Passed IntegrationTests.CrossCuttingTests.Cors_OnlyConfiguredOriginsAreAllowed(origin: "https://sitio-no-autorizado.com", allowed: False) [11 ms]
-  Passed IntegrationTests.CrossCuttingTests.Cors_OnlyConfiguredOriginsAreAllowed(origin: "http://localhost:5173", allowed: True) [3 ms]
-  Passed IntegrationTests.CrossCuttingTests.Login_IsRateLimited [711 ms]
 warn: Microsoft.EntityFrameworkCore.Query[10103]
       The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
-      Regla de negocio violada: El documento Factura Octubre 2026 #1 ya está anulado.
+      Regla de negocio violada: El documento Factura Octubre 2026 #5 ya está anulado.
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
-      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA ab86c5a807454bd3bd103679: se solicitan 10 und y hay 0 und.
+      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA 4cc57e43c1ca4473ad0829db: se solicitan 10 und y hay 0 und.
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
-      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA ab86c5a807454bd3bd103679: se solicitan 10 und y hay 0 und.
+      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA 4cc57e43c1ca4473ad0829db: se solicitan 10 und y hay 0 und.
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
-      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA ab86c5a807454bd3bd103679: se solicitan 10 und y hay 0 und.
+      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA 4cc57e43c1ca4473ad0829db: se solicitan 10 und y hay 0 und.
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
-      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA ab86c5a807454bd3bd103679: se solicitan 10 und y hay 0 und.
-warn: Microsoft.EntityFrameworkCore.Query[10103]
-      The query uses the 'First'/'FirstOrDefault' operator without 'OrderBy' and filter operators. This may lead to unpredictable results.
+      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA 4cc57e43c1ca4473ad0829db: se solicitan 10 und y hay 0 und.
+  Passed IntegrationTests.ProfessorObservationTests.Sale_RetriedWithTheSameIdempotencyKey_IsCreatedOnlyOnce [167 ms]
+  Passed IntegrationTests.ProfessorObservationTests.Dashboard_IncludesDebtAging [257 ms]
+  Passed IntegrationTests.ProfessorObservationTests.CreditLimit_BlocksCreditSales_ButNotCashSales_AndOnlyAdminSetsIt [161 ms]
+  Passed IntegrationTests.CrossCuttingTests.Cors_OnlyConfiguredOriginsAreAllowed(origin: "https://sitio-no-autorizado.com", allowed: False) [3 ms]
+  Passed IntegrationTests.CrossCuttingTests.Cors_OnlyConfiguredOriginsAreAllowed(origin: "http://localhost:5173", allowed: True) [2 ms]
+  Passed IntegrationTests.CrossCuttingTests.Login_IsRateLimited [400 ms]
+  Passed IntegrationTests.BusinessScenarioTests.Cancellation_RevertsInventoryMoneyAndEmpties_AndIsExcludedFromReports [269 ms]
+  Passed IntegrationTests.BusinessScenarioTests.ConcurrentSales_OfTheLastUnits_NeverOversell [187 ms]
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
       Regla de negocio violada: La fecha inicial no puede ser posterior a la final.
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
       Regla de negocio violada: El camión ya tiene esa cantidad o más.
-  Passed IntegrationTests.BusinessScenarioTests.Cancellation_RevertsInventoryMoneyAndEmpties_AndIsExcludedFromReports [1 s]
-  Passed IntegrationTests.BusinessScenarioTests.ConcurrentSales_OfTheLastUnits_NeverOversell [211 ms]
-  Passed IntegrationTests.BusinessScenarioTests.Empties_SellThreeBoxesFiveUnits_ReturnTwoBoxes_LeavesOneBoxFiveUnitsOwed [70 ms]
-  Passed IntegrationTests.BusinessScenarioTests.Payment_ReducesDebt [85 ms]
-  Passed IntegrationTests.BusinessScenarioTests.Dashboard_ReflectsTruckSaleOccupancyAndRotation_AndIsAdminOnly [303 ms]
-  Passed IntegrationTests.BusinessScenarioTests.Audit_RecordsBusinessOperations [104 ms]
-  Passed IntegrationTests.BusinessScenarioTests.TruckLoad_TargetMode_LoadsTheDifference_OrRejectsWhenAlreadyAtTarget [78 ms]
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
       Regla de negocio violada: Su usuario no tiene permiso para cambiar el vendedor que atiende.
+  Passed IntegrationTests.BusinessScenarioTests.Empties_SellThreeBoxesFiveUnits_ReturnTwoBoxes_LeavesOneBoxFiveUnitsOwed [65 ms]
+  Passed IntegrationTests.BusinessScenarioTests.Payment_ReducesDebt [78 ms]
+  Passed IntegrationTests.BusinessScenarioTests.Dashboard_ReflectsTruckSaleOccupancyAndRotation_AndIsAdminOnly [167 ms]
+  Passed IntegrationTests.BusinessScenarioTests.Audit_RecordsBusinessOperations [99 ms]
+  Passed IntegrationTests.BusinessScenarioTests.TruckLoad_TargetMode_LoadsTheDifference_OrRejectsWhenAlreadyAtTarget [80 ms]
+  Passed IntegrationTests.BusinessScenarioTests.Gift_HasNoMoneyEffect_ButGeneratesEmpties [78 ms]
+  Passed IntegrationTests.BusinessScenarioTests.InvoiceNumber_IsMonthlyWithYear [54 ms]
+  Passed IntegrationTests.BusinessScenarioTests.Permissions_EmployeeOperates_ButCannotAdminister [91 ms]
+  Passed IntegrationTests.BusinessScenarioTests.Consignment_ChargesOnlySoldUnits [196 ms]
 warn: Presentation.API.Middleware.ExceptionMiddleware[0]
-      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA 0f82c8dcfe1d4dba96e2b550: se solicitan 11 und y hay 10 und.
+      Regla de negocio violada: Inventario insuficiente en el galpón. PRODUCTO PRUEBA ede66d5a58684c08908fd3f1: se solicitan 11 und y hay 10 und.
 info: Microsoft.Hosting.Lifetime[0]
       Application is shutting down...
-[testcontainers.org 00:00:10.54] Delete Docker container 07dda0fc28c0
-[xUnit.net 00:00:11.18]   Finished:    IntegrationTests
-  Passed IntegrationTests.BusinessScenarioTests.Gift_HasNoMoneyEffect_ButGeneratesEmpties [99 ms]
-  Passed IntegrationTests.BusinessScenarioTests.InvoiceNumber_IsMonthlyWithYear [78 ms]
-  Passed IntegrationTests.BusinessScenarioTests.Permissions_EmployeeOperates_ButCannotAdminister [99 ms]
-  Passed IntegrationTests.BusinessScenarioTests.Consignment_ChargesOnlySoldUnits [208 ms]
-  Passed IntegrationTests.BusinessScenarioTests.OutOfStock_FailsWithoutAnyChange_AndDoesNotConsumeInvoiceNumber [80 ms]
-  Passed IntegrationTests.BusinessScenarioTests.SaleWithPayment_LeavesPendingAsDebt_AndPaymentOverTotalLeavesCredit [80 ms]
+[testcontainers.org 00:00:11.05] Delete Docker container 48e4a85ac79c
+[xUnit.net 00:00:11.73]   Finished:    IntegrationTests
+  Passed IntegrationTests.BusinessScenarioTests.OutOfStock_FailsWithoutAnyChange_AndDoesNotConsumeInvoiceNumber [94 ms]
+  Passed IntegrationTests.BusinessScenarioTests.SaleWithPayment_LeavesPendingAsDebt_AndPaymentOverTotalLeavesCredit [67 ms]
 
 Test Run Successful.
-Total tests: 16
-     Passed: 16
- Total time: 11.8220 Seconds
+Total tests: 20
+     Passed: 20
+ Total time: 12.4717 Seconds

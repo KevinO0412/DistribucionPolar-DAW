@@ -1,14 +1,14 @@
-# docker compose down -v && docker compose up --build -d   (Development)
-# docker ps --filter label=com.docker.compose.project=distribucion-polar   (2026-10-15T20:36Z)
-NAMES                        IMAGE                           STATUS                   PORTS
-distribucion-polar-spa       distribucion-polar-spa:latest   Up 3 minutes (healthy)   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
-distribucion-polar-pgadmin   dpage/pgadmin4:9.8              Up 3 minutes             443/tcp, 0.0.0.0:5050->80/tcp, [::]:5050->80/tcp
-distribucion-polar-api       distribucion-polar-api:latest   Up 3 minutes (healthy)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp
-distribucion-polar-db        postgres:15-alpine              Up 3 minutes (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+# docker compose up -d   (Development)
+# docker ps --filter label=com.docker.compose.project=distribucion-polar   (2026-10-16T00:47Z)
+NAMES                        IMAGE                           STATUS                        PORTS
+distribucion-polar-spa       distribucion-polar-spa:latest   Up 56 seconds (healthy)       0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
+distribucion-polar-pgadmin   dpage/pgadmin4:9.8              Up About a minute             443/tcp, 0.0.0.0:5050->80/tcp, [::]:5050->80/tcp
+distribucion-polar-api       distribucion-polar-api:latest   Up About a minute (healthy)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp
+distribucion-polar-db        postgres:15-alpine              Up About a minute (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
 
 # Redes: qué contenedores ve cada una
-distribucion-polar_backend: distribucion-polar-db distribucion-polar-api distribucion-polar-pgadmin 
-distribucion-polar_frontend: distribucion-polar-spa distribucion-polar-api 
+distribucion-polar_backend: distribucion-polar-pgadmin distribucion-polar-db distribucion-polar-api 
+distribucion-polar_frontend: distribucion-polar-api distribucion-polar-spa 
 
 # Volumen persistente
 distribucion-polar_postgres-data (local)
@@ -18,3 +18,4 @@ GET http://localhost:8080/healthz -> ok
 GET http://localhost:5000/health  -> Healthy
 GET http://localhost:8080/api/info -> {"name":"Distribución Polar API","environment":"Development","swagger":true,"migrateOnStartup":true}
 GET http://localhost:8080/dashboard (fallback del SPA) -> HTTP 200
+GET http://localhost:8080/manifest.webmanifest (PWA) -> 200 application/manifest+json
