@@ -106,11 +106,22 @@ public sealed record RouteSettlementLineResponse(
     int CountedUnits, string CountedDisplay, int DifferenceUnits, decimal DifferenceValue);
 
 /// <summary>Planilla de cuadre de una ruta.</summary>
+/// <param name="Id">Identificador de la liquidación.</param>
+/// <param name="TruckId">Camión liquidado.</param>
+/// <param name="TruckName">Nombre del camión.</param>
+/// <param name="TruckPlate">Placa del camión.</param>
+/// <param name="DispatchedAt">Salida a ruta (UTC).</param>
+/// <param name="SettledAt">Liquidación (UTC).</param>
+/// <param name="SettledBy">Usuario que liquidó.</param>
+/// <param name="InvoicesCount">Facturas de venta no anuladas emitidas desde el camión durante la ruta.</param>
+/// <param name="SalesTotal">Total vendido en esas facturas.</param>
 /// <param name="ExpectedCash">Abonos cobrados en las facturas del camión durante la ruta.</param>
 /// <param name="CountedCash">Dinero declarado.</param>
 /// <param name="CashDifference">Declarado − esperado (negativo = faltante).</param>
 /// <param name="MissingGoodsValue">Valor de la mercancía faltante.</param>
 /// <param name="IsBalanced">Sin diferencias de dinero ni de mercancía.</param>
+/// <param name="Observation">Observación del chofer.</param>
+/// <param name="Lines">Productos esperados o declarados, con sus diferencias.</param>
 public sealed record RouteSettlementResponse(
     Guid Id, Guid TruckId, string TruckName, string TruckPlate, DateTime DispatchedAt, DateTime SettledAt, string? SettledBy,
     int InvoicesCount, decimal SalesTotal, decimal ExpectedCash, decimal CountedCash, decimal CashDifference,

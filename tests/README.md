@@ -25,6 +25,8 @@ Un solo proyecto, como en la estructura del curso, con dos carpetas:
 
 ### Prueba de `ProductService` con mock de `IProductRepository`
 
+> **Ruta exacta:** el enunciado muestra `tests/UnitTests/ProductServiceTests.cs`; aquí está en **`tests/UnitTests/Application/ProductServiceTests.cs`**, porque el proyecto `UnitTests` separa `Domain/` y `Application/`. La prueba del enunciado es **`GetByIdAsync_ExistingId_ReturnsProductDto`**.
+
 Los nombres coinciden con los del material del curso: `ProductService` (`src/backend/Core.Application/Services`) e `IProductRepository` (`src/backend/Core.Application/Abstractions`). La prueba está en [`UnitTests/Application/ProductServiceTests.cs`](UnitTests/Application/ProductServiceTests.cs):
 
 ```csharp
@@ -87,4 +89,4 @@ Cada ejecución levanta un PostgreSQL 15 nuevo y la API real con una clave JWT a
 
 `scripts/cobertura.sh` corre las pruebas unitarias con coverlet (`coverlet.runsettings` mide solo `Core.Domain` y `Core.Application`) y genera el reporte con ReportGenerator. El CI lo publica como artefacto y lo resume en cada ejecución.
 
-Resultado actual: 85,8 % de líneas y 78,5 % de ramas del núcleo, con todos los servicios de aplicación entre el 85,7 % y el 100 % ([reporte](../docs/evidencias/cobertura/index.html)).
+Resultado actual: 86,8 % de líneas y 80,3 % de ramas del núcleo, con todos los servicios de aplicación entre el 85,7 % y el 100 % ([reporte](../docs/evidencias/cobertura/index.html)).

@@ -2,16 +2,25 @@
 
  RUN  v2.1.8 /home/kevin-orduz/Desktop/projects/DistribucionPolar/src/frontend
 
- ✓ src/lib/cn.test.ts > cn > resuelve conflictos de Tailwind
- ✓ src/lib/cn.test.ts > cn > conserva el tamaño propio junto a un color de texto
  ✓ src/lib/productImage.test.ts > productImageUrl > devuelve la foto de un producto sembrado
  ✓ src/lib/productImage.test.ts > productImageUrl > devuelve null para un producto creado desde la aplicación
- ✓ src/context/ThemeContext.test.tsx > ThemeProvider > alterna el modo oscuro con la clase "dark" en <html> y lo guarda en localStorage
- ✓ src/context/ThemeContext.test.tsx > ThemeProvider > respeta el tema guardado al recargar
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > lee title y detail del Problem Details
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > expone los errores por campo de un 400 de validación
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > explica el 403 aunque la API no envíe cuerpo
  ✓ src/api/client.test.ts > toApiError (RFC 7807) > distingue la falta de conexión
+ ✓ src/context/ThemeContext.test.tsx > ThemeProvider > alterna el modo oscuro con la clase "dark" en <html> y lo guarda en localStorage
+ ✓ src/context/ThemeContext.test.tsx > ThemeProvider > respeta el tema guardado al recargar
+ ✓ src/offline/catalogCache.test.ts > caché del catálogo > sin conexión devuelve la última copia guardada
+ ✓ src/offline/catalogCache.test.ts > caché del catálogo > con conexión devuelve los datos frescos
+ ✓ src/offline/catalogCache.test.ts > caché del catálogo > sin conexión y sin copia previa propaga el error
+ ✓ src/offline/queue.test.ts > cola de preventa > guarda los pedidos en IndexedDB en el orden en que se registraron
+ ✓ src/offline/queue.test.ts > cola de preventa > envía cada pedido con su id como Idempotency-Key y lo borra al confirmarse
+ ✓ src/offline/queue.test.ts > cola de preventa > sin conexión se detiene y deja los pedidos pendientes para reintentar
+ ✓ src/offline/queue.test.ts > cola de preventa > marca como rechazado el pedido que la API rechaza (RFC 7807) y sigue con los demás
+ ✓ src/offline/queue.test.ts > cola de preventa > un pedido rechazado se puede reintentar o descartar
+ ✓ src/offline/queue.test.ts > cola de preventa > un error del servidor no descarta el pedido; si el proxy no alcanza la API cuenta como sin conexión
+ ✓ src/components/print/ThermalPaper.test.tsx > impresión térmica > el recibo de cobro se adapta al papel de 58 mm
+ ✓ src/components/print/ThermalPaper.test.tsx > impresión térmica > la planilla de cuadre marca el faltante de dinero y mercancía
  ✓ src/context/AuthContext.test.tsx > decodeSession > lee los claims del JWT emitido por la API
  ✓ src/context/AuthContext.test.tsx > decodeSession > rechaza un token sin un rol conocido
  ✓ src/context/AuthContext.test.tsx > AuthProvider > guarda el token en localStorage al iniciar sesión y lo limpia al cerrarla
@@ -33,9 +42,13 @@
  ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > bloquea el dashboard al Employee
  ✓ src/components/ProtectedRoute.test.tsx > ProtectedRoute > deja al Employee consultar el catálogo
  ✓ src/components/ProtectedRoute.test.tsx > menú por rol > oculta el dashboard al Employee y lo muestra al Admin
+ ✓ src/offline/ConnectionIndicator.test.tsx > indicador de conexión > sin conexión muestra "Sin conexión" y los pedidos pendientes
+ ✓ src/offline/ConnectionIndicator.test.tsx > indicador de conexión > al volver la conexión envía los pedidos y el indicador desaparece
+ ✓ src/lib/cn.test.ts > cn > resuelve conflictos de Tailwind
+ ✓ src/lib/cn.test.ts > cn > conserva el tamaño propio junto a un color de texto
 
- Test Files  8 passed (8)
-      Tests  31 passed (31)
-   Start at  14:36:11
-   Duration  1.91s (transform 419ms, setup 2.26s, collect 1.19s, tests 368ms, environment 5.30s, prepare 860ms)
+ Test Files  12 passed (12)
+      Tests  44 passed (44)
+   Start at  18:47:09
+   Duration  3.02s (transform 907ms, setup 4.64s, collect 2.70s, tests 764ms, environment 10.07s, prepare 1.77s)
 

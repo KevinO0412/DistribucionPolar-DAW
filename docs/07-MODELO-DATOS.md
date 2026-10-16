@@ -10,10 +10,32 @@ El curso propone los atributos de una ferretería. En una distribuidora de bebid
 
 | Dimensión | Atributos del curso | Atributos en Distribución Polar | Impacto operacional y financiero |
 | --- | --- | --- | --- |
-| **1. Identificación comercial** | Nombre comercial, SKU único, marca, código de barras (EAN-13) | `Products.Name`, `Products.Brand` y `Products.SKU` (único, formato `[CAT]-[PRO]-[SEQ]`, generado por el sistema con `CorporateSkuGenerator`). La categoría (`Categories.Name`) agrupa el catálogo | Búsqueda indexada por SKU (índice único, B-Tree) y por nombre. El SKU sale de la categoría y del nombre, así que no lo escribe nadie a mano |
-| **2. Gestión financiera** | Costo unitario, precio de venta, margen bruto | `Products.CostPrice` (costo por caja), `Products.PriceBox` y `Products.PriceUnit` (precio de venta por caja y por unidad, independientes), todos `numeric(18,2)` | Valorización del inventario al costo frente al precio de venta, y margen bruto proyectado en el dashboard ([ADR 41](04-DECISIONES.md#41-dashboard-kpi-calculado-en-la-capa-de-aplicación)). Las facturas guardan una copia de los precios del momento |
-| **3. Control y umbrales de stock** | Stock físico, stock mínimo, capacidad máxima | `Products.StockUnits` (galpón, en unidades), `Products.MinStock` y `Products.MaxStock` (`MaxStock > MinStock` por check constraint). El stock de cada camión está en `TruckStock` | Alertas del dashboard: agotado, bajo el mínimo, bajo, óptimo, en el tope y sobre el máximo (`ProductHealthEvaluator`), con las unidades a reponer |
-| **4. Logística y almacén** | Ubicación física, unidad de medida | Ubicación: `Categories.Deposit` (depósito del galpón por categoría) y `TruckStock` (qué camión lleva cada producto). Unidad de medida: caja de `Products.UnitsPerBox` unidades, más unidades sueltas. Capacidad de la flota: `Trucks.CapacityBoxes` | Despacho desde el galpón o desde un camión, carga de camiones y ocupación de la flota. Las cantidades se capturan en cajas y unidades y se guardan en unidades (`BoxQuantity`) |
+| **1. Identificación Comercial** | Nombre comercial, SKU único, marca, código de barras (EAN-13) | `Products.Name`, `Products.Brand` y `Products.SKU` (único, formato `[CAT]-[PRO]-[SEQ]`, generado por el sistema con `CorporateSkuGenerator`). La categoría (`Categories.Name`) agrupa el catálogo | Búsqueda indexada por SKU (índice único, B-Tree) y por nombre. El SKU sale de la categoría y del nombre, así que no lo escribe nadie a mano |
+| **2. Gestión Financiera** | Costo unitario, precio de venta, margen bruto | `Products.CostPrice` (costo por caja), `Products.PriceBox` y `Products.PriceUnit` (precio de venta por caja y por unidad, independientes), todos `numeric(18,2)` | Valorización del inventario al costo frente al precio de venta, y margen bruto proyectado en el dashboard ([ADR 41](04-DECISIONES.md#41-dashboard-kpi-calculado-en-la-capa-de-aplicación)). Las facturas guardan una copia de los precios del momento |
+| **3. Control/Umbrales de Stock** | Stock físico, stock mínimo, capacidad máxima | `Products.StockUnits` (galpón, en unidades), `Products.MinStock` y `Products.MaxStock` (`MaxStock > MinStock` por check constraint). El stock de cada camión está en `TruckStock` | Alertas del dashboard: agotado, bajo el mínimo, bajo, óptimo, en el tope y sobre el máximo (`ProductHealthEvaluator`), con las unidades a reponer |
+| **4. Logística/Almacén** | Ubicación física, unidad de medida | Ubicación: `Categories.Deposit` (depósito del galpón por categoría) y `TruckStock` (qué camión lleva cada producto). Unidad de medida: caja de `Products.UnitsPerBox` unidades, más unidades sueltas. Capacidad de la flota: `Trucks.CapacityBoxes` | Despacho desde el galpón o desde un camión, carga de camiones y ocupación de la flota. Las cantidades se capturan en cajas y unidades y se guardan en unidades (`BoxQuantity`) |
+
+### Columnas reales por dimensión
+
+| Dimensión | Tabla.Columna | Tipo | Regla |
+| --- | --- | --- | --- |
+| **Identificación Comercial** | `Products.SKU` | `varchar(20)` | Índice único `IX_Products_SKU`, generado por el sistema |
+| | `Products.Name` | `varchar(150)` | Obligatorio; índice `IX_Products_Name` |
+| | `Products.Brand` | `varchar(80)` | Obligatorio |
+| | `Products.CategoryId` → `Categories.Name` | `uuid` → `varchar(50)` | FK `Restrict`; nombre de categoría único entre vigentes |
+| | `Products.IsActive` | `boolean` | Habilitado en el catálogo |
+| **Gestión Financiera** | `Products.CostPrice` | `numeric(18,2)` | Costo por caja, ≥ 0 |
+| | `Products.PriceBox` | `numeric(18,2)` | Precio de venta por caja, > 0 |
+| | `Products.PriceUnit` | `numeric(18,2)` | Precio de venta por unidad, > 0 |
+| | (calculado) margen bruto | — | Venta − costo, en el dashboard |
+| **Control/Umbrales de Stock** | `Products.StockUnits` | `integer` | Existencia en galpón, ≥ 0 |
+| | `Products.MinStock` | `integer` | Stock mínimo de seguridad |
+| | `Products.MaxStock` | `integer` | Capacidad máxima; check `MaxStock > MinStock` |
+| | `TruckStock.StockUnits` | `integer` | Existencia en cada camión, > 0 |
+| **Logística/Almacén** | `Categories.Deposit` | `varchar(100)` | Ubicación: depósito del galpón |
+| | `Products.UnitsPerBox` | `integer` | Unidad de medida: caja de N unidades, > 0 |
+| | `TruckStock (TruckId, ProductId)` | PK compuesta | Qué camión lleva cada producto |
+| | `Trucks.CapacityBoxes` | `integer` | Capacidad de carga en cajas (1–5000) |
 
 **Atributo del curso que no se modela:** el código de barras EAN-13. La distribuidora identifica los productos por SKU y nombre; ningún proceso (facturación, compras ni inventario) lee códigos de barras. Si se agrega un lector, la columna sería `Products.Barcode varchar(13)` con un índice único parcial.
 

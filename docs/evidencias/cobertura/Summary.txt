@@ -1,25 +1,25 @@
 Summary - Distribución Polar: pruebas unitarias
-  Generated on: 10/15/2026 - 15:46:35
-  Coverage date: 10/15/2026 - 15:46:34
+  Generated on: 10/16/2026 - 00:47:42
+  Coverage date: 10/16/2026 - 00:47:41
   Parser: MultiReport (2x Cobertura)
   Assemblies: 2
-  Classes: 124
-  Files: 65
-  Line coverage: 85.8%
-  Covered lines: 1419
-  Uncovered lines: 234
-  Coverable lines: 1653
-  Total lines: 5560
-  Branch coverage: 78.5% (209 of 266)
-  Covered branches: 209
-  Total branches: 266
-  Method coverage: 83.9% (230 of 274)
-  Full method coverage: 50.3% (138 of 274)
-  Covered methods: 230
-  Fully covered methods: 138
-  Total methods: 274
+  Classes: 134
+  Files: 67
+  Line coverage: 86.8%
+  Covered lines: 1586
+  Uncovered lines: 241
+  Coverable lines: 1827
+  Total lines: 6175
+  Branch coverage: 80.3% (249 of 310)
+  Covered branches: 249
+  Total branches: 310
+  Method coverage: 85% (257 of 302)
+  Full method coverage: 50.3% (152 of 302)
+  Covered methods: 257
+  Fully covered methods: 152
+  Total methods: 302
 
-Core.Application                                                          85.7%
+Core.Application                                                          86.8%
   Core.Application.Abstractions.AuditEntry                                 100%
   Core.Application.Abstractions.DashboardData                              100%
   Core.Application.Abstractions.DashboardProductRow                        100%
@@ -29,6 +29,7 @@ Core.Application                                                          85.7%
   Core.Application.DTOs.AuthResponse                                       100%
   Core.Application.DTOs.BalanceResponse                                      0%
   Core.Application.DTOs.CategoryResponse                                   100%
+  Core.Application.DTOs.ClientDebtAging                                    100%
   Core.Application.DTOs.ClientResponse                                     100%
   Core.Application.DTOs.ClientStatementResponse                              0%
   Core.Application.DTOs.ConsignmentIndicatorsResponse                      100%
@@ -45,6 +46,7 @@ Core.Application                                                          85.7%
   Core.Application.DTOs.DashboardInventoryKpi                              100%
   Core.Application.DTOs.DashboardResponse                                  100%
   Core.Application.DTOs.DashboardSalesKpi                                  100%
+  Core.Application.DTOs.DebtAgingResponse                                  100%
   Core.Application.DTOs.InternalConsumptionResponse                        100%
   Core.Application.DTOs.InventorySummaryResponse                             0%
   Core.Application.DTOs.InvoiceEmptyGroupResponse                          100%
@@ -54,6 +56,8 @@ Core.Application                                                          85.7%
   Core.Application.DTOs.ProductResponse                                    100%
   Core.Application.DTOs.ProductRotation                                    100%
   Core.Application.DTOs.PurchaseResponse                                   100%
+  Core.Application.DTOs.RouteSettlementLineResponse                        100%
+  Core.Application.DTOs.RouteSettlementResponse                            100%
   Core.Application.DTOs.TransferFromTruckRequest                             0%
   Core.Application.DTOs.TruckLoadResponse                                  100%
   Core.Application.DTOs.TruckOccupancy                                     100%
@@ -62,7 +66,7 @@ Core.Application                                                          85.7%
   Core.Application.DTOs.UpdateProductRequest                               100%
   Core.Application.DTOs.UserResponse                                       100%
   Core.Application.Exceptions.ExternalServiceUnavailableException            0%
-  Core.Application.Mappings.BusinessMappings                                96%
+  Core.Application.Mappings.BusinessMappings                              97.1%
   Core.Application.Mappings.Mappings                                       100%
   Core.Application.Services.AuditExtensions                                100%
   Core.Application.Services.AuthService                                    100%
@@ -71,10 +75,10 @@ Core.Application                                                          85.7%
   Core.Application.Services.ConsignmentService                             100%
   Core.Application.Services.EmployeeService                                100%
   Core.Application.Services.InventoryService                              85.7%
-  Core.Application.Services.InvoiceService                                89.7%
+  Core.Application.Services.InvoiceService                                  90%
   Core.Application.Services.ProductService                                 100%
   Core.Application.Services.PurchaseService                                100%
-  Core.Application.Services.ReportService                                 93.3%
+  Core.Application.Services.ReportService                                 94.7%
   Core.Application.Services.SpanishText                                    100%
   Core.Application.Services.StockOperations                               88.8%
   Core.Application.Services.StockWithdrawalService                        91.6%
@@ -105,6 +109,8 @@ Core.Application                                                          85.7%
   Core.Application.Validators.LoadTruckRequestValidator                    100%
   Core.Application.Validators.LoginRequestValidator                        100%
   Core.Application.Validators.ResetPasswordRequestValidator                100%
+  Core.Application.Validators.SetCreditLimitRequestValidator               100%
+  Core.Application.Validators.SettleRouteRequestValidator                  100%
   Core.Application.Validators.SkuGeneratorRequestValidator                   0%
   Core.Application.Validators.SpanishDisplayNames                            0%
   Core.Application.Validators.TransferFromTruckRequestValidator            100%
@@ -115,13 +121,13 @@ Core.Application                                                          85.7%
   Core.Application.Validators.UpdateProductRequestValidator                100%
   Core.Application.Validators.UpdateUserRequestValidator                   100%
 
-Core.Domain                                                                 86%
+Core.Domain                                                               86.8%
   Core.Domain.Common.BaseEntity                                            100%
   Core.Domain.Common.EmptyReturnGroups                                     100%
   Core.Domain.Common.Guard                                                 100%
   Core.Domain.Entities.AuditLog                                              0%
   Core.Domain.Entities.Category                                           78.5%
-  Core.Domain.Entities.Client                                             87.5%
+  Core.Domain.Entities.Client                                             90.9%
   Core.Domain.Entities.ClientEmptyBalance                                 77.7%
   Core.Domain.Entities.ClientMovement                                       80%
   Core.Domain.Entities.ConsignmentEvent                                   94.7%
@@ -129,19 +135,23 @@ Core.Domain                                                                 86%
   Core.Domain.Entities.DamagedProduct                                       75%
   Core.Domain.Entities.Employee                                           72.2%
   Core.Domain.Entities.InternalConsumption                                71.4%
-  Core.Domain.Entities.Invoice                                            95.2%
+  Core.Domain.Entities.Invoice                                            94.3%
   Core.Domain.Entities.InvoiceEmptyGroup                                    80%
   Core.Domain.Entities.InvoiceItem                                        88.8%
   Core.Domain.Entities.Product                                            92.9%
+  Core.Domain.Entities.ProductLine                                         100%
   Core.Domain.Entities.Purchase                                           85.1%
   Core.Domain.Entities.PurchaseItem                                       86.6%
+  Core.Domain.Entities.RouteSettlement                                    88.2%
+  Core.Domain.Entities.RouteSettlementLine                                85.7%
   Core.Domain.Entities.StockWithdrawal                                      85%
-  Core.Domain.Entities.Truck                                              94.3%
+  Core.Domain.Entities.Truck                                              95.7%
   Core.Domain.Entities.TruckLoad                                          92.3%
   Core.Domain.Entities.TruckStock                                           70%
   Core.Domain.Entities.User                                               78.3%
   Core.Domain.Exceptions.DomainException                                   100%
   Core.Domain.Services.CorporateSkuGenerator                               100%
+  Core.Domain.Services.DebtAging                                          92.8%
   Core.Domain.Services.ProductHealthEvaluator                             97.3%
   Core.Domain.Services.SkuGenerationResult                                 100%
   Core.Domain.Services.StockHealthReport                                   100%
