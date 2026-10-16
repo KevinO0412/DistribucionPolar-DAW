@@ -385,5 +385,50 @@ export interface RouteSettlement {
   lines: RouteSettlementLine[];
 }
 
+export interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export type InternalConsumptionType = 'InternalConsumption' | 'Gift';
+
+/** POST /api/internal-consumptions (solo Admin): salida de inventario sin cliente ni cobro. */
+export interface CreateInternalConsumptionRequest {
+  productId: string;
+  boxes: number;
+  looseUnits: number;
+  origin: StockOrigin;
+  truckId: string | null;
+  employeeId: string;
+  type: InternalConsumptionType;
+  observation: string | null;
+}
+
+export interface InternalConsumption {
+  id: string;
+  occurredAt: string;
+  type: InternalConsumptionType;
+  employeeName: string;
+  origin: StockOrigin;
+  truckName: string | null;
+  productId: string;
+  productName: string;
+  boxes: number;
+  looseUnits: number;
+  totalUnits: number;
+  /** Valor de referencia a precio de venta (no es un cobro). */
+  estimatedValue: number;
+  observation: string | null;
+}
+
+export interface WithdrawalList<T> {
+  items: T[];
+  count: number;
+  totalValue: number;
+}
+
 /** Ancho del papel de la impresora térmica. */
 export type PaperWidth = 80 | 58;

@@ -6,6 +6,10 @@ import type {
   Client,
   ClientStatement,
   CreateGiftRequest,
+  CreateInternalConsumptionRequest,
+  Employee,
+  InternalConsumption,
+  WithdrawalList,
   CreateSaleRequest,
   LineRequest,
   RouteSettlement,
@@ -79,6 +83,18 @@ export const invoicesApi = {
   giftProducts: () => api.get<Product[]>('/invoices/gift-products').then((r) => r.data),
   /** Regalía: descuenta stock y genera vacíos, total 0 y sin efecto en el saldo de dinero. */
   createGift: (body: CreateGiftRequest) => api.post<Invoice>('/invoices/gifts', body).then((r) => r.data),
+};
+
+export const employeesApi = {
+  /** Empleados activos (Admin y Employee). */
+  list: () => api.get<Employee[]>('/employees').then((r) => r.data),
+};
+
+/** Consumos internos y regalías a empleados (solo Admin en la API). */
+export const internalConsumptionsApi = {
+  list: (params: { from?: string; to?: string }, signal?: AbortSignal) =>
+    api.get<WithdrawalList<InternalConsumption>>('/internal-consumptions', { params, signal }).then((r) => r.data),
+  create: (body: CreateInternalConsumptionRequest) => api.post<InternalConsumption>('/internal-consumptions', body).then((r) => r.data),
 };
 
 /** Respaldo (solo Admin): descarga el archivo que genera la API. */
