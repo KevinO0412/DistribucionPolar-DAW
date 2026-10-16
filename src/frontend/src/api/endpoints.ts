@@ -5,6 +5,7 @@ import type {
   CategoryRequest,
   Client,
   ClientStatement,
+  CreateGiftRequest,
   CreateSaleRequest,
   LineRequest,
   RouteSettlement,
@@ -69,11 +70,15 @@ export const clientsApi = {
 
 export const invoicesApi = {
   list: (params: { from?: string; to?: string; type?: string; includeCancelled?: boolean; page?: number; pageSize?: number }) =>
-    api.get<PagedResponse<InvoiceSummary>>('/invoices', { params }).then((r) => r.data),
+    api.get<PagedResponse<InvoiceSummary>>('/invoices', { params: { ...params, type: params.type || undefined } }).then((r) => r.data),
   get: (id: string) => api.get<Invoice>(`/invoices/${id}`).then((r) => r.data),
   /** Venta idempotente: reenviar con la misma clave devuelve la factura ya emitida en lugar de duplicarla. */
   createSale: (body: CreateSaleRequest, idempotencyKey: string) =>
     api.post<Invoice>('/invoices/sales', body, { headers: { 'Idempotency-Key': idempotencyKey } }).then((r) => r.data),
+  /** Productos activos marcados como autorizados para regalía (IsGiftEligible). */
+  giftProducts: () => api.get<Product[]>('/invoices/gift-products').then((r) => r.data),
+  /** Regalía: descuenta stock y genera vacíos, total 0 y sin efecto en el saldo de dinero. */
+  createGift: (body: CreateGiftRequest) => api.post<Invoice>('/invoices/gifts', body).then((r) => r.data),
 };
 
 /** Respaldo (solo Admin): descarga el archivo que genera la API. */

@@ -288,6 +288,14 @@ export interface CreateSaleRequest {
   returnedEmpties: { groupKey: string; boxes: number; units: number }[] | null;
 }
 
+/** Regalía a cliente (POST /api/invoices/gifts): solo productos autorizados, sin cobro. */
+export interface CreateGiftRequest {
+  clientId: string;
+  dispatchOrigin: StockOrigin;
+  truckId: string | null;
+  items: LineRequest[];
+}
+
 export interface EmptyGroupBalance {
   groupKey: string;
   groupName: string;
