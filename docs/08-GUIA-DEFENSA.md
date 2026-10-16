@@ -19,6 +19,14 @@ Las 10 mejoras de la evaluación del 9 de octubre (fuente y estado en [09-OBSERV
 | 9 | Errores RFC 7807 por stock del camión | En **Preventa**, elegir **Camión …** como despacho y pedir más cajas de las que lleva (por ejemplo `99`). Al enviarse, el pedido queda **Rechazado: Inventario insuficiente en el camión…**, que es el `detail` del Problem Details que intercepta Axios | `src/frontend/src/api/client.ts`, `offline/queue.ts` |
 | 10 | KPIs de ocupación, rotación y envejecimiento de deuda | Como `admin`, en el **Dashboard**: "Ocupación de la flota" (% por camión), "Rotación por producto" (vendidas / existencia) y "Antigüedad de la deuda" (0–7, 8–15, 16–30 y más de 30 días, y clientes con deuda vencida) | `Core.Application/Services/ReportService.cs`, `components/dashboard/DebtAgingPanel.tsx` |
 
+### Pantallas de la SPA sobre funciones que ya tenía la API
+
+| Pantalla | Pasos exactos de la demo | Dónde está |
+| --- | --- | --- |
+| Historial del cliente | Como `admin` o `empleado`, en **Clientes** pulsar el **nombre** de un cliente (o el botón **Historial**). Se ven sus datos, el saldo actual, el límite de crédito, los vacíos por grupo, la **antigüedad de la deuda** y los movimientos (facturas, regalías, abonos, vacíos, anulaciones y ajustes) del más reciente al más antiguo, con monto y **saldo resultante**. Filtrar por **Tipo** = Abonos y por fechas **Desde/Hasta** | `src/frontend/src/components/clients/ClientStatementDialog.tsx`, `lib/statement.ts`, `GET /api/clients/{id}/statement` |
+| Regalía a cliente | En **Facturas** pulsar **Nueva regalía**. El selector de producto solo ofrece los autorizados para regalía; al elegir un **camión** como despacho, solo los autorizados que ese camión lleva. Elegir cliente y producto (por ejemplo `1` caja de POLAR PILSEN RET 222ML) y **Registrar regalía**: aviso de éxito y se abre el **ticket** (80/58 mm). En la tabla aparece con el tipo **Regalía** y "Sin cobro"; en el **historial** del cliente aparece la regalía (monto $0) y sus vacíos, sin cambiar el saldo de dinero | `src/frontend/src/components/invoices/GiftDialog.tsx`, `POST /api/invoices/gifts` |
+| Consumos internos | Como `admin`, menú **Consumos internos** → **Registrar consumo**: sale del galpón o de un camión, producto, cajas/unidades, **empleado** y motivo. Al registrar, aviso de éxito y la fila aparece en la lista (cobrado $0; el "valor ref." es solo informativo). Como `empleado` el menú no la muestra y `/consumos` lleva a "sin permiso" (la API responde 403) | `src/frontend/src/pages/InternalConsumptionsPage.tsx`, `/api/internal-consumptions` |
+
 ## 2. Antes de entrar (preparación, 10 minutos antes)
 
 ```bash
@@ -53,7 +61,7 @@ scripts/demo-fechas.sh                    # reparte esas facturas en los último
 | 8–9 | SPA como **empleado** | El menú no tiene Dashboard; `/dashboard` por URL lleva a "sin permiso" (`ProtectedRoute`); Productos sin editar ni eliminar. La API responde 403 igual |
 | 9–11 | Preventa **sin conexión** | `docker stop distribucion-polar-spa`, recargar (abre desde el service worker), registrar un pedido: "Sin conexión: 1 pedido pendiente". `docker start distribucion-polar-spa` y pulsar "Enviar ahora" (o esperar 30 s): se factura una sola vez (Idempotency-Key) |
 | 11–12 | Camiones: "Salir a ruta" y "Liquidar ruta" | Liquidación ciega: el chofer declara sin ver lo esperado; la planilla muestra las diferencias. Imprimir en 58 mm |
-| 12–13 | Clientes: "Abono" y recibo de 58 mm | Saldos con signo, vacíos por grupo, recibo de cobro. Como admin, el límite de crédito (bloquea la venta a crédito) |
+| 12–13 | Clientes: "Abono", recibo de 58 mm e **historial** | Saldos con signo, vacíos por grupo, recibo de cobro. Pulsar el nombre del cliente: historial con saldo resultante y antigüedad de la deuda. Como admin, el límite de crédito (bloquea la venta a crédito). Si sobra tiempo: **Nueva regalía** en Facturas y **Consumos internos** (§1) |
 | 13–14 | Persistencia: `docker compose down` (sin `-v`) y `docker compose up -d` (§5) | Los datos siguen en la SPA y en pgAdmin porque viven en el volumen `postgres-data` |
 | 14–15 | GitHub Actions y [cobertura](evidencias/cobertura/index.html) | CI en push y PR a `main` y `develop`: pruebas unitarias e integración, build de la SPA, artefactos solo si todo pasa, imágenes y prueba de humo con Compose. Cobertura del núcleo del 86,8 % |
 | 15+ | Preguntas | Ver §7 |
