@@ -15,7 +15,7 @@ public sealed class ClientServiceTests
     private readonly Mock<IUnitOfWork> mockUnitOfWork = TestDoubles.UnitOfWork();
     private readonly Mock<IAuditService> mockAudit = new();
     private readonly ClientService service;
-    private readonly Client client = new(1, "J-301798740", "Bodega La Esquina", null, "La Esquina", null);
+    private readonly Client client = new(1, "J-00000000-0", "Bodega La Esquina", null, "La Esquina", null);
 
     public ClientServiceTests()
     {

@@ -73,9 +73,9 @@ export function TicketHeader({ title, subtitle }: { title: string; subtitle?: st
   return (
     <div className="text-center">
       <p className="font-bold" style={{ fontSize: '1.2em' }}>
-        DISTRIBUIDORA VICROS C.A.
+        DISTRIBUCIÓN POLAR C.A.
       </p>
-      <p>RIF J-301798740</p>
+      <p>RIF J-00000000-0</p>
       <p className="mt-1 font-bold">{title}</p>
       {subtitle && <p>{subtitle}</p>}
     </div>
