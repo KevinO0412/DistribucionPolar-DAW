@@ -316,6 +316,36 @@ export interface Client {
   creditLimit: number | null;
 }
 
+/** Tipo de movimiento del estado de cuenta (ClientMovementType en la API). */
+export type ClientMovementType =
+  | 'Invoice'
+  | 'Gift'
+  | 'Payment'
+  | 'EmptiesGenerated'
+  | 'EmptiesReturned'
+  | 'InvoiceCancelled'
+  | 'BalanceAdjustment';
+
+export interface ClientMovement {
+  id: string;
+  type: ClientMovementType;
+  title: string;
+  description: string;
+  amount: number;
+  invoiceId: string | null;
+  date: string;
+}
+
+/** GET /api/clients/{id}/statement: movimientos por pestaña, de más reciente a más antiguo. */
+export interface ClientStatement {
+  client: Client;
+  invoices: ClientMovement[];
+  gifts: ClientMovement[];
+  payments: ClientMovement[];
+  empties: ClientMovement[];
+  adjustments: ClientMovement[];
+}
+
 export interface RouteSettlementLine {
   productId: string;
   productName: string;

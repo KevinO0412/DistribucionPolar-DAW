@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { Banknote, PackageOpen, Printer, Search, ShieldCheck } from 'lucide-react';
+import { Banknote, History, PackageOpen, Printer, Search, ShieldCheck } from 'lucide-react';
 import { toApiError } from '../api/client';
 import { clientsApi } from '../api/endpoints';
 import type { Client } from '../api/types';
+import { ClientStatementDialog } from '../components/clients/ClientStatementDialog';
 import { DataTable } from '../components/dashboard/DataTable';
 import { PageHeader } from '../components/layout/PageHeader';
 import { PaymentReceipt, type PaymentReceiptData } from '../components/print/PaymentReceipt';
@@ -240,6 +241,7 @@ type Dialog =
   | { kind: 'receipt'; data: PaymentReceiptData }
   | { kind: 'empties'; client: Client }
   | { kind: 'credit'; client: Client }
+  | { kind: 'statement'; client: Client }
   | null;
 
 /**
@@ -261,7 +263,7 @@ export function ClientsPage() {
 
   return (
     <>
-      <PageHeader title="Clientes" description="Saldos, vacíos por grupo de envase, abonos con recibo y límites de crédito." />
+      <PageHeader title="Clientes" description="Saldos, historial de movimientos, vacíos por grupo de envase, abonos con recibo y límites de crédito." />
 
       <div className="panel mb-4 flex flex-wrap items-end gap-4 p-4">
         <div className="flex min-w-[14rem] flex-1 flex-col gap-1.5">
@@ -295,7 +297,16 @@ export function ClientsPage() {
             rows={list}
             rowKey={(c) => c.id}
             columns={[
-              { header: 'Cliente', cell: (c) => <><p className="font-medium">{c.code} {c.name}</p><p className="text-muted">{c.rif}{c.nickname ? `, ${c.nickname}` : ''}</p></> },
+              {
+                header: 'Cliente',
+                cell: (c) => (
+                  <>
+                    <button type="button" onClick={() => setDialog({ kind: 'statement', client: c })} className="cursor-pointer text-left font-medium text-brand underline-offset-2 hover:underline" title="Ver historial">
+                      {c.code} {c.name}
+                    </button><p className="text-muted">{c.rif}{c.nickname ? `, ${c.nickname}` : ''}</p>
+                  </>
+                ),
+              },
               { header: 'Dinero', cell: (c) => <><MoneyBalance client={c} /><p className="text-muted">{c.creditLimit === null ? 'Sin límite' : `Límite ${formatMoney(c.creditLimit)}`}</p></> },
               { header: 'Vacíos', cell: (c) => <EmptiesBalance client={c} /> },
               {
@@ -303,6 +314,10 @@ export function ClientsPage() {
                 align: 'right',
                 cell: (c) => (
                   <div className="flex flex-wrap justify-end gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => setDialog({ kind: 'statement', client: c })} aria-label={`Historial de ${c.name}`}>
+                      <History className="h-4 w-4" aria-hidden />
+                      Historial
+                    </Button>
                     <Button size="sm" variant="secondary" onClick={() => setDialog({ kind: 'payment', client: c })}>
                       <Banknote className="h-4 w-4" aria-hidden />
                       Abono
@@ -334,6 +349,7 @@ export function ClientsPage() {
           }}
         />
       )}
+      {dialog?.kind === 'statement' && <ClientStatementDialog client={dialog.client} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'receipt' && <ReceiptDialog data={dialog.data} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'empties' && (
         <EmptiesDialog client={dialog.client} onClose={() => setDialog(null)} onSaved={(c) => { notify(`Vacíos registrados. ${c.emptiesStatus}.`); clients.reload(); setDialog(null); }} />

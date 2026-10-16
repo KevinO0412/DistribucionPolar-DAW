@@ -4,6 +4,7 @@ import type {
   Category,
   CategoryRequest,
   Client,
+  ClientStatement,
   CreateSaleRequest,
   LineRequest,
   RouteSettlement,
@@ -56,6 +57,8 @@ export const trucksApi = {
 
 export const clientsApi = {
   list: (search?: string) => api.get<Client[]>('/clients', { params: { search: search || undefined } }).then((r) => r.data),
+  /** Estado de cuenta completo (Admin y Employee); la API no filtra por fecha. */
+  statement: (id: string, signal?: AbortSignal) => api.get<ClientStatement>(`/clients/${id}/statement`, { signal }).then((r) => r.data),
   registerPayment: (id: string, amount: number, observation: string | null) =>
     api.post<Client>(`/clients/${id}/payments`, { amount, observation }).then((r) => r.data),
   returnEmpties: (id: string, groups: { groupKey: string; boxes: number; units: number }[], observation: string | null) =>
